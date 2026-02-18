@@ -1,0 +1,47 @@
+.terms-conditions-container {
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+.terms-content {
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    color: #000;
+    line-height: 1.4;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.terms-content h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #000;
+}
+
+.terms-content h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    color: #000;
+}
+
+.terms-content p {
+    font-size: 15px;
+    margin-bottom: 15px;
+    font-weight: 500;
+    text-align: justify;
+}
+
+@media (max-width: 768px) {
+    .terms-content {
+        padding: 15px;
+        max-width: 100%;
+    }
+
+    .terms-content p {
+        font-size: 14px;
+        text-align: left;
+    }
+}

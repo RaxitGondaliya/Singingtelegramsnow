@@ -1,0 +1,111 @@
+.contact-us-container {
+    width: 100%;
+    /* Added to match ChangePassword.css base style */
+    background-color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-us-content {
+    flex: 1;
+    padding: 30px 20px;
+    /* Matched to ChangePassword.css */
+    /* Removed display: flex and align-items: center to match ChangePassword.css behavior */
+}
+
+.logo-section {
+    text-align: center;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.contact-logo {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    background-color: #fca311;
+    border-radius: 12px;
+    padding: 5px;
+}
+
+.app-version {
+    color: #999;
+    font-size: 14px;
+    margin: 0;
+}
+
+.contact-form {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 30px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+    /* Matched to ChangePassword.css */
+}
+
+.form-group input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #333;
+    /* Matched to ChangePassword.css */
+    padding: 10px 0;
+    font-size: 18px;
+    /* Matched to ChangePassword.css */
+    background: transparent;
+    outline: none;
+    color: #333;
+}
+
+.form-group input:focus {
+    border-bottom: 2px solid #fca311;
+    /* Matched to ChangePassword.css focus state */
+}
+
+.submit-btn {
+    width: 100%;
+    background-color: #fca311;
+    /* Matched to #fca311 from ChangePassword.css */
+    color: white;
+    border: none;
+    padding: 16px;
+    /* Matched to ChangePassword.css */
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 0;
+    /* Matched to ChangePassword.css */
+    cursor: pointer;
+    margin-top: 40px;
+    /* Matched to ChangePassword.css */
+    box-shadow: 0 4px 12px rgba(252, 163, 17, 0.2);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.submit-btn:hover {
+    background-color: #e5920b;
+}
+
+.submit-btn:active {
+    transform: scale(0.98);
+}
+
+/* Responsive Styles matched EXACTLY to ChangePassword.css */
+@media (min-width: 768px) {
+    .contact-us-container {
+        max-width: 600px;
+        margin: 20px auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        height: min-content;
+        min-height: 400px;
+    }
+}

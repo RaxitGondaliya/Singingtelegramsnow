@@ -1,0 +1,217 @@
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #fff;
+}
+
+/* wrapper */
+.signup-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f6f6f6;
+  position: relative;
+  padding: 0;
+  /* reset, mobile will add top padding */
+}
+
+/* Top bar (mobile) */
+.top-bar {
+  display: none;
+}
+
+.signup-wrapper .back {
+  font-size: 28px;
+  font-weight: 900;
+  color: #f59e0b;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* Top link (always inside signup box) */
+.top-link {
+  font-size: 18px;
+  color: black;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: right;
+  /* right-aligned */
+  margin-bottom: 15px;
+}
+
+.top-link span {
+  color: orange;
+  font-weight: 600;
+}
+
+/* signup box */
+.signup-box {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: none;
+  position: relative;
+}
+
+/* signup heading */
+.signup-box h2 {
+  text-align: left;
+  /* Changed from center to left */
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* profile icon */
+.profile-icon {
+  width: 80px;
+  height: 80px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  font-size: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 0 20px 0;
+  /* Left aligned (removed auto) */
+}
+
+/* name fields */
+.name-fields {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.name-fields input {
+  flex: 1;
+}
+
+/* other inputs */
+.signup-box input,
+.signup-box select {
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid black;
+  padding: 12px 0;
+  font-size: 16px;
+  background: transparent;
+  margin-bottom: 15px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* zip & gender side by side */
+.zip-gender {
+  display: flex;
+  gap: 10px;
+}
+
+.zip-gender input,
+.zip-gender select {
+  flex: 1;
+}
+
+/* button */
+.create-btn {
+  width: 100%;
+  padding: 16px;
+  background: orange;
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 20px;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+/* ===== MEDIA QUERIES ===== */
+
+/* Desktop */
+@media (min-width: 769px) {
+  .top-bar {
+    display: none;
+  }
+
+  .signup-wrapper {
+    padding: 0;
+    align-items: center;
+  }
+
+  .signup-box h2 {
+    margin-top: 0;
+  }
+
+  .signup-box {
+    border-radius: 12px;
+  }
+
+  /* Desktop: top link inside box, right-aligned */
+  .signup-box .top-link {
+    display: block;
+    text-align: right;
+    margin-bottom: 15px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .top-bar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    padding: 20px 0;
+    background: white;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    box-sizing: border-box;
+  }
+
+  .signup-wrapper .back {
+    font-size: 28px;
+    font-weight: 900;
+    color: #f59e0b;
+    cursor: pointer;
+    position: static;
+    /* Reset from fixed */
+    margin: 0;
+  }
+
+  .signup-wrapper {
+    background: white;
+    /* Match Signin page */
+    padding-top: 80px;
+    /* space for top bar */
+    align-items: flex-start;
+  }
+
+  .signup-box {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    padding: 25px;
+    background: transparent;
+    /* wrapper is white */
+  }
+
+  .signup-box h2 {
+    margin-top: 0;
+  }
+
+  /* Position the top-link absolutely on mobile to align with arrow */
+  .signup-box .top-link {
+    position: absolute;
+    top: -25px;
+    right: 20px;
+    margin: 0;
+    z-index: 101;
+    /* Ensure it's above other elements */
+  }
+}

@@ -1,0 +1,170 @@
+.add-character-container {
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.add-character-form {
+    padding: 10px 20px 20px 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.first-group {
+    margin-top: 10px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+
+}
+
+.form-label {
+    display: block;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.select-wrapper::after {
+    content: '\2304';
+    font-size: 24px;
+    color: #333;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-85%);
+    pointer-events: none;
+}
+
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    border-bottom: 1px solid #000;
+    background-color: transparent;
+    font-size: 17px;
+    outline: none;
+}
+
+.form-textarea {
+    resize: none;
+    min-height: 35px;
+}
+
+.form-textarea:focus,
+.form-select:focus {
+    border-bottom: 1.5px solid #fca311;
+}
+
+/* Upload Box Style */
+.hidden-input {
+    display: none;
+}
+
+.upload-label {
+    display: block;
+    background-color: #f7f7f7;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    height: 180px;
+
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+}
+
+.upload-plus {
+    font-size: 45px;
+    color: #cccccc;
+    line-height: 1;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.upload-hint {
+    color: #cccccc;
+    font-size: 13px;
+    display: block;
+}
+
+.upload-indicator {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #eee;
+}
+
+.indicator-dot.active {
+    background-color: #fca311;
+}
+
+/* --- Buttons: Vertical alignment and Reduced gap --- */
+.form-actions {
+    padding: 0 20px 30px 20px;
+
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+
+    margin-top: 6px;
+
+}
+
+.action-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-add-another {
+    background-color: #3d3d3d;
+    color: #fff;
+}
+
+.btn-done {
+    background-color: #fca311;
+    color: #fff;
+}
+
+@media (min-width: 768px) {
+    .add-character-form {
+        flex: none;
+    }
+
+    .form-actions {
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+    }
+}

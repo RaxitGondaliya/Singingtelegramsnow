@@ -1,0 +1,32 @@
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 22px 0;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item:hover {
+    background-color: #fafafa;
+}
+
+.menu-icon {
+    color: #f7b141;
+    font-size: 20px;
+    width: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.menu-label {
+    flex: 1;
+    font-size: 16px;
+    color: #333;
+    font-weight: 400;
+}
