@@ -1,5 +1,6 @@
 .add-character-container {
-    background-color: #f5f5f5;
+    /* Changed from #f5f5f5 to white */
+    background-color: #ffffff; 
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -17,8 +18,7 @@
 }
 
 .form-group {
-    margin-bottom: 20px;
-
+    margin-bottom: 25px; /* Increased slightly for better spacing on white */
 }
 
 .form-label {
@@ -50,7 +50,7 @@
     width: 100%;
     padding: 10px 0;
     border: none;
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid #e5e5e5; /* Lighter border for white background */
     background-color: transparent;
     font-size: 17px;
     outline: none;
@@ -73,11 +73,10 @@
 
 .upload-label {
     display: block;
-    background-color: #f7f7f7;
-    border: 1px solid #e5e5e5;
+    background-color: #fafafa; /* Very light gray to distinguish from background */
+    border: 1px dashed #cccccc; /* Dashed looks better for upload on white */
     border-radius: 6px;
     height: 180px;
-
     cursor: pointer;
     margin-top: 10px;
     width: 100%;
@@ -124,18 +123,14 @@
     background-color: #fca311;
 }
 
-/* --- Buttons: Vertical alignment and Reduced gap --- */
+/* --- Buttons --- */
 .form-actions {
-    padding: 0 20px 30px 20px;
-
-    background: #fff;
+    padding: 0 20px 40px 20px;
+    /* Removed background: #fff so it inherits the container white */
     display: flex;
     flex-direction: column;
-
-    gap: 6px;
-
-    margin-top: 6px;
-
+    gap: 8px;
+    margin-top: 10px;
 }
 
 .action-btn {
@@ -144,6 +139,7 @@
     font-size: 16px;
     font-weight: 600;
     border: none;
+    border-radius: 8px; /* Added small radius for a cleaner look */
     cursor: pointer;
 }
 

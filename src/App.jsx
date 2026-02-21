@@ -11,6 +11,7 @@ import MyAccount from "./pages/Profile/MyAccount";
 import ManageProfiles from "./pages/Profile/ManageProfiles";
 import Availability from "./pages/Profile/ManageAvailability";
 import BookingHistory from "./pages/Profile/BookingHistory";
+import BookingHistoryDetails from "./pages/Profile/BookingHistoryDetails";
 import MyEarnings from "./pages/Profile/MyEarnings";
 import AddCharacterProfile from "./pages/Profile/AddCharacterProfile";
 import EditCharacterProfile from "./pages/Profile/EditCharacterProfile";
@@ -23,6 +24,7 @@ import AboutUs from "./pages/Settings/AboutUs";
 import PrivacyPolicy from "./pages/Settings/PrivacyPolicy";
 import ContactUs from "./pages/Settings/ContactUs";
 import TermsAndConditions from "./pages/Settings/TermsAndConditions";
+import ReportIt from "./pages/Profile/ReportIt";
 
 
 function App() {
@@ -56,9 +58,11 @@ function App() {
             <Route path="manage-profiles" element={<ManageProfiles />} />
             <Route path="availability" element={<Availability />} />
             <Route path="history" element={<BookingHistory />} />
+            <Route path="history/:id" element={<BookingHistoryDetails />} />
             <Route path="earnings" element={<MyEarnings />} />
             <Route path="add-character" element={<AddCharacterProfile />} />
             <Route path="edit-character" element={<EditCharacterProfile />} />
+            <Route path="report" element={<ReportIt />} />
           </Route>
 
           <Route path="notifications" element={<Notifications />} />

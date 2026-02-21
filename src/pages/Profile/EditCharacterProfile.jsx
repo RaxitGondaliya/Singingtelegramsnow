@@ -5,8 +5,6 @@ import './EditCharacterProfile.css';
 
 export default function EditCharacterProfile() {
     const navigate = useNavigate();
-    // const location = useLocation();
-    // const { id } = useParams(); 
 
     const [formData, setFormData] = useState({
         character: '',
@@ -15,20 +13,6 @@ export default function EditCharacterProfile() {
         media: null,
         previewUrl: null 
     });
-
-    // useEffect(() => {
-    //     if (location.state && location.state.profileData) {
-    //         const data = location.state.profileData;
-    //         setFormData({
-    //             character: data.character || '',
-    //             characterStyle: data.characterStyle || '',
-    //             description: data.description || '',
-    //             media: null,
-    //             previewUrl: data.imageUrl || null
-    //         });
-    //     }
-        
-    // }, [location.state]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -42,9 +26,9 @@ export default function EditCharacterProfile() {
 
     return (
         <div className="edit-character-container">
-            <div className="custom-header-wrapper">
+            {/* <div className="custom-header-wrapper"> */}
                 <Header title="Edit Character Profile" />
-            </div>
+            {/* </div> */}
 
             <div className="edit-character-form">
                 <div className="form-group">
