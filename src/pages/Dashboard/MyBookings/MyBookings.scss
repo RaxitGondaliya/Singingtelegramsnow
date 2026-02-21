@@ -1,0 +1,297 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.home-container {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #f5f5f5;
+
+    .home-header {
+        @include flex-between;
+        padding: 20px 20px 0 20px;
+        margin-bottom: 5px;
+        background-color: transparent;
+
+        h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .notification-icon {
+            font-size: 20px;
+            cursor: pointer;
+            position: relative;
+
+            .dot {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 8px;
+                height: 8px;
+                background-color: red;
+                border-radius: 50%;
+                border: 1px solid $white;
+            }
+        }
+    }
+
+    .calendar-container {
+        background: transparent;
+        padding: 0 20px 20px 20px;
+        margin-bottom: 0;
+        border-radius: 0;
+
+        .calendar-header {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 20px;
+            margin: 0 0 10px 0;
+
+            .month-year {
+                text-decoration: none;
+
+                @media (max-width: 768px) {
+                    cursor: pointer;
+                }
+
+                @media (min-width: 769px) {
+                    cursor: default;
+                }
+            }
+
+            .nav-arrow {
+                background: none;
+                border: none;
+                font-size: 24px;
+                font-weight: bold;
+                color: #333;
+                cursor: pointer;
+                padding: 5px 10px;
+
+                &:hover {
+                    color: $primary-color;
+                }
+
+                &.desktop-only {
+                    @media (max-width: 768px) {
+                        display: none;
+                    }
+                }
+            }
+        }
+
+        .calendar-body {
+            background-color: $white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+
+            &.slide-left .days-grid {
+                animation: slideInLeft 0.3s ease forwards;
+            }
+
+            &.slide-right .days-grid {
+                animation: slideInRight 0.3s ease forwards;
+            }
+
+            .weekdays {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                text-align: center;
+                font-weight: 500;
+                color: #666;
+                margin-bottom: 15px;
+                font-size: 14px;
+            }
+
+            .days-grid {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                row-gap: 20px;
+                text-align: center;
+
+                .day-cell {
+                    height: 40px;
+                    @include flex-center;
+                    font-size: 16px;
+                    color: #333;
+                    border-radius: 50%;
+                    width: 40px;
+                    margin: 0 auto;
+                    cursor: pointer;
+
+                    &.other-month {
+                        color: #ccc;
+                    }
+
+                    &.selected {
+                        background-color: #ff9800;
+                        color: $white;
+                        font-weight: bold;
+                    }
+                }
+            }
+        }
+
+        @media (max-width: 768px) {
+            padding: 0;
+            margin: 0;
+
+            .calendar-header {
+                padding: 0 20px;
+            }
+
+            .calendar-body {
+                margin: 0;
+                border-radius: 0;
+            }
+        }
+    }
+
+    .bookings-section {
+        flex: 1;
+        padding: 20px;
+        background-color: #f5f5f5;
+        overflow-y: auto;
+
+        .loading-msg {
+            @include flex-center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .bookings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+
+            .booking-item-card {
+                background-color: $white;
+                padding: 16px;
+                border-radius: 12px;
+                @include flex-between;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+                .booking-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+
+                    h4 {
+                        margin: 0;
+                        font-size: 16px;
+                        color: #333;
+                    }
+
+                    span {
+                        font-size: 13px;
+                        color: #888;
+                    }
+                }
+
+                .status-badge {
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    text-transform: capitalize;
+
+                    &.confirmed {
+                        background-color: #e3f2fd;
+                        color: #1976d2;
+                    }
+
+                    &.completed {
+                        background-color: #e8f5e9;
+                        color: #2e7d32;
+                    }
+                }
+            }
+        }
+
+        .no-bookings {
+            @include flex-center;
+            padding: 40px 0;
+            color: #888;
+        }
+    }
+}
+
+.picker-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    @include flex-center;
+
+    .picker-modal {
+        background-color: $white;
+        padding: 20px;
+        border-radius: 12px;
+        width: 80%;
+        max-width: 320px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        text-align: center;
+
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+
+            .month-item {
+                padding: 10px;
+                background-color: #f5f5f5;
+                border-radius: 8px;
+                cursor: pointer;
+
+                &:hover {
+                    background-color: #e0e0e0;
+                }
+            }
+        }
+
+        .close-btn {
+            background-color: #333;
+            color: $white;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

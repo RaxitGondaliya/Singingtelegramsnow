@@ -1,0 +1,244 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.booking-history-page {
+    background: #f9f9f9;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+
+    .booking-container {
+        padding: 20px 12px;
+        max-width: 1200px;
+        margin: auto;
+        width: 100%;
+        overflow: hidden;
+
+        .booking-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            width: 100%;
+
+            @media(min-width: 600px) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            @media(min-width: 1000px) {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .booking-card {
+                background: $white;
+                border-radius: 12px;
+                position: relative;
+                border: 1px solid #eee;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                min-width: 0;
+
+                .date-badge {
+                    position: absolute;
+                    top: -12px;
+                    left: 15px;
+                    background: linear-gradient(135deg, $accent-color, lighten($accent-color, 10%));
+                    color: $white;
+                    padding: 6px 10px;
+                    border-radius: 8px;
+                    text-align: center;
+                    min-width: 45px;
+
+                    .date-day {
+                        font-size: 18px;
+                        font-weight: 800;
+                        display: block;
+                    }
+
+                    .date-month {
+                        font-size: 11px;
+                        font-weight: 600;
+                    }
+                }
+
+                .card-body {
+                    display: flex;
+                    flex-direction: column;
+                    height: 100%;
+
+                    .user-info-header {
+                        display: flex;
+                        align-items: center;
+                        padding: 12px 15px 8px 75px;
+
+                        .avatar-circle {
+                            width: 32px;
+                            height: 32px;
+                            border: 1px solid #eee;
+                            border-radius: 50%;
+                            @include flex-center;
+                            margin-right: 10px;
+                            color: #999;
+                        }
+
+                        .user-full-name {
+                            font-size: 14px;
+                            font-weight: 500;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
+                    }
+
+                    .divider {
+                        border: 0;
+                        border-top: 1px solid #f0f0f0;
+                        margin: 0;
+                    }
+
+                    .main-content {
+                        display: flex;
+                        padding: 12px 15px;
+                        gap: 12px;
+                        flex: 1;
+                        width: 100%;
+                        min-width: 0;
+
+                        .img-wrapper {
+                            width: 65px;
+                            height: 65px;
+                            flex-shrink: 0;
+
+                            .booking-img {
+                                width: 100%;
+                                height: 100%;
+                                border-radius: 8px;
+                                object-fit: cover;
+                            }
+                        }
+
+                        .text-details {
+                            flex: 1;
+                            min-width: 0;
+                            overflow: hidden;
+
+                            .character-name {
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: $accent-color;
+                                margin: 0 0 4px;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
+
+                            .detail-row {
+                                display: flex;
+                                align-items: center;
+                                gap: 6px;
+                                margin-bottom: 3px;
+
+                                .icon {
+                                    font-size: 14px;
+                                    color: #aaa;
+                                }
+
+                                .one-line {
+                                    font-size: 13px;
+                                    color: #666;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .card-footer {
+                    margin-top: auto;
+                    @include flex-between;
+                    padding: 6px 14px;
+                    background: #fafafa;
+                    border-bottom-left-radius: 12px;
+                    border-bottom-right-radius: 12px;
+                    height: 40px;
+                    position: relative;
+
+                    .status-box {
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+
+                        .label {
+                            font-size: 12px;
+                            font-weight: 700;
+                        }
+
+                        .value {
+                            font-size: 12px;
+                            font-weight: 600;
+
+                            &.completed {
+                                color: #2ecc71;
+                            }
+
+                            &.confirmed {
+                                color: #3498db;
+                            }
+                        }
+                    }
+
+                    .action-menu {
+                        position: relative;
+                        display: flex;
+                        align-items: center;
+
+                        .dots-btn {
+                            background: none;
+                            border: none;
+                            font-size: 16px;
+                            cursor: pointer;
+                            color: #ccc;
+                            padding: 4px 6px;
+                            margin-top: 12px !important;
+                            line-height: 1;
+                        }
+
+                        .dropdown-menu {
+                            position: absolute;
+                            right: 0;
+                            top: 28px;
+                            width: 150px;
+                            height: 45px;
+                            background: $white;
+                            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                            border: 1px solid #f0f0f0;
+                            @include flex-center;
+                            justify-content: flex-start;
+                            padding: 0;
+
+                            .dropdown-item {
+                                display: flex;
+                                align-items: center;
+                                justify-content: flex-start;
+                                width: 100%;
+                                height: 100%;
+                                padding-left: 16px;
+                                font-size: 14px;
+                                border: none;
+                                background: none;
+                                cursor: pointer;
+                                color: #333;
+                                font-weight: 500;
+                                margin: 0;
+                                line-height: normal;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

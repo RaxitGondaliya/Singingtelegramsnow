@@ -1,0 +1,128 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.auth-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: url("../../../assets/bg.jpg") center center / cover no-repeat;
+  @include flex-center;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+
+  .logo {
+    width: 220px;
+    margin-top: 80px;
+
+    @include mobile-first(769px) {
+      width: 300px;
+    }
+
+    @include mobile-first(1025px) {
+      width: 260px;
+    }
+  }
+
+  .bottom {
+    width: 90%;
+    max-width: 420px;
+    margin-bottom: 60px;
+
+    button {
+      width: 100%;
+      height: 58px;
+      border-radius: 0;
+      border: none;
+      font-size: $font-size-large;
+      font-weight: $font-weight-bold;
+      margin-bottom: 18px;
+      cursor: pointer;
+      @include flex-center;
+      position: relative;
+
+      img {
+        position: absolute;
+        left: 18px;
+        width: 24px;
+        height: 24px;
+      }
+
+      span {
+        margin-left: 52px;
+        display: block;
+        text-align: center;
+      }
+
+      &.google {
+        background: $primary-color;
+        color: $white;
+      }
+
+      &.facebook {
+        background: $secondary-color;
+        color: $white;
+      }
+
+      &.outline {
+        background: transparent;
+        border: 2px solid $white;
+        color: $white;
+      }
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .terms {
+      color: $white;
+      font-size: 15px;
+      margin-top: 18px;
+      line-height: 1.6;
+      text-align: center;
+
+      .link {
+        color: $accent-color;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .login-box {
+    background: $background-overlay;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    color: $white;
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    .switch {
+      display: flex;
+      margin-bottom: 15px;
+
+      button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+
+        &.active {
+          background: $accent-color;
+          color: $white;
+        }
+      }
+    }
+  }
+}

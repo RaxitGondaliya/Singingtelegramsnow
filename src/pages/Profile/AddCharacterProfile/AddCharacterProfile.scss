@@ -1,0 +1,162 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.add-character-container {
+    background-color: $white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    .add-character-form {
+        padding: 10px 20px 20px 20px;
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+
+        .form-group {
+            margin-bottom: 25px;
+
+            &.first-group {
+                margin-top: 10px;
+            }
+
+            .form-label {
+                display: block;
+                color: #666;
+                font-size: 14px;
+                margin-bottom: 4px;
+                font-weight: 500;
+            }
+
+            .select-wrapper {
+                position: relative;
+                width: 100%;
+
+                &::after {
+                    content: '\2304';
+                    font-size: 24px;
+                    color: #333;
+                    position: absolute;
+                    right: 8px;
+                    top: 50%;
+                    transform: translateY(-85%);
+                    pointer-events: none;
+                }
+            }
+
+            .form-select,
+            .form-textarea {
+                width: 100%;
+                padding: 10px 0;
+                border: none;
+                border-bottom: 1px solid #e5e5e5;
+                background-color: transparent;
+                font-size: 17px;
+                outline: none;
+
+                &:focus {
+                    border-bottom: 1.5px solid $accent-color;
+                }
+            }
+
+            .form-textarea {
+                resize: none;
+                min-height: 35px;
+            }
+
+            .hidden-input {
+                display: none;
+            }
+
+            .upload-label {
+                display: block;
+                background-color: #fafafa;
+                border: 1px dashed #cccccc;
+                border-radius: 6px;
+                height: 180px;
+                cursor: pointer;
+                margin-top: 10px;
+                width: 100%;
+
+                .upload-content {
+                    @include flex-center;
+                    flex-direction: column;
+                    text-align: center;
+                    width: 100%;
+                    height: 100%;
+
+                    .upload-plus {
+                        font-size: 45px;
+                        color: #cccccc;
+                        line-height: 1;
+                        margin-bottom: 5px;
+                        display: block;
+                    }
+
+                    .upload-hint {
+                        color: #cccccc;
+                        font-size: 13px;
+                        display: block;
+                    }
+                }
+            }
+
+            .upload-indicator {
+                @include flex-center;
+                margin-top: 8px;
+
+                .indicator-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background-color: #eee;
+                    margin: 0 4px;
+
+                    &.active {
+                        background-color: $accent-color;
+                    }
+                }
+            }
+        }
+    }
+
+    .form-actions {
+        padding: 0 20px 40px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 10px;
+
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+
+            &.btn-add-another {
+                background-color: #3d3d3d;
+                color: $white;
+            }
+
+            &.btn-done {
+                background-color: $accent-color;
+                color: $white;
+            }
+        }
+    }
+
+    @media (min-width: 768px) {
+        .add-character-form {
+            flex: none;
+        }
+
+        .form-actions {
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+    }
+}

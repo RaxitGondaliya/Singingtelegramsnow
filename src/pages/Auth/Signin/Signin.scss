@@ -1,0 +1,158 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.signin-wrapper {
+  width: 100%;
+  height: 100vh;
+  background: #f6f6f6;
+  @include flex-center;
+  position: relative;
+
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    background: $white;
+  }
+}
+
+.back {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: fixed;
+    top: 30px;
+    left: 18px;
+    font-size: 28px;
+    font-weight: 900;
+    color: #f59e0b;
+    cursor: pointer;
+    z-index: 10;
+  }
+}
+
+.signin-box {
+  width: 100%;
+  max-width: 420px;
+  background: $white;
+  position: relative;
+  border-radius: 12px;
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+    padding-top: 90px;
+    border-radius: 0;
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+
+    button {
+      flex: 1;
+      padding: 16px;
+      font-size: 16px;
+      margin-bottom: -1px;
+
+      &.active {
+        color: $accent-color;
+        border-bottom: 3px solid $accent-color;
+      }
+    }
+  }
+
+  .form-area {
+    padding: 25px;
+
+    h2 {
+      margin-top: 5px;
+      margin-bottom: 25px;
+      font-weight: 500;
+    }
+
+    label {
+      display: block;
+      margin-top: 22px;
+      font-size: 15px;
+    }
+
+    input {
+      width: 100%;
+      border: none;
+      border-bottom: 2px solid $black;
+      padding: 12px 0;
+      font-size: 16px;
+      background: transparent;
+      outline: none;
+    }
+
+    .password {
+      position: relative;
+      @include flex-between;
+
+      input {
+        padding-right: 50px;
+      }
+
+      span {
+        position: absolute;
+        right: 0;
+        bottom: 12px;
+        color: $accent-color;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+      }
+    }
+
+    .mobile-input-wrapper {
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid $black;
+      padding-bottom: 12px;
+      margin-top: 10px;
+
+      .country-code {
+        margin-right: 8px;
+        color: $black;
+        font-size: 16px;
+      }
+
+      input {
+        border: none;
+        flex: 1;
+        font-size: 16px;
+      }
+    }
+
+    .signin-btn {
+      width: 100%;
+      margin-top: 35px;
+      padding: 16px;
+      background: $accent-color;
+      border: none;
+      color: $white;
+      font-size: 18px;
+      font-weight: 600;
+      border-radius: 0;
+    }
+
+    .forgot {
+      color: $accent-color;
+      margin-top: 32px;
+      font-size: 15px;
+    }
+
+    .signup-link {
+      margin-top: 75px;
+      font-size: 15px;
+      text-align: center;
+
+      span {
+        color: $accent-color;
+        font-weight: 600;
+        cursor: pointer;
+        margin-left: 5px;
+      }
+    }
+  }
+}

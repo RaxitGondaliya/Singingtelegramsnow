@@ -1,0 +1,182 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.details-page {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+
+    .details-container {
+        padding: 15px;
+        max-width: 1000px;
+        margin: 0 auto;
+
+        .details-card {
+            background: $white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+
+            .user-section {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                position: relative;
+
+                .user-avatar {
+                    width: 50px;
+                    height: 50px;
+                    background: #eee;
+                    border-radius: 50%;
+                    @include flex-center;
+                    color: #999;
+                }
+
+                .user-info {
+                    .user-name {
+                        font-size: 16px;
+                        margin: 0;
+                    }
+
+                    .user-phone {
+                        color: $accent-color;
+                        font-size: 14px;
+                        margin: 4px 0;
+                    }
+
+                    .payment-status {
+                        font-size: 12px;
+                        color: #666;
+                        margin: 0;
+
+                        &.paid {
+                            color: #28a745;
+                            font-weight: bold;
+                        }
+                    }
+                }
+
+                .chat-btn {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    background: none;
+                    border: 1px solid $accent-color;
+                    color: $accent-color;
+                    border-radius: 50%;
+                    width: 35px;
+                    height: 35px;
+                    cursor: pointer;
+                }
+            }
+
+            .detail-divider {
+                border: 0;
+                border-top: 1px solid #eee;
+                margin: 15px 0;
+            }
+
+            .char-section {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                margin-bottom: 20px;
+
+                .char-thumb {
+                    border-radius: 8px;
+                    border: 1px solid #ddd;
+                }
+            }
+
+            .details-grid {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 15px;
+
+                @media (min-width: 768px) {
+                    grid-template-columns: 1fr 1fr;
+                    gap: 40px;
+                }
+
+                .grid-column {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
+
+                    .info-item {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 2px;
+
+                        .label {
+                            color: #888;
+                            font-size: 13px;
+                            margin-bottom: 2px;
+                        }
+
+                        .value {
+                            color: #333;
+                            font-size: 15px;
+                            font-weight: 500;
+
+                            &.value-orange {
+                                color: $accent-color;
+                                font-size: 15px;
+                                font-weight: 600;
+                            }
+                        }
+
+                        .icon-row {
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+
+                            .icon-orange {
+                                color: $accent-color;
+                                font-size: 14px;
+                            }
+                        }
+
+                        .address-box {
+                            display: flex;
+                            gap: 8px;
+                            align-items: flex-start;
+                            margin-top: 2px;
+                        }
+                    }
+                }
+            }
+        }
+
+        .details-footer {
+            margin-top: 30px;
+            text-align: center;
+
+            .footer-button-wrapper {
+                @media (min-width: 768px) {
+                    max-width: 400px;
+                    margin: 0 auto;
+                }
+
+                .btn-payout {
+                    width: 100%;
+                    background: $accent-color;
+                    color: $white;
+                    border: none;
+                    padding: 14px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+            }
+
+            .cancel-policy {
+                margin-top: 15px;
+                color: $accent-color;
+                font-size: 13px;
+                text-decoration: underline;
+                display: inline-block;
+            }
+        }
+    }
+}

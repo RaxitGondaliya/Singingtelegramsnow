@@ -1,0 +1,91 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: $white;
+    position: relative;
+    overflow: hidden;
+
+    &.hide-nav {
+        @media (max-width: 767px) {
+            .bottom-nav {
+                display: none !important;
+            }
+        }
+    }
+
+    .dashboard-header {
+        @include flex-center;
+        padding: 15px 20px;
+        background-color: $white;
+        border-bottom: 1px solid #eee;
+        position: relative;
+
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .notification-icon {
+            position: absolute;
+            right: 20px;
+            font-size: 20px;
+            cursor: pointer;
+
+            .dot {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 8px;
+                height: 8px;
+                background-color: red;
+                border-radius: 50%;
+                border: 1px solid $white;
+            }
+        }
+    }
+
+    .dashboard-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        color: #333;
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .bottom-nav {
+        grid-area: sidebar;
+    }
+
+    /* Responsive Desktop Wrapper */
+    @media (min-width: 768px) {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        grid-template-rows: 1fr;
+        grid-template-areas: "sidebar content";
+        height: 100vh;
+        background-color: #f4f7fe;
+
+        .dashboard-content {
+            grid-area: content;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            background-color: $white;
+            margin: 20px 40px 40px 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            height: auto;
+            overflow-y: auto;
+            position: relative;
+        }
+    }
+}

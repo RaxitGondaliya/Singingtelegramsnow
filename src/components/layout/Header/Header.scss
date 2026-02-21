@@ -1,0 +1,37 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.common-header {
+    @include flex-center;
+    height: 56px;
+    padding: 0 20px;
+    background-color: $white;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid #f0f0f0;
+    z-index: 1000;
+    width: 100%;
+
+    h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+        color: #444;
+    }
+
+    .back-arrow {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 26px;
+        color: $accent-color;
+        cursor: pointer;
+        background: none;
+        border: none;
+        @include flex-center;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+    }
+}

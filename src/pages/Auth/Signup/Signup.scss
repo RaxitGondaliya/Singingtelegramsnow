@@ -1,0 +1,147 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.signup-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  @include flex-center;
+  background: #f6f6f6;
+  position: relative;
+  padding: 0;
+
+  .back {
+    font-size: 28px;
+    font-weight: 900;
+    color: #f59e0b;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  /* Mobile Designs */
+  @include mobile-first(0) {
+    @media (max-width: 768px) {
+      background: $white;
+      padding-top: 80px;
+      align-items: flex-start;
+    }
+  }
+
+  @include mobile-first(769px) {
+    padding: 0;
+    align-items: center;
+  }
+}
+
+.top-bar {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    padding: 20px 0;
+    background: $white;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+  }
+}
+
+.signup-box {
+  width: 100%;
+  max-width: 420px;
+  background: $white;
+  padding: 25px;
+  border-radius: 12px;
+  position: relative;
+
+  .top-link {
+    font-size: 18px;
+    color: $black;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: right;
+    margin-bottom: 15px;
+
+    span {
+      color: $accent-color;
+      font-weight: 600;
+    }
+  }
+
+  h2 {
+    text-align: left;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+
+  .profile-icon {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    font-size: 36px;
+    @include flex-center;
+    margin: 0 0 20px 0;
+  }
+
+  .name-fields {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+
+    input {
+      flex: 1;
+    }
+  }
+
+  input,
+  select {
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid $black;
+    padding: 12px 0;
+    font-size: 16px;
+    background: transparent;
+    margin-bottom: 15px;
+    outline: none;
+  }
+
+  .zip-gender {
+    display: flex;
+    gap: 10px;
+
+    input,
+    select {
+      flex: 1;
+    }
+  }
+
+  .create-btn {
+    width: 100%;
+    padding: 16px;
+    background: $accent-color;
+    border: none;
+    color: $white;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 20px;
+    border-radius: 0;
+  }
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+    border-radius: 0;
+    background: transparent;
+
+    .top-link {
+      position: absolute;
+      top: -25px;
+      right: 20px;
+      margin: 0;
+      z-index: 101;
+    }
+  }
+}

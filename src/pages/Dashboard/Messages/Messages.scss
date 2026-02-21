@@ -1,0 +1,52 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.messages-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .messages-header {
+        @include flex-center;
+        padding: 15px 20px;
+        background-color: $white;
+        border-bottom: 1px solid #eee;
+        position: relative;
+
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .notification-icon {
+            position: absolute;
+            right: 20px;
+            font-size: 20px;
+            cursor: pointer;
+
+            .dot {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 8px;
+                height: 8px;
+                background-color: red;
+                border-radius: 50%;
+                border: 1px solid $white;
+            }
+        }
+    }
+
+    .messages-content {
+        flex: 1;
+        @include flex-center;
+        background-color: #f9f9f9;
+
+        .no-messages-msg {
+            color: #888;
+            font-size: 16px;
+        }
+    }
+}

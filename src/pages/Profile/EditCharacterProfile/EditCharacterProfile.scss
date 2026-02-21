@@ -1,0 +1,143 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.edit-character-container {
+    background-color: $white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    .custom-header-wrapper {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .edit-character-form {
+        padding: 15px 20px 0 20px;
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+
+        .form-group {
+            margin-bottom: 18px;
+
+            .form-label {
+                display: block;
+                color: #666;
+                font-size: 14px;
+                margin-bottom: 6px;
+                font-weight: 500;
+            }
+
+            .edit-upload-box {
+                background-color: #fcfcfc;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                height: 200px;
+                width: 100%;
+                position: relative;
+                @include flex-center;
+
+                .media-preview {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 8px;
+                }
+
+                .remove-media {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: rgba(0, 0, 0, 0.6);
+                    color: $white;
+                    border: none;
+                    border-radius: 50%;
+                    width: 25px;
+                    height: 25px;
+                    cursor: pointer;
+                }
+            }
+
+            .select-wrapper {
+                position: relative;
+
+                &::after {
+                    content: '\2304';
+                    font-size: 22px;
+                    position: absolute;
+                    right: 5px;
+                    top: 50%;
+                    pointer-events: none;
+                    color: #333;
+                }
+            }
+
+            .form-select,
+            .form-textarea {
+                width: 100%;
+                padding: 10px 0;
+                border: none;
+                border-bottom: 1px solid #333;
+                background: transparent;
+                font-size: 16px;
+                outline: none;
+                appearance: none;
+                cursor: pointer;
+            }
+
+            .form-textarea {
+                line-height: 1.5;
+                color: #444;
+            }
+
+            .upload-indicator {
+                @include flex-center;
+                gap: 5px;
+                margin-top: 8px;
+
+                .indicator-dot {
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    background: #ddd;
+
+                    &.active {
+                        background: $accent-color;
+                    }
+                }
+            }
+        }
+
+        @media (min-width: 768px) {
+            padding-bottom: 40px;
+        }
+    }
+
+    .form-actions {
+        padding: 15px 20px;
+        background: $white;
+        margin-top: auto;
+
+        .btn-update {
+            width: 100%;
+            padding: 14px;
+            background-color: $accent-color;
+            color: $white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (min-width: 768px) {
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+    }
+}

@@ -1,0 +1,89 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.report-page {
+    background-color: $white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    .report-container {
+        padding: 10px 20px;
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+
+        @media (min-width: 768px) {
+            padding-top: 40px;
+        }
+
+        .report-form {
+            display: flex;
+            flex-direction: column;
+            height: auto;
+
+            .form-group {
+                margin-bottom: 12px;
+                margin-top: 10px;
+                height: auto;
+                display: block;
+
+                .form-label {
+                    display: block;
+                    color: #888;
+                    font-size: 16px;
+                    margin-bottom: 0px;
+                    line-height: 1.2;
+                }
+
+                .form-select,
+                .form-textarea {
+                    width: 100%;
+                    padding: 4px 0;
+                    border: none;
+                    border-bottom: 1px solid #ccc;
+                    background-color: transparent;
+                    font-size: 16px;
+                    outline: none;
+                    color: #333;
+                    display: block;
+
+                    &:focus {
+                        border-bottom: 2px solid $accent-color;
+                    }
+                }
+
+                .select-wrapper {
+                    position: relative;
+                    width: 100%;
+                    height: auto;
+                }
+
+                .form-textarea {
+                    resize: none;
+                    min-height: 80px;
+                    margin-top: 5px;
+                }
+            }
+
+            .button-container {
+                margin-top: 20px;
+                padding-bottom: 20px;
+
+                @media (min-width: 768px) {
+                    margin-top: 40px;
+                }
+
+                .btn-submit {
+                    width: 100%;
+                    background: $accent-color;
+                    color: $white;
+                    border: none;
+                    padding: 14px;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+            }
+        }
+    }
+}

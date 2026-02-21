@@ -5,7 +5,6 @@ import Signin from "./pages/Auth/Signin";
 import DashboardLayout from "./pages/Dashboard/Dashboard";
 import MyBookings from "./pages/Dashboard/MyBookings";
 import BookingRequests from "./pages/Dashboard/BookingRequests";
-import Messages from "./pages/Dashboard/Messages";
 import Profile from "./pages/Profile/Profile";
 import MyAccount from "./pages/Profile/MyAccount";
 import ManageProfiles from "./pages/Profile/ManageProfiles";
@@ -49,7 +48,6 @@ function App() {
           <Route index element={<Navigate to="my-bookings" replace />} />
           <Route path="my-bookings" element={<MyBookings />} />
           <Route path="booking-requests" element={<BookingRequests />} />
-          <Route path="messages" element={<Messages />} />
 
           {/* Profile Group */}
           <Route path="profile">

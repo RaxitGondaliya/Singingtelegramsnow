@@ -1,0 +1,31 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.common-toggle-switch {
+    width: 44px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &.active {
+        background-color: $accent-color;
+
+        .toggle-thumb {
+            left: 22px;
+        }
+    }
+
+    .toggle-thumb {
+        width: 20px;
+        height: 20px;
+        background-color: $white;
+        border-radius: 50%;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transition: left 0.3s;
+    }
+}

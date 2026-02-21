@@ -1,0 +1,87 @@
+@use "../../../styles/abstracts/variables" as *;
+@use "../../../styles/abstracts/mixins" as *;
+
+.bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: $white;
+    border-top: 1px solid #eee;
+    padding: 10px 0;
+    height: 60px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    width: 100%;
+
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        color: #999;
+
+        .icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+
+        &.active {
+            color: #333;
+            border-bottom: 2px solid #333;
+            padding-bottom: 2px;
+        }
+
+        .label {
+            display: none;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+    }
+
+    @media (min-width: 768px) {
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        width: 100%;
+        height: 100%;
+        border-top: none;
+        border-right: 1px solid #e0e0e0;
+        padding: 20px 0;
+        background-color: $white;
+
+        .nav-item {
+            flex-direction: row;
+            width: 100%;
+            padding: 15px 25px;
+            box-sizing: border-box;
+            align-items: center;
+            gap: 15px;
+            color: #8b96a5;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background-color: #f5faff;
+                color: $primary-color;
+            }
+
+            &.active {
+                color: $primary-color;
+                border-bottom: none;
+                border-right: 3px solid $primary-color;
+                background-color: #f0f7ff;
+            }
+
+            .icon {
+                font-size: 20px;
+                margin-bottom: 0;
+            }
+
+            .label {
+                display: block;
+                font-size: 16px;
+                font-weight: 500;
+                margin-top: 0;
+            }
+        }
+    }
+}
