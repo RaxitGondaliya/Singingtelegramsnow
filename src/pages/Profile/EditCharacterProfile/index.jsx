@@ -26,9 +26,7 @@ export default function EditCharacterProfile() {
 
     return (
         <div className="edit-character-container">
-            {/* <div className="custom-header-wrapper"> */}
-                <Header title="Edit Character Profile" />
-            {/* </div> */}
+            <Header title="Edit Character Profile" />
 
             <div className="edit-character-form">
                 <div className="form-group">

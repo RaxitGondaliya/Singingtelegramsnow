@@ -19,7 +19,13 @@ export default function Profile() {
     return (
         <div className="profile-container">
             <div className="profile-header">
-                <div className="notification-bell">🔔</div>
+                <div 
+                    className="notification-bell" 
+                    onClick={() => navigate('/dashboard/notifications')} 
+                    style={{ cursor: 'pointer' }}
+                >
+                    🔔
+                </div>
                 <div className="profile-main-content">
                     <div className="profile-avatar-container">
                         <span className="avatar-icon">👤</span>

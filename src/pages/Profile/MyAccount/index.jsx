@@ -30,6 +30,11 @@ export default function MyAccount() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        navigate('/dashboard/profile'); 
+    };
+
     return (
         <div className="my-account-container">
             <Header title="My Account" />
@@ -59,7 +64,7 @@ export default function MyAccount() {
                             <button className="change-photo-btn">Change Photo</button>
                         </div>
 
-                        <form className="account-form">
+                        <form className="account-form" onSubmit={handleSubmit}>
                             <div className="form-row">
                                 <div className="form-group half">
                                     <label>First Name</label>
@@ -152,7 +157,6 @@ export default function MyAccount() {
                                     <span className="phone-display">{formData.mobileNumber}</span>
                                     <button type="button" className="change-link">Change</button>
                                 </div>
-
                             </div>
 
                             <div className="form-group">
@@ -170,7 +174,7 @@ export default function MyAccount() {
                     </div>
                 ) : (
                     <div className="bank-details">
-                        <form className="account-form">
+                        <form className="account-form" onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label>Bank Name</label>
                                 <input

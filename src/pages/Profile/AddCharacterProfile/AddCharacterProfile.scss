@@ -54,6 +54,11 @@
                 font-size: 17px;
                 outline: none;
 
+                appearance: none;         
+                -webkit-appearance: none;   
+                -moz-appearance: none;      
+                cursor: pointer;
+
                 &:focus {
                     border-bottom: 1.5px solid $accent-color;
                 }

@@ -4,6 +4,7 @@
 .details-page {
     background-color: #f8f9fa;
     min-height: 100vh;
+    position: relative;
 
     .details-container {
         padding: 15px;
@@ -31,10 +32,11 @@
                     color: #999;
                 }
 
-                .user-info {
+                .user-meta {
                     .user-name {
                         font-size: 16px;
                         margin: 0;
+                        font-weight: 600;
                     }
 
                     .user-phone {
@@ -48,24 +50,11 @@
                         color: #666;
                         margin: 0;
 
-                        &.paid {
+                        .paid {
                             color: #28a745;
                             font-weight: bold;
                         }
                     }
-                }
-
-                .chat-btn {
-                    position: absolute;
-                    right: 0;
-                    top: 0;
-                    background: none;
-                    border: 1px solid $accent-color;
-                    color: $accent-color;
-                    border-radius: 50%;
-                    width: 35px;
-                    height: 35px;
-                    cursor: pointer;
                 }
             }
 
@@ -82,8 +71,24 @@
                 margin-bottom: 20px;
 
                 .char-thumb {
+                    width: 60px;
+                    height: 60px;
                     border-radius: 8px;
                     border: 1px solid #ddd;
+                    object-fit: cover;
+                }
+
+                .char-info {
+                    .label {
+                        color: #888;
+                        font-size: 12px;
+                        display: block;
+                    }
+                    .value-orange {
+                        color: $accent-color;
+                        margin: 0;
+                        font-size: 16px;
+                    }
                 }
             }
 
@@ -117,12 +122,12 @@
                             color: #333;
                             font-size: 15px;
                             font-weight: 500;
+                        }
 
-                            &.value-orange {
-                                color: $accent-color;
-                                font-size: 15px;
-                                font-weight: 600;
-                            }
+                        .value-orange {
+                            color: $accent-color;
+                            font-size: 15px;
+                            font-weight: 600;
                         }
 
                         .icon-row {
@@ -145,38 +150,121 @@
                     }
                 }
             }
-        }
 
-        .details-footer {
-            margin-top: 30px;
-            text-align: center;
+            .details-footer {
+                margin-top: 30px;
+                text-align: center;
 
-            .footer-button-wrapper {
-                @media (min-width: 768px) {
-                    max-width: 400px;
-                    margin: 0 auto;
+                .footer-button-wrapper {
+                    @media (min-width: 768px) {
+                        max-width: 400px;
+                        margin: 0 auto;
+                    }
+
+                    .btn-payout {
+                        width: 100%;
+                        background: $accent-color;
+                        color: $white;
+                        border: none;
+                        padding: 14px;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        font-weight: 700;
+                        cursor: pointer;
+                    }
                 }
 
-                .btn-payout {
-                    width: 100%;
-                    background: $accent-color;
-                    color: $white;
-                    border: none;
-                    padding: 14px;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    font-weight: 700;
+                .cancel-policy {
+                    margin-top: 15px;
+                    color: $accent-color;
+                    font-size: 13px;
+                    text-decoration: underline;
+                    display: inline-block;
                     cursor: pointer;
                 }
             }
+        }
+    }
 
-            .cancel-policy {
-                margin-top: 15px;
-                color: $accent-color;
-                font-size: 13px;
-                text-decoration: underline;
-                display: inline-block;
+    // Payout Bottom Sheet / Modal
+    .payout-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        z-index: 1000;
+
+        @media (min-width: 768px) {
+            align-items: center;
+        }
+
+        .payout-sheet {
+            background: $white;
+            width: 100%;
+            max-width: 500px;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 24px;
+            animation: slideUp 0.3s ease-out;
+
+            @media (min-width: 768px) {
+                border-radius: 12px;
+            }
+
+            .sheet-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 25px;
+
+                h3 {
+                    font-size: 18px;
+                    font-weight: 700;
+                    margin: 0;
+                }
+
+                .close-btn {
+                    background: none;
+                    border: none;
+                    font-size: 28px;
+                    color: $accent-color;
+                    cursor: pointer;
+                    line-height: 1;
+                }
+            }
+
+            .sheet-content {
+                .payout-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 18px;
+                    font-size: 15px;
+                    color: #555;
+
+                    strong { color: #000; }
+
+                    &.total {
+                        margin-top: 15px;
+                        font-size: 17px;
+                        color: #000;
+                        font-weight: 700;
+                    }
+                }
+
+                .payout-divider {
+                    border: 0;
+                    border-top: 1px solid #eee;
+                    margin: 15px 0;
+                }
             }
         }
     }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
 }

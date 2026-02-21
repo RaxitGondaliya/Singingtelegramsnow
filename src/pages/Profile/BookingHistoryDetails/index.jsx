@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../../../components/layout/Header/Header';
 import './BookingHistoryDetails.scss';
 
 const BookingHistoryDetails = () => {
+    const [isPayoutOpen, setIsPayoutOpen] = useState(false);
+
     return (
         <div className="details-page">
             <Header title="Booking Details" />
@@ -19,7 +21,7 @@ const BookingHistoryDetails = () => {
                             <p className="user-phone">📞 +1 4155550827</p>
                             <p className="payment-status">Payment status: <span className="paid">Paid</span></p>
                         </div>
-                        <button className="chat-btn">💬</button>
+                        {/* Chat button removed as requested */}
                     </div>
 
                     <hr className="detail-divider" />
@@ -81,7 +83,6 @@ const BookingHistoryDetails = () => {
 
                         {/* Right Column */}
                         <div className="grid-column">
-
                             <div className="info-item">
                                 <span className="label">Special Instruction for the location</span>
                                 <span className="value">asdf</span>
@@ -114,15 +115,52 @@ const BookingHistoryDetails = () => {
                         </div>
                     </div>
 
-                    {/* Action Button - Centered on Desktop */}
+                    {/* Action Button */}
                     <div className="details-footer">
                         <div className="footer-button-wrapper">
-                            <button className="btn-payout">Payout Details</button>
+                            <button className="btn-payout" onClick={() => setIsPayoutOpen(true)}>
+                                Payout Details
+                            </button>
                         </div>
                         <p className="cancel-policy">Booking Cancellation Policy</p>
                     </div>
                 </div>
             </div>
+
+            {/* Payout Details Overlay */}
+            {isPayoutOpen && (
+                <div className="payout-overlay" onClick={() => setIsPayoutOpen(false)}>
+                    <div className="payout-sheet" onClick={(e) => e.stopPropagation()}>
+                        <div className="sheet-header">
+                            <h3>Payout Details</h3>
+                            <button className="close-btn" onClick={() => setIsPayoutOpen(false)}>&times;</button>
+                        </div>
+                        <div className="sheet-content">
+                            <div className="payout-row">
+                                <span>Singing Telegram Base</span>
+                                <strong>$5.00</strong>
+                            </div>
+                            <div className="payout-row">
+                                <span>Tip Amount</span>
+                                <strong>$0.00</strong>
+                            </div>
+                            <div className="payout-row">
+                                <span>Travel Fee</span>
+                                <strong>$0.00</strong>
+                            </div>
+                            <div className="payout-row">
+                                <span>Add-Ons Reimbursement</span>
+                                <strong>$0.00</strong>
+                            </div>
+                            <hr className="payout-divider" />
+                            <div className="payout-row total">
+                                <span>Total Payout</span>
+                                <strong>$5.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
