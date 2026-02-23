@@ -1,49 +1,151 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authApi } from "../../../api";
 import "./Signup.scss";
 
 export default function Signup() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    streetAddress: "",
+    mobileNumber: "",
+    zipCode: "",
+    gender: "1", // Default to Male (1)
+    password: "", // Required by API
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSignup = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await authApi.signup(formData);
+
+      // Handle the case where API returns 200 OK but with an error code in the body
+      if (response.data.responseCode && response.data.responseCode !== 200) {
+        setError(response.data.responseMessage || "Signup failed");
+        return;
+      }
+
+      const resData = response.data.data || response.data; // Handle different response structures
+      if (resData.vAuthKey || resData.token) {
+        localStorage.setItem('token', resData.vAuthKey || resData.token);
+        navigate("/dashboard");
+      } else {
+        navigate("/signin");
+      }
+    } catch (err) {
+      setError(err.response?.data?.responseMessage || err.response?.data?.message || "Something went wrong during signup");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="signup-wrapper">
-
-      {/* Top bar (mobile only) */}
       <div className="top-bar">
         <div className="back" onClick={() => navigate("/")}>←</div>
-      </div>
-
-      <div className="signup-box">
-        {/* Top link: always right-aligned (Visible on all screens) */}
         <div className="top-link" onClick={() => navigate("/signin")}>
           Already an account? <span>Sign In</span>
         </div>
+      </div>
 
+      <div className="signup-box">
         <h2>Sign Up to continue</h2>
 
-        {/* Profile icon */}
-        <div className="profile-icon">👤</div>
-
-        {/* Name fields */}
-        <div className="name-fields">
-          <input placeholder="First Name" />
-          <input placeholder="Last Name" />
+        <div className="profile-placeholder">
+          <div className="icon">👤</div>
         </div>
 
-        {/* Other fields */}
-        <input placeholder="Email" />
-        <input placeholder="Street Address" />
-        <input placeholder="Mobile Number" />
-        <div className="zip-gender">
-          <input placeholder="Zip Code" />
-          <select>
-            <option>Gender</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
-        </div>
+        {error && <div className="error-message" style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</div>}
 
-        <button className="create-btn">Create Account</button>
+        <div className="form-content">
+          <div className="name-fields">
+            <input
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
+              onChange={handleChange}
+              disabled={loading}
+            />
+            <input
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChange={handleChange}
+              disabled={loading}
+            />
+          </div>
+
+          <input
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            disabled={loading}
+          />
+          <input
+            name="streetAddress"
+            placeholder="Street Address"
+            value={formData.streetAddress}
+            onChange={handleChange}
+            disabled={loading}
+          />
+          <input
+            name="mobileNumber"
+            placeholder="Mobile Number"
+            value={formData.mobileNumber}
+            onChange={handleChange}
+            disabled={loading}
+          />
+
+          <div className="zip-gender">
+            <input
+              name="zipCode"
+              placeholder="Zip Code"
+              value={formData.zipCode}
+              onChange={handleChange}
+              disabled={loading}
+            />
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              disabled={loading}
+            >
+              <option value="0">Gender</option>
+              <option value="1">Male</option>
+              <option value="2">Female</option>
+              <option value="3">Other</option>
+            </select>
+          </div>
+
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            disabled={loading}
+            style={{ marginTop: '10px' }}
+          />
+
+          <button
+            className="create-btn"
+            onClick={handleSignup}
+            disabled={loading}
+          >
+            {loading ? "Creating Account..." : "Create Account"}
+          </button>
+        </div>
       </div>
     </div>
   );

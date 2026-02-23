@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./Signin.scss";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { authApi } from "../../../api";
 
 
@@ -18,10 +18,24 @@ export default function Signin() {
     setError("");
     try {
       const response = await authApi.login({ email, password });
-      localStorage.setItem('token', response.data.token);
-      navigate("/dashboard");
+
+      // Handle custom API error codes with 200 OK status
+      if (response.data.responseCode && response.data.responseCode !== 200) {
+        setError(response.data.responseMessage || "Invalid credentials");
+        return;
+      }
+
+      const resData = response.data.data || response.data;
+      const token = resData.vAuthKey || resData.token;
+
+      if (token) {
+        localStorage.setItem('token', token);
+        navigate("/dashboard");
+      } else {
+        setError("Token not received from server");
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong");
+      setError(err.response?.data?.responseMessage || err.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -69,7 +83,7 @@ export default function Signin() {
           </button>
 
 
-          <p className="forgot">Forgot Password?</p>
+          <Link to="/forgot-password" className="forgot">Forgot Password?</Link>
 
           <div className="signup-link">
             Don't have an account? <span onClick={() => navigate("/signup")}>Sign Up</span>

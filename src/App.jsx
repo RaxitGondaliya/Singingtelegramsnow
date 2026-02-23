@@ -24,6 +24,7 @@ import PrivacyPolicy from "./pages/Settings/PrivacyPolicy";
 import ContactUs from "./pages/Settings/ContactUs";
 import TermsAndConditions from "./pages/Settings/TermsAndConditions";
 import ReportIt from "./pages/Profile/ReportIt";
+import ForgotPassword from "./pages/Auth/ForgotPassword";
 
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
 
         {/* Dashboard Routes */}
