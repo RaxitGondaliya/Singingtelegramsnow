@@ -25,6 +25,7 @@ import ContactUs from "./pages/Settings/ContactUs";
 import TermsAndConditions from "./pages/Settings/TermsAndConditions";
 import ReportIt from "./pages/Profile/ReportIt";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
+import VerifyOtp from "./pages/Auth/VerifyOtp/VerifyOtp";
 
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
 
 
         {/* Dashboard Routes */}

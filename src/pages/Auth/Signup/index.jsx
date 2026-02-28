@@ -15,8 +15,8 @@ export default function Signup() {
     streetAddress: "",
     mobileNumber: "",
     zipCode: "",
-    gender: "1", // Default to Male (1)
-    password: "", // Required by API
+    gender: "1",
+    password: "",
   });
 
   const handleChange = (e) => {
@@ -29,18 +29,24 @@ export default function Signup() {
     try {
       const response = await authApi.signup(formData);
 
-      // Handle the case where API returns 200 OK but with an error code in the body
       if (response.data.responseCode && response.data.responseCode !== 200) {
         setError(response.data.responseMessage || "Signup failed");
         return;
       }
 
-      const resData = response.data.data || response.data; // Handle different response structures
-      if (resData.vAuthKey || resData.token) {
-        localStorage.setItem('token', resData.vAuthKey || resData.token);
-        navigate("/dashboard");
+      const resData = response.data.responseData || response.data;
+
+      if (resData.vAuthKey) {
+        localStorage.setItem('vAuthKey', resData.vAuthKey);
+
+        if (String(resData.tiMobileVerified) === "0") {
+          navigate("/verify-otp");
+        } else {
+          localStorage.setItem('token', resData.vAuthKey);
+          navigate("/dashboard");
+        }
       } else {
-        navigate("/signin");
+        navigate("/verify-otp");
       }
     } catch (err) {
       setError(err.response?.data?.responseMessage || err.response?.data?.message || "Something went wrong during signup");
@@ -51,14 +57,14 @@ export default function Signup() {
 
   return (
     <div className="signup-wrapper">
-      <div className="top-bar">
-        <div className="back" onClick={() => navigate("/")}>←</div>
-        <div className="top-link" onClick={() => navigate("/signin")}>
-          Already an account? <span>Sign In</span>
-        </div>
-      </div>
-
       <div className="signup-box">
+        <div className="box-header">
+          <div className="back-arrow" onClick={() => navigate("/")}>←</div>
+          <div className="top-link" onClick={() => navigate("/signin")}>
+            Already an account? <span>Sign In</span>
+          </div>
+        </div>
+
         <h2>Sign Up to continue</h2>
 
         <div className="profile-placeholder">
