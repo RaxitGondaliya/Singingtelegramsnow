@@ -14,8 +14,8 @@ export default function Availability() {
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [slideDirection, setSlideDirection] = useState('');
     
-    // Updated: availabilityType will now handle 'available', 'not-available', or 'specific-slot'
-    const [selection, setSelection] = useState('not-available'); 
+    const [dayStatus, setDayStatus] = useState('not-available'); 
+    const [selectedSlots, setSelectedSlots] = useState([]); 
 
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const timeSlots = [
@@ -71,13 +71,18 @@ export default function Availability() {
         setSelectedDate(day.fullDate);
     };
 
-    // Updated: Handle single selection for slots
+    // Toggles individual slots
     const handleSlotToggle = (slot) => {
-        setSelection(slot);
+        setDayStatus('specific-slots'); 
+        setSelectedSlots(prev => 
+            prev.includes(slot) 
+                ? prev.filter(item => item !== slot) 
+                : [...prev, slot]
+        );
     };
 
     const handleUpdate = () => {
-        console.log("Saving selection:", selection);
+        console.log("Saving selection:", { dayStatus, selectedSlots });
         navigate('/dashboard/profile');
     };
 
@@ -109,7 +114,6 @@ export default function Availability() {
                         <div className="days-grid">
                             {days.map((day, idx) => {
                                 const isPast = day.fullDate && day.fullDate < today && day.currentMonth;
-                                
                                 return (
                                     <div 
                                         key={idx} 
@@ -143,8 +147,11 @@ export default function Availability() {
                             <input 
                                 type="radio" 
                                 name="avail" 
-                                checked={selection === 'not-available'} 
-                                onChange={() => setSelection('not-available')}
+                                checked={dayStatus === 'not-available'} 
+                                onChange={() => {
+                                    setDayStatus('not-available');
+                                    setSelectedSlots([]); // Clears all checkmarks
+                                }}
                             />
                             <span className="custom-radio"></span>
                         </label>
@@ -154,26 +161,36 @@ export default function Availability() {
                             <input 
                                 type="radio" 
                                 name="avail" 
-                                checked={selection === 'available'} 
-                                onChange={() => setSelection('available')}
+                                checked={dayStatus === 'available'} 
+                                onChange={() => {
+                                    setDayStatus('available');
+                                    setSelectedSlots([...timeSlots]); // Checks ALL time slots
+                                }}
                             />
                             <span className="custom-radio"></span>
                         </label>
                     </div>
 
                     <div className="time-slots-list">
-                        {timeSlots.map((slot, index) => (
-                            <div key={index} className="slot-row" onClick={() => handleSlotToggle(slot)}>
-                                <span>{slot}</span>
-                                <div className={`custom-checkbox ${selection === slot ? 'checked' : ''}`}></div>
-                            </div>
-                        ))}
+                        {timeSlots.map((slot, index) => {
+                            const isChecked = selectedSlots.includes(slot);
+                            return (
+                                <div key={index} className="slot-row" onClick={() => handleSlotToggle(slot)}>
+                                    <span>{slot}</span>
+                                    <div className={`custom-checkbox ${isChecked ? 'checked' : ''}`} 
+                                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        {isChecked && <span style={{ color: 'white', fontSize: '10px' }}>✓</span>}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
 
                     <button className="update-btn" onClick={handleUpdate}>Update</button>
                 </div>
             </div>
 
+            {/* Month Picker Modal */}
             {isPickerOpen && (
                 <div className="picker-overlay" onClick={() => setIsPickerOpen(false)}>
                     <div className="picker-modal" onClick={e => e.stopPropagation()}>
