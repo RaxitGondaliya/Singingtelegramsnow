@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Settings.scss';
 import Header from '../../../components/layout/Header/Header';
 import ToggleSwitch from '../../../components/common/ToggleSwitch/ToggleSwitch';
+import { authApi } from '../../../api';
 
 export default function Settings() {
     const navigate = useNavigate();
@@ -82,7 +83,13 @@ export default function Settings() {
                 <div className="section-spacer" />
 
                 <div className="settings-section sign-out-section">
-                    <div className="settings-item sign-out-item">
+                    <div
+                        className="settings-item sign-out-item"
+                        onClick={() => {
+                            authApi.logout();
+                            navigate('/Signin');   // login route muk
+                        }}
+                    >
                         <div className="sign-out-info">
                             <span className="sign-out-label">Sign Out</span>
                             <p className="user-email">testing@singing.Com</p>

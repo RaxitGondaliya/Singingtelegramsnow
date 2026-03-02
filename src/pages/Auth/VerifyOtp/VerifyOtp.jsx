@@ -9,16 +9,21 @@ export default function VerifyOtp() {
   const [timer, setTimer] = useState(59);
   const [showToast, setShowToast] = useState(false);
   const [error, setError] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
 
+  // Timer countdown
   useEffect(() => {
     if (timer > 0) {
-      const interval = setInterval(() => setTimer(prev => prev - 1), 1000);
+      const interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
       return () => clearInterval(interval);
     }
   }, [timer]);
 
   const handleChange = (value, index) => {
     if (isNaN(value)) return;
+
     const newOtp = [...otp];
     newOtp[index] = value.substring(value.length - 1);
     setOtp(newOtp);
@@ -28,20 +33,9 @@ export default function VerifyOtp() {
     }
   };
 
-  const handleResend = () => {
-    setTimer(59);
-    setShowToast(true);
-    setError("");
-
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
-  };
-
   const isOtpComplete = otp.every((digit) => digit !== "");
 
   const handleVerify = async () => {
-    console.log("handleVerify called, isOtpComplete:", isOtpComplete, "otp:", otp);
     if (!isOtpComplete) return;
 
     setError("");
@@ -54,10 +48,48 @@ export default function VerifyOtp() {
         return;
       }
 
-      // Successfully verified! Redirect to dashboard or next specific screen.
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.responseMessage || err.response?.data?.message || "Invalid OTP");
+      setError(
+        err.response?.data?.responseMessage ||
+        err.response?.data?.message ||
+        "Invalid OTP"
+      );
+    }
+  };
+
+  const handleResend = async () => {
+    if (timer > 0) {
+    console.log("Resend blocked - timer still running:", timer);
+    return;
+  }
+
+  console.log("Resend OTP API calling...");
+
+    setResendLoading(true);
+    setError("");
+
+    try {
+      const response = await authApi.resendOtp();
+
+      if (response.data.responseCode && response.data.responseCode !== 200) {
+        setError(response.data.responseMessage || "Failed to resend OTP");
+        return;
+      }
+
+      setTimer(59);
+      setShowToast(true);
+
+      setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+    } catch (err) {
+      setError(
+        err.response?.data?.responseMessage ||
+        "Resend failed"
+      );
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -74,7 +106,14 @@ export default function VerifyOtp() {
             A verification code has been sent to your registered mobile number <strong>XX806</strong>
           </p>
 
-          {error && <div className="error-message" style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</div>}
+          {error && (
+            <div
+              className="error-message"
+              style={{ color: "red", textAlign: "center", marginBottom: "15px" }}
+            >
+              {error}
+            </div>
+          )}
 
           <div className="timer-display">
             00:{timer < 10 ? `0${timer}` : timer}
@@ -93,7 +132,17 @@ export default function VerifyOtp() {
             ))}
           </div>
 
-          <div className="resend-link" onClick={handleResend}>Resend Code</div>
+          <div
+            className={`resend-link ${timer > 0 ? "disabled" : ""}`}
+            onClick={handleResend}
+            style={{
+              pointerEvents: timer > 0 ? "none" : "auto",
+              opacity: timer > 0 ? 0.5 : 1,
+              cursor: timer > 0 ? "not-allowed" : "pointer"
+            }}
+          >
+            {resendLoading ? "Resending..." : "Resend Code"}
+          </div>
 
           <button
             className={`next-btn ${isOtpComplete ? "active" : ""}`}

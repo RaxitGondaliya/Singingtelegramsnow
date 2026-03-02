@@ -110,6 +110,8 @@ export const authApi = {
         });
     },
 
+    
+
     verifyOtp: async (data) => {
         const body = new URLSearchParams();
         body.append('vOtpCode', data.otpCode);
@@ -130,8 +132,27 @@ export const authApi = {
         });
     },
 
+    resendOtp: async () => {
+    const nonce = Math.random().toString(36).substring(2, 15);
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const appToken = generateAppToken(nonce, timestamp);
+    const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+    return apiClient.post('/user/resendotp', {}, {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'nonce': nonce,
+            'timestamp': timestamp,
+            'token': appToken,
+            'vAuthKey': authKey
+            }
+        });
+    },
+
     logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('vAuthKey');
+        localStorage.clear(); 
+        sessionStorage.clear();
     }
 };
