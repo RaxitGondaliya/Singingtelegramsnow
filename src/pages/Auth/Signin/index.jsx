@@ -19,27 +19,33 @@ export default function Signin() {
     try {
       const response = await authApi.login({ email, password });
 
-      // Handle custom API error codes with 200 OK status
-      if (response.data.responseCode && response.data.responseCode !== 200) {
-        setError(response.data.responseMessage || "Invalid credentials");
-        return;
-      }
+    const { responseCode, responseMessage, responseData } = response.data;
 
-      const resData = response.data.data || response.data;
-      const token = resData.vAuthKey || resData.token;
-
-      if (token) {
-        localStorage.setItem('token', token);
-        navigate("/dashboard");
-      } else {
-        setError("Token not received from server");
-      }
-    } catch (err) {
-      setError(err.response?.data?.responseMessage || err.response?.data?.message || "Something went wrong");
-    } finally {
-      setLoading(false);
+    if (responseCode !== 200) {
+      setError(responseMessage || "Invalid credentials");
+      return;
     }
-  };
+
+    const token = responseData?.vAuthKey;
+    if (!token) {
+      setError("Token not received from server");
+      return;
+    }
+    if(token){
+      localStorage.setItem("token", token);
+      navigate("/verify-otp");
+    }
+
+  } catch (err) {
+    setError(
+      err?.response?.data?.responseMessage ||
+      err?.response?.data?.message ||
+      "Something went wrong"
+    );
+  } finally {
+    setLoading(false);
+  }
+};  
 
   return (
     <div className="signin-wrapper">
