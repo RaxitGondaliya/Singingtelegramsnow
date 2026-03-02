@@ -33,7 +33,7 @@ export default function Signin() {
     }
     if(token){
       localStorage.setItem("token", token);
-      navigate("/verify-otp");
+      navigate("/dashboard");
     }
 
   } catch (err) {
