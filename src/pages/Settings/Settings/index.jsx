@@ -87,7 +87,7 @@ export default function Settings() {
                         className="settings-item sign-out-item"
                         onClick={() => {
                             authApi.logout();
-                            navigate('/Signin');   // login route muk
+                            navigate('/Signin');   
                         }}
                     >
                         <div className="sign-out-info">
