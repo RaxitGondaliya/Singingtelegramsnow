@@ -1,38 +1,98 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router-dom';
+import { profileApi } from '../../../api/profileApi';
 import './MyAccount.scss';
 import Header from '../../../components/layout/Header/Header';
 
 export default function MyAccount() {
-    const navigate = useNavigate();
+
+    // const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('personal');
 
     const [formData, setFormData] = useState({
-        firstName: 'Test 1',
-        lastName: 'Testing',
-        email: 'testing@singing.Com',
-        streetAddress: '118 Tocoloma Ave, San Francisco, CA 94134, USA',
-        zipCode: '94134',
-        gender: 'Female',
-        dob: '1984-02-21',
-        radius: '60',
-        mobileNumber: '4155555555',
-        ssn: '123-45-6789',
-        bankName: 'San Francisco Fire credit union',
-        branchLocation: 'San Francisco',
-        routingNumber: '321076506',
-        accountHolderName: 'Heather Atles',
-        accountNumber: '756000506042'
+        firstName: '',
+        lastName: '',
+        email: '',
+        streetAddress: '',
+        zipCode: '',
+        gender: '',
+        dob: '',
+        radius: '',
+        mobileNumber: '',
+        ssn: '',
+        bankName: '',
+        branchLocation: '',
+        routingNumber: '',
+        accountHolderName: '',
+        accountNumber: ''
     });
+
+    
+    useEffect(() => {
+
+        const fetchProfile = async () => {
+            try {
+                const res = await profileApi.getProfile();
+
+                console.log("STATUS CODE:", res.status); 
+                console.log("PROFILE RESPONSE:", res.data);
+
+                if (res.data?.responseCode !== 200) return;
+
+                const user = res.data.responseData;
+
+                setFormData(prev => ({
+                    ...prev,
+                    firstName: user?.vFirstName || '',
+                    lastName: user?.vLastName || '',
+                    email: user?.vEmailId || '',
+                    streetAddress: user?.vStreetAddress || '',
+                    zipCode: user?.vZipCode || '',
+                    gender:
+                        String(user?.tiGender) === "1"
+                            ? "Male"
+                            : String(user?.tiGender) === "2"
+                            ? "Female"
+                            : "Other",
+                    dob: user?.vDob || '',
+                    radius: user?.iRadius || '',
+                    mobileNumber: user?.vMobileNumber || '',
+                    ssn: user?.vSsnNumber || ''
+                }));
+
+            } catch (error) {
+                console.log("PROFILE ERROR:", error);
+            }
+        };
+
+        fetchProfile();
+
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        navigate('/dashboard/profile'); 
+
+        try {
+            const res = await profileApi.updateProfile(formData);
+
+            console.log("UPDATE RESPONSE:", res.data);
+
+            if (res.data?.responseCode === 200) {
+                alert("Profile Updated Successfully ✅");
+            } else {
+                alert(res.data?.responseMessage || "Update Failed ❌");
+            }
+
+        } catch (error) {
+            console.log("UPDATE ERROR:", error);
+            alert("Update Failed ❌");
+        }
     };
 
     return (
@@ -68,43 +128,23 @@ export default function MyAccount() {
                             <div className="form-row">
                                 <div className="form-group half">
                                     <label>First Name</label>
-                                    <input
-                                        type="text"
-                                        name="firstName"
-                                        value={formData.firstName}
-                                        onChange={handleChange}
-                                    />
+                                    <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} />
                                 </div>
                                 <div className="form-group half">
                                     <label>Last Name</label>
-                                    <input
-                                        type="text"
-                                        name="lastName"
-                                        value={formData.lastName}
-                                        onChange={handleChange}
-                                    />
+                                    <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} />
                                 </div>
                             </div>
 
                             <div className="form-group">
                                 <label>Email</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                />
+                                <input type="email" name="email" value={formData.email} onChange={handleChange} />
                             </div>
 
                             <div className="form-group address-group">
                                 <label>Street Address</label>
                                 <div className="input-with-icon">
-                                    <input
-                                        type="text"
-                                        name="streetAddress"
-                                        value={formData.streetAddress}
-                                        onChange={handleChange}
-                                    />
+                                    <input type="text" name="streetAddress" value={formData.streetAddress} onChange={handleChange} />
                                     <span className="location-icon">📍</span>
                                 </div>
                             </div>
@@ -112,16 +152,12 @@ export default function MyAccount() {
                             <div className="form-row">
                                 <div className="form-group half">
                                     <label>Zip Code</label>
-                                    <input
-                                        type="text"
-                                        name="zipCode"
-                                        value={formData.zipCode}
-                                        onChange={handleChange}
-                                    />
+                                    <input type="text" name="zipCode" value={formData.zipCode} onChange={handleChange} />
                                 </div>
                                 <div className="form-group half">
                                     <label>Gender</label>
                                     <select name="gender" value={formData.gender} onChange={handleChange}>
+                                        <option value="">Select</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
                                         <option value="Other">Other</option>
@@ -132,21 +168,11 @@ export default function MyAccount() {
                             <div className="form-row">
                                 <div className="form-group half">
                                     <label>DOB</label>
-                                    <input
-                                        type="date"
-                                        name="dob"
-                                        value={formData.dob}
-                                        onChange={handleChange}
-                                    />
+                                    <input type="date" name="dob" value={formData.dob} onChange={handleChange} />
                                 </div>
                                 <div className="form-group half">
                                     <label>Radius</label>
-                                    <input
-                                        type="text"
-                                        name="radius"
-                                        value={formData.radius}
-                                        onChange={handleChange}
-                                    />
+                                    <input type="text" name="radius" value={formData.radius} onChange={handleChange} />
                                 </div>
                             </div>
 
@@ -161,12 +187,7 @@ export default function MyAccount() {
 
                             <div className="form-group">
                                 <label>Social Security number</label>
-                                <input
-                                    type="text"
-                                    name="ssn"
-                                    value={formData.ssn}
-                                    onChange={handleChange}
-                                />
+                                <input type="text" name="ssn" value={formData.ssn} onChange={handleChange} />
                             </div>
 
                             <button type="submit" className="update-btn">Update</button>
@@ -177,52 +198,27 @@ export default function MyAccount() {
                         <form className="account-form" onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label>Bank Name</label>
-                                <input
-                                    type="text"
-                                    name="bankName"
-                                    value={formData.bankName}
-                                    onChange={handleChange}
-                                />
+                                <input type="text" name="bankName" value={formData.bankName} onChange={handleChange} />
                             </div>
 
                             <div className="form-group">
                                 <label>Branch Location</label>
-                                <input
-                                    type="text"
-                                    name="branchLocation"
-                                    value={formData.branchLocation}
-                                    onChange={handleChange}
-                                />
+                                <input type="text" name="branchLocation" value={formData.branchLocation} onChange={handleChange} />
                             </div>
 
                             <div className="form-group">
                                 <label>Bank Routing Number</label>
-                                <input
-                                    type="text"
-                                    name="routingNumber"
-                                    value={formData.routingNumber}
-                                    onChange={handleChange}
-                                />
+                                <input type="text" name="routingNumber" value={formData.routingNumber} onChange={handleChange} />
                             </div>
 
                             <div className="form-group">
                                 <label>Account Holder's Name</label>
-                                <input
-                                    type="text"
-                                    name="accountHolderName"
-                                    value={formData.accountHolderName}
-                                    onChange={handleChange}
-                                />
+                                <input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={handleChange} />
                             </div>
 
                             <div className="form-group">
                                 <label>Account Number</label>
-                                <input
-                                    type="text"
-                                    name="accountNumber"
-                                    value={formData.accountNumber}
-                                    onChange={handleChange}
-                                />
+                                <input type="text" name="accountNumber" value={formData.accountNumber} onChange={handleChange} />
                             </div>
 
                             <button type="submit" className="update-btn">Update</button>
