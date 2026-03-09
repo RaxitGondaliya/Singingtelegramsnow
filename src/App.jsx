@@ -9,6 +9,7 @@ import Profile from "./pages/Profile/Profile";
 import MyAccount from "./pages/Profile/MyAccount";
 import ManageProfiles from "./pages/Profile/ManageProfiles";
 import Availability from "./pages/Profile/ManageAvailability";
+import ChangeMobileNumber from "./pages/Profile/ChangeMobileNumber";
 import BookingHistory from "./pages/Profile/BookingHistory";
 import BookingHistoryDetails from "./pages/Profile/BookingHistoryDetails";
 import MyEarnings from "./pages/Profile/MyEarnings";
@@ -65,6 +66,7 @@ function App() {
             <Route path="add-character" element={<AddCharacterProfile />} />
             <Route path="edit-character" element={<EditCharacterProfile />} />
             <Route path="report" element={<ReportIt />} />
+            <Route path="change-mobile" element={<ChangeMobileNumber />} />
           </Route>
 
           <Route path="notifications" element={<Notifications />} />

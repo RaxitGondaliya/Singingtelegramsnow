@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { profileApi } from '../../../api/profileApi';
 import './MyAccount.scss';
 import Header from '../../../components/layout/Header/Header';
 
 export default function MyAccount() {
 
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('personal');
 
     const [formData, setFormData] = useState({
@@ -27,14 +27,14 @@ export default function MyAccount() {
         accountNumber: ''
     });
 
-    
+
     useEffect(() => {
 
         const fetchProfile = async () => {
             try {
                 const res = await profileApi.getProfile();
 
-                console.log("STATUS CODE:", res.status); 
+                console.log("STATUS CODE:", res.status);
                 console.log("PROFILE RESPONSE:", res.data);
 
                 if (res.data?.responseCode !== 200) return;
@@ -52,8 +52,8 @@ export default function MyAccount() {
                         String(user?.tiGender) === "1"
                             ? "Male"
                             : String(user?.tiGender) === "2"
-                            ? "Female"
-                            : "Other",
+                                ? "Female"
+                                : "Other",
                     dob: user?.vDob || '',
                     radius: user?.iRadius || '',
                     mobileNumber: user?.vMobileNumber || '',
@@ -74,7 +74,7 @@ export default function MyAccount() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -181,7 +181,13 @@ export default function MyAccount() {
                                 <div className="phone-input-container">
                                     <span className="country-code">+1</span>
                                     <span className="phone-display">{formData.mobileNumber}</span>
-                                    <button type="button" className="change-link">Change</button>
+                                    <button
+                                        type="button"
+                                        className="change-link"
+                                        onClick={() => navigate('/dashboard/profile/change-mobile')}
+                                    >
+                                        Change
+                                    </button>
                                 </div>
                             </div>
 
