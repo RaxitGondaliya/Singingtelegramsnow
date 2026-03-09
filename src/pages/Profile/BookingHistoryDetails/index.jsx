@@ -115,7 +115,7 @@ const BookingHistoryDetails = () => {
                         <div className="user-meta">
                             <h3 className="user-name">{getUserName()}</h3>
                             <p className="user-phone">📞 {phoneStr || 'N/A'}</p>
-                            <p className="payment-status">Status: <span className="paid">{paymentStatus}</span></p>
+                            <p className="payment-status">Payment Status: <span className="paid">{paymentStatus}</span></p>
                         </div>
                     </div>
 

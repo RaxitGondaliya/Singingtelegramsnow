@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { profileApi } from '../../../api/profileApi';
 import { useMessage } from '../../../context/MessageContext';
 import './MyAccount.scss';
@@ -7,7 +7,7 @@ import Header from '../../../components/layout/Header/Header';
 
 export default function MyAccount() {
 
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('personal');
     const { showMessage } = useMessage();
 
@@ -213,7 +213,13 @@ export default function MyAccount() {
                                 <div className="phone-input-container">
                                     <span className="country-code">+1</span>
                                     <span className="phone-display">{formData.mobileNumber}</span>
-                                    <button type="button" className="change-link">Change</button>
+                                    <button
+                                        type="button"
+                                        className="change-link"
+                                        onClick={() => navigate('/dashboard/profile/change-mobile')}
+                                    >
+                                        Change
+                                    </button>
                                 </div>
                             </div>
 

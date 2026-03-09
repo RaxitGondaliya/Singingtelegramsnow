@@ -10,6 +10,7 @@ import Profile from "./pages/Profile/Profile";
 import MyAccount from "./pages/Profile/MyAccount";
 import ManageProfiles from "./pages/Profile/ManageProfiles";
 import Availability from "./pages/Profile/ManageAvailability";
+import ChangeMobileNumber from "./pages/Profile/ChangeMobileNumber";
 import BookingHistory from "./pages/Profile/BookingHistory";
 import BookingHistoryDetails from "./pages/Profile/BookingHistoryDetails";
 import MyEarnings from "./pages/Profile/MyEarnings";
@@ -79,7 +80,20 @@ function App() {
             <Route path="contact-us" element={<ContactUs />} />
             <Route path="terms-and-conditions" element={<TermsAndConditions />} />
 
-          </Route>
+            {/* Profile Group */}
+            <Route path="profile">
+              <Route index element={<Profile />} />
+              <Route path="my-account" element={<MyAccount />} />
+              <Route path="manage-profiles" element={<ManageProfiles />} />
+              <Route path="availability" element={<Availability />} />
+              <Route path="history" element={<BookingHistory />} />
+              <Route path="history/:id" element={<BookingHistoryDetails />} />
+              <Route path="earnings" element={<MyEarnings />} />
+              <Route path="add-character" element={<AddCharacterProfile />} />
+              <Route path="edit-character" element={<EditCharacterProfile />} />
+              <Route path="report" element={<ReportIt />} />
+              <Route path="change-mobile" element={<ChangeMobileNumber />} />
+            </Route>
         </Routes>
       </BrowserRouter>
     </MessageProvider>
