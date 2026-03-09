@@ -66,6 +66,44 @@ export const bookingApi = {
         });
     },
 
+    getReportCustomerReasonsList: async () => {
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        return apiClient.get('/booking/reportcustomerreasonslist', {
+            headers: {
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
+    },
+
+    reportCustomer: async (iBookingId, iReasonId, txDescription) => {
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        const params = new URLSearchParams();
+        params.append('iBookingId', iBookingId);
+        params.append('iReasonId', iReasonId);
+        params.append('txDescription', txDescription);
+
+        return apiClient.post('/booking/reportcustomer', params.toString(), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
+    },
+
     respondToRequest: async (id, action) => {
         // Action: 'accept' or 'reject'
         // Real call: return apiClient.post(`/bookings/requests/${id}/${action}`);

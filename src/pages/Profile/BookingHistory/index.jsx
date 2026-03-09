@@ -38,7 +38,8 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
     const handleReportRedirect = (e) => {
         e.stopPropagation(); // 3. Prevents navigating to details when clicking Report
         setActiveMenu(null);
-        navigate('/dashboard/profile/report');
+        localStorage.setItem('reportBookingId', booking.id);
+        navigate('/dashboard/profile/report', { state: { iBookingId: booking.id } });
     };
 
     return (
