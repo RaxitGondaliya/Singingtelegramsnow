@@ -12,7 +12,9 @@
         @include flex-center;
         padding: 15px 20px;
         background-color: $white;
-        position: relative;
+        position: sticky;
+        top: 0;
+        z-index: 100;
         border-bottom: 1px solid #eee;
 
         h1 {
@@ -43,13 +45,160 @@
 
     .requests-content {
         flex: 1;
-        @include flex-center;
+        padding: 30px 20px 80px; // Add padding bottom for footer clearance
         background-color: #f5f5f5;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 25px;
+        align-items: start; // Avoid stretching heights
 
-        .no-requests-msg {
-            color: #333;
-            font-size: 16px;
-            font-weight: 500;
+        .booking-card {
+            background-color: $white;
+            width: 100%;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 15px; // Provides space for absolute date-badge
+
+            .date-badge {
+                position: absolute;
+                top: -12px;
+                left: 20px;
+                background: linear-gradient(180deg, #ffA726 0%, #FF8F00 100%);
+                padding: 10px 14px;
+                border-radius: 6px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                box-shadow: 0 4px 8px rgba(255, 143, 0, 0.3);
+
+                .day {
+                    color: $white;
+                    font-size: 16px;
+                    font-weight: 700;
+                    line-height: 1;
+                }
+
+                .month {
+                    color: $white;
+                    font-size: 13px;
+                    font-weight: 500;
+                    margin-top: 2px;
+                }
+            }
+
+            .card-header-info {
+                padding: 20px 20px 15px 95px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+
+                .user-avatar-placeholder {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    border: 1px solid #ddd;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background-color: #f9f9f9;
+                }
+
+                .user-name {
+                    font-size: 15px;
+                    color: #444;
+                    font-weight: 500;
+                }
+            }
+
+            .divider {
+                height: 1px;
+                background-color: #eee;
+                width: calc(100% - 40px);
+                margin: 0 auto;
+            }
+
+            .card-details {
+                padding: 15px 20px;
+                display: flex;
+                gap: 15px;
+
+                .character-image-wrapper {
+                    width: 65px;
+                    height: 65px;
+                    flex-shrink: 0;
+
+                    .character-image {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        border-radius: 6px;
+                    }
+                }
+
+                .details-text {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    gap: 6px;
+
+                    .character-name {
+                        margin: 0 0 2px 0;
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #FF9800; // Match image orange
+                    }
+
+                    .info-row {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        color: #777;
+                        font-size: 13px;
+
+                        svg {
+                            flex-shrink: 0;
+                        }
+                    }
+                }
+            }
+
+            .card-actions {
+                padding: 15px 20px 20px;
+                display: flex;
+                gap: 15px;
+
+                button {
+                    flex: 1;
+                    padding: 12px 0;
+                    border-radius: 6px;
+                    font-size: 15px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .btn-decline {
+                    background-color: $white;
+                    border: 1px solid #555;
+                    color: #333;
+
+                    &:hover {
+                        background-color: #f9f9f9;
+                    }
+                }
+
+                .btn-confirm {
+                    background-color: #FF9800;
+                    border: none;
+                    color: $white;
+                    box-shadow: 0 4px 10px rgba(255, 152, 0, 0.2);
+
+                    &:hover {
+                        background-color: #F57C00;
+                    }
+                }
+            }
         }
     }
 }
