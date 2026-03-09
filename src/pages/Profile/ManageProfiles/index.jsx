@@ -11,6 +11,22 @@ const characters = [
         price: "10.00",
         status: "Active",
         image: "https://www.singingtelegramsnow.com/images/austinpowers.jpg" // Placeholder based on design
+    },
+    {
+        id: 1,
+        name: "Austin Powers",
+        description: "Yeah, baby, yeah! This shagadelic secret agent recently defrosted from the sixties is a master of disguise and a hit with the ladies.",
+        price: "10.00",
+        status: "Active",
+        image: "https://www.singingtelegramsnow.com/images/austinpowers.jpg" // Placeholder based on design
+    },
+    {
+        id: 1,
+        name: "Austin Powers",
+        description: "Yeah, baby, yeah! This shagadelic secret agent recently defrosted from the sixties is a master of disguise and a hit with the ladies.",
+        price: "10.00",
+        status: "Active",
+        image: "https://www.singingtelegramsnow.com/images/austinpowers.jpg" // Placeholder based on design
     }
 ];
 
