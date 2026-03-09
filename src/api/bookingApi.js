@@ -1,4 +1,5 @@
 import apiClient from './axiosConfig';
+import { generateAppToken } from './authApi';
 
 export const bookingApi = {
     getMyBookings: async () => {
@@ -18,18 +19,50 @@ export const bookingApi = {
     },
 
     getBookingRequests: async () => {
-        // Real call: return apiClient.get('/bookings/requests');
-        
-        // Dummy implementation
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    data: [
-                        { id: 101, character: 'Batman', requestedDate: '2026-04-05', location: 'New York', price: '$150' },
-                        { id: 102, character: 'Elsa', requestedDate: '2026-04-10', location: 'Los Angeles', price: '$200' },
-                    ]
-                });
-            }, 800);
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        return apiClient.get('/booking/bookingrequests', {
+            headers: {
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
+    },
+
+    getBookingHistory: async (offset = '') => {
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        return apiClient.get(`/booking/bookinghistory?offset=${offset}`, {
+            headers: {
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
+    },
+
+    getBookingDetails: async (iBookingId) => {
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        return apiClient.get(`/booking/${iBookingId}`, {
+            headers: {
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
         });
     },
 

@@ -1,7 +1,7 @@
 import apiClient from './axiosConfig';
 import CryptoJS from 'crypto-js';
 
-const generateAppToken = (nonce, timestamp) => {
+export const generateAppToken = (nonce, timestamp) => {
     const rawToken = import.meta.env.VITE_APP_LOGIN_TOKEN || '';
     if (rawToken && rawToken.length > 0 && rawToken !== 'undefined') {
         return rawToken;

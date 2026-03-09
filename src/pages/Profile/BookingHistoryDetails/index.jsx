@@ -1,37 +1,132 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
+import { bookingApi } from '../../../api/bookingApi';
 import './BookingHistoryDetails.scss';
 
 const BookingHistoryDetails = () => {
+    const { id } = useParams();
     const [isPayoutOpen, setIsPayoutOpen] = useState(false);
+    const [bookingDetails, setBookingDetails] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!id) return;
+
+        const fetchDetails = async () => {
+            try {
+                setLoading(true);
+                const response = await bookingApi.getBookingDetails(id);
+                console.log('Booking details response:', response.data);
+
+                if (response.data && response.data.responseData) {
+                    setBookingDetails(response.data.responseData);
+                } else if (response.data && response.data.data) {
+                    setBookingDetails(response.data.data);
+                } else {
+                    setBookingDetails(response.data);
+                }
+            } catch (error) {
+                console.error('Error fetching booking details:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDetails();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <div className="details-page">
+                <Header title="Booking Details" />
+                <div className="details-container" style={{ padding: '20px', textAlign: 'center' }}>
+                    Loading details...
+                </div>
+            </div>
+        );
+    }
+
+    if (!bookingDetails) {
+        return (
+            <div className="details-page">
+                <Header title="Booking Details" />
+                <div className="details-container" style={{ padding: '20px', textAlign: 'center' }}>
+                    No details found for this booking.
+                </div>
+            </div>
+        );
+    }
+
+    // Safely extract deeply nested data or top-level data depending on API structure
+    // Since we don't know the exact response format yet, we'll setup robust fallbacks
+    const data = bookingDetails;
+
+    // Formatting helpers
+    const getAvatar = () => data.txProfilePic || data.vProfilePic || data.txCharacterPic || data.vImage;
+    const getUserName = () => data.vUserName || `${data.vFirstName || ''} ${data.vLastName || ''}`.trim() || 'Unknown User';
+
+    // Sometimes backend returns nested objects, sometimes flat
+    const locationObj = data.location || {};
+    const recipientObj = data.recipient || {};
+    const detailsObj = data.details || {};
+    const paymentObj = data.bookingPaymentDetails || data.payout || {};
+
+    let phoneStr = data.vMobileNumber || data.vPhoneNumber || data.vMobile || data.vPhone || locationObj.vPhoneNumber || '';
+    if (data.vISDCode && phoneStr && !phoneStr.startsWith('+')) phoneStr = `${data.vISDCode} ${phoneStr}`;
+
+    const statusMap = {
+        1: 'Pending',
+        2: 'Confirmed',
+        3: 'Completed',
+        4: 'Cancelled',
+        5: 'Reported'
+    };
+    const paymentStatus = data.vPaymentStatus || data.paymentStatus || (data.tiStatus ? statusMap[data.tiStatus] : 'Completed');
+
+    // Time/Date formatting
+    let dateTimeStr = `${data.dBookingDate || ''} ${data.tFromTime || ''} - ${data.tToTime || ''}`;
+    if (!data.dBookingDate && data.vBookingDate) {
+        dateTimeStr = `${data.vBookingDate} ${data.vBookingTime || ''}`;
+    }
+
+    // Image fallback
+    let charImg = data.vImage || data.txCharacterPic || data.vCharacterImage;
+    if (charImg && !charImg.startsWith('http')) {
+        charImg = `https://placehold.co/60x60?text=${charImg.slice(0, 5)}`;
+    }
+    if (!charImg) charImg = 'https://placehold.co/60x60';
 
     return (
         <div className="details-page">
             <Header title="Booking Details" />
-            
+
             <div className="details-container">
                 <div className="details-card">
                     {/* User Header */}
                     <div className="user-section">
                         <div className="user-avatar">
-                            <i className="fa-regular fa-user"></i>
+                            {getAvatar() ? (
+                                <img src={getAvatar()} alt="User" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                                <i className="fa-regular fa-user"></i>
+                            )}
                         </div>
                         <div className="user-meta">
-                            <h3 className="user-name">Anita Volz</h3>
-                            <p className="user-phone">📞 +1 4155550827</p>
-                            <p className="payment-status">Payment status: <span className="paid">Paid</span></p>
+                            <h3 className="user-name">{getUserName()}</h3>
+                            <p className="user-phone">📞 {phoneStr || 'N/A'}</p>
+                            <p className="payment-status">Status: <span className="paid">{paymentStatus}</span></p>
                         </div>
-                        {/* Chat button removed as requested */}
                     </div>
 
                     <hr className="detail-divider" />
 
                     {/* Character Section */}
                     <div className="char-section">
-                        <img src="https://placehold.co/60x60" alt="Character" className="char-thumb" />
+                        <img src={charImg} alt="Character" className="char-thumb" />
                         <div className="char-info">
                             <span className="label">Character Name</span>
-                            <h4 className="value-orange">Austin Powers</h4>
+                            <h4 className="value-orange">{data.vCharacterName || data.charName || 'Unknown'}</h4>
                         </div>
                     </div>
 
@@ -41,32 +136,32 @@ const BookingHistoryDetails = () => {
                         <div className="grid-column">
                             <div className="info-item">
                                 <span className="label">Delivery Date</span>
-                                <span className="value-orange">Oct 23, 2023 04:00 PM - 05:00 PM</span>
+                                <span className="value-orange">{dateTimeStr || 'N/A'}</span>
                             </div>
 
                             <div className="info-item">
                                 <span className="label">Occasion</span>
-                                <span className="value">test1023</span>
+                                <span className="value">{data.vOccasion || detailsObj.vOccasion || 'N/A'}</span>
                             </div>
 
                             <div className="info-item">
                                 <span className="label">Recipient Details</span>
                                 <div className="icon-row">
                                     <span className="icon">👤</span>
-                                    <span className="value">asdf</span>
+                                    <span className="value">{data.vRcepientName || recipientObj.vRecipientName || data.vRecipientName || 'N/A'}</span>
                                 </div>
                             </div>
 
                             <div className="info-item">
                                 <span className="label">Location Name</span>
-                                <span className="value">asdf</span>
+                                <span className="value">{data.vLocationName || locationObj.vLocationName || 'N/A'}</span>
                             </div>
 
                             <div className="info-item">
                                 <span className="label">Location Address</span>
                                 <div className="address-box">
                                     <span className="icon-orange">📍</span>
-                                    <span className="value">250 Howard Street, San Francisco, CA, USA</span>
+                                    <span className="value">{data.vLocationAddress || data.vStreetAddress || locationObj.vStreetAddress || 'N/A'}</span>
                                 </div>
                             </div>
 
@@ -74,9 +169,9 @@ const BookingHistoryDetails = () => {
                                 <span className="label">Contact Person Details @Delivery Location</span>
                                 <div className="icon-row">
                                     <span className="icon-orange">👤</span>
-                                    <span className="value">sdfa</span>
-                                    <span className="icon-orange" style={{marginLeft: '15px'}}>📞</span>
-                                    <span className="value-orange">456-456-4564</span>
+                                    <span className="value">{data.vContactPersonDeliveryLocation || data.vContactPersonName || locationObj.vContactPersonName || 'N/A'}</span>
+                                    <span className="icon-orange" style={{ marginLeft: '15px' }}>📞</span>
+                                    <span className="value-orange">{data.vPhoneNumberDeliveryLocation || data.vContactPersonNumber || locationObj.vContactPersonNumber || 'N/A'}</span>
                                 </div>
                             </div>
                         </div>
@@ -85,32 +180,32 @@ const BookingHistoryDetails = () => {
                         <div className="grid-column">
                             <div className="info-item">
                                 <span className="label">Special Instruction for the location</span>
-                                <span className="value">asdf</span>
+                                <span className="value">{data.vSpecialInstructions || data.txSpecialInstruction || locationObj.txSpecialInstruction || 'N/A'}</span>
                             </div>
 
                             <div className="info-item">
                                 <span className="label">Recipient Personal Info</span>
-                                <span className="value">asfd</span>
+                                <span className="value">{data.vRecipientPersonalInfo || recipientObj.txPersonalInfo || data.txRecipientPersonalInfo || 'N/A'}</span>
                             </div>
 
                             <div className="info-item">
                                 <span className="label">Card Message</span>
-                                <span className="value">asdf</span>
+                                <span className="value">{data.vCardMessage || detailsObj.txCardMessage || data.txCardMessage || 'N/A'}</span>
                             </div>
 
                             <div className="info-item">
                                 <span className="label">From</span>
-                                <span className="value">asdf</span>
+                                <span className="value">{data.vCardFrom || detailsObj.vFrom || data.vFrom || 'N/A'}</span>
                             </div>
 
                             <div className="info-item">
                                 <span className="label">Additional Notes</span>
-                                <span className="value">afdsa</span>
+                                <span className="value">{data.vAdditionalNotes || detailsObj.txAdditionalNotes || data.txAdditionalNotes || 'N/A'}</span>
                             </div>
 
                             <div className="info-item">
                                 <span className="label">Add-Ons Charges</span>
-                                <span className="value">-</span>
+                                <span className="value">{data.dAddOnCharges || paymentObj?.fAddOnAmount ? `$${data.dAddOnCharges || paymentObj.fAddOnAmount}` : '-'}</span>
                             </div>
                         </div>
                     </div>
@@ -138,24 +233,24 @@ const BookingHistoryDetails = () => {
                         <div className="sheet-content">
                             <div className="payout-row">
                                 <span>Singing Telegram Base</span>
-                                <strong>$5.00</strong>
+                                <strong>${paymentObj.fPayableAmount || paymentObj.dBasePayout || data.dProviderBaseAmount || data.fPrice || '0.00'}</strong>
                             </div>
                             <div className="payout-row">
                                 <span>Tip Amount</span>
-                                <strong>$0.00</strong>
+                                <strong>${paymentObj.fTipAmount || paymentObj.dTipAmount || data.dDriverTip || data.fTipPercentage || '0.00'}</strong>
                             </div>
                             <div className="payout-row">
                                 <span>Travel Fee</span>
-                                <strong>$0.00</strong>
+                                <strong>${paymentObj.fTravelFee || paymentObj.dTravelFee || data.dTravelFee || '0.00'}</strong>
                             </div>
                             <div className="payout-row">
                                 <span>Add-Ons Reimbursement</span>
-                                <strong>$0.00</strong>
+                                <strong>${paymentObj.fAddOnAmount || paymentObj.dAddOnReimbursement || data.dAddOnCharges || '0.00'}</strong>
                             </div>
                             <hr className="payout-divider" />
                             <div className="payout-row total">
                                 <span>Total Payout</span>
-                                <strong>$5.00</strong>
+                                <strong>${paymentObj.fTotalAmount || paymentObj.dTotalPayout || data.dDriverTotalAmount || data.fPrice || '0.00'}</strong>
                             </div>
                         </div>
                     </div>

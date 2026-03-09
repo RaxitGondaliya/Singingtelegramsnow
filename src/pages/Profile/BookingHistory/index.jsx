@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
+import { bookingApi } from '../../../api/bookingApi';
 import './BookingHistory.scss';
 
 const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
@@ -37,7 +38,7 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
     const handleReportRedirect = (e) => {
         e.stopPropagation(); // 3. Prevents navigating to details when clicking Report
         setActiveMenu(null);
-        navigate('/dashboard/profile/report'); 
+        navigate('/dashboard/profile/report');
     };
 
     return (
@@ -105,26 +106,109 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
 
 export default function BookingHistory() {
     const [activeMenu, setActiveMenu] = useState(null);
+    const [bookings, setBookings] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const bookings = [
-        { id: 1, day: '23', month: 'Oct', userName: 'Anita Volz', charName: 'Austin Powers', time: '04:00 PM - 05:00 PM', location: '250 Howard Street, San Francisco, CA, USA', status: 'Completed', charImage: 'https://placehold.co/100x100' },
-        { id: 2, day: '26', month: 'Aug', userName: 'Anita Volz', charName: 'Austin Powers', time: '12:00 PM - 01:00 PM', location: 'San Francisco, CA, USA', status: 'Completed', charImage: 'https://placehold.co/100x100' },
-        { id: 3, day: '05', month: 'Oct', userName: 'Anita Volz', charName: 'Austin Powers', time: '12:00 PM - 01:00 PM', location: 'San Francisco, CA, USA', status: 'Confirmed', charImage: 'https://placehold.co/100x100' },
-    ];
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                setLoading(true);
+                const response = await bookingApi.getBookingHistory();
+                console.log('Booking history response:', response.data);
+
+                let data = [];
+                if (response.data && response.data.responseData) {
+                    data = response.data.responseData;
+                } else if (response.data && response.data.status === 200) {
+                    data = response.data.data || [];
+                } else if (response.data && Array.isArray(response.data.data)) {
+                    data = response.data.data;
+                } else if (Array.isArray(response.data)) {
+                    data = response.data;
+                }
+
+                setBookings(data);
+            } catch (error) {
+                console.error('Error fetching booking history:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchHistory();
+    }, []);
+
+    const formatBooking = (req) => {
+        let dateObj = new Date();
+        const bookingDateStr = req.dBookingDate || req.date;
+        if (bookingDateStr) {
+            dateObj = new Date(bookingDateStr);
+        }
+
+        const statusMap = {
+            1: 'Pending',
+            2: 'Confirmed',
+            3: 'Completed',
+            4: 'Cancelled',
+            5: 'Reported'
+        };
+
+        const timeStr = req.time || req.vBookingTime || (req.tFromTime && req.tToTime ? `${req.tFromTime} - ${req.tToTime}` : null) || `${req.vStartTime || '00:00'} - ${req.vEndTime || '00:00'}`;
+
+        // Use a placeholder URL if vImage is just a filename
+        let imageSrc = req.charImage || req.txProfilePic || req.txCharacterPic || req.vCharacterImage;
+        if (!imageSrc && req.vImage) {
+            imageSrc = `https://placehold.co/100x100?text=${req.vImage.slice(0, 10)}`;
+        }
+        if (!imageSrc || imageSrc === '') {
+            imageSrc = 'https://placehold.co/100x100';
+        }
+
+        return {
+            id: req.id || req.iBookingId || Math.random(),
+            day: req.day || dateObj.getDate().toString().padStart(2, '0'),
+            month: req.month || dateObj.toLocaleString('default', { month: 'short' }),
+            userName: req.userName || req.vUserName || `${req.vFirstName || ''} ${req.vLastName || ''}`.trim() || 'Unknown User',
+            charImage: imageSrc,
+            charName: req.charName || req.vCharacterName || 'Unknown Character',
+            time: timeStr,
+            location: req.location || req.vStreetAddress || req.vAddress || req.vLocation || 'Unknown Location',
+            status: req.status || (req.tiStatus ? statusMap[req.tiStatus] : null) || req.eStatus || req.vStatus || 'Completed',
+            ...req
+        };
+    };
+
+    if (loading) {
+        return (
+            <div className="booking-history-page">
+                <Header title="Booking History" />
+                <div className="booking-container" style={{ padding: '20px', textAlign: 'center' }}>
+                    Loading...
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="booking-history-page">
             <Header title="Booking History" />
             <div className="booking-container">
                 <div className="booking-list">
-                    {bookings.map(item => (
-                        <BookingCard
-                            key={item.id}
-                            booking={item}
-                            activeMenu={activeMenu}
-                            setActiveMenu={setActiveMenu}
-                        />
-                    ))}
+                    {bookings.length === 0 ? (
+                        <div style={{ textAlign: 'center', width: '100%', padding: '20px' }}>No booking history found.</div>
+                    ) : (
+                        bookings.map((item, index) => {
+                            const formattedBooking = formatBooking(item);
+                            return (
+                                <BookingCard
+                                    key={formattedBooking.id || index}
+                                    booking={formattedBooking}
+                                    activeMenu={activeMenu}
+                                    setActiveMenu={setActiveMenu}
+                                />
+                            );
+                        })
+                    )}
                 </div>
             </div>
         </div>
