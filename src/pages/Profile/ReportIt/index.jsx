@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import { bookingApi } from '../../../api/bookingApi';
+import { useMessage } from '../../../context/MessageContext';
 import './ReportIt.scss';
 
 const ReportIt = () => {
@@ -16,8 +17,7 @@ const ReportIt = () => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [comment, setComment] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+    const { showMessage } = useMessage();
 
     useEffect(() => {
         const fetchReasonsList = async () => {
@@ -43,16 +43,14 @@ const ReportIt = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setSuccess('');
 
         if (!reason) {
-            setError('Please select a reason');
+            showMessage('Please select a reason', 'error');
             return;
         }
 
         if (!bookingId) {
-            setError('Missing Booking ID. Cannot submit report.');
+            showMessage('Missing Booking ID. Cannot submit report.', 'error');
             return;
         }
 
@@ -61,14 +59,14 @@ const ReportIt = () => {
             const response = await bookingApi.reportCustomer(bookingId, reason, comment);
 
             if (response.data && response.data.responseCode === 200) {
-                setSuccess(response.data.responseMessage || 'Report submitted successfully');
-                setTimeout(() => navigate(-1), 2000); // Go back after success
+                showMessage(response.data.responseMessage || 'Report submitted successfully', 'success');
+                setTimeout(() => navigate(-1), 2000);
             } else {
-                setError(response.data?.responseMessage || 'Failed to submit report. Please try again.');
+                showMessage(response.data?.responseMessage || 'Failed to submit report. Please try again.', 'error');
             }
         } catch (err) {
             console.error('Error submitting report:', err);
-            setError('An error occurred. Please try again later.');
+            showMessage('An error occurred. Please try again later.', 'error');
         } finally {
             setSubmitting(false);
         }
@@ -80,9 +78,6 @@ const ReportIt = () => {
 
             <div className="report-container">
                 <form className="report-form" onSubmit={handleSubmit}>
-                    {error && <div className="error-message" style={{ color: 'red', marginBottom: '15px' }}>{error}</div>}
-                    {success && <div className="success-message" style={{ color: 'green', marginBottom: '15px' }}>{success}</div>}
-
                     <div className="form-group">
                         <label className="form-label">Reason</label>
                         <div className="select-wrapper">

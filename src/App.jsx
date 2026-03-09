@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { MessageProvider } from "./context/MessageContext";
 import AuthLanding from "./pages/Auth/AuthLanding";
 import Signup from "./pages/Auth/Signup";
 import Signin from "./pages/Auth/Signin";
@@ -30,56 +31,58 @@ import VerifyOtp from "./pages/Auth/VerifyOtp/VerifyOtp";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<AuthLanding />} />
-        <Route path="/signin" element={<Signin />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/setting" element={<Settings />} />
-        <Route path="/sync-calendars" element={<SyncCalendars />} />
-        <Route path="/change-password" element={<ChangePassword />} />
-        <Route path="/about-us" element={<AboutUs />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/contact-us" element={<ContactUs />} />
-        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
+    <MessageProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<AuthLanding />} />
+          <Route path="/signin" element={<Signin />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/setting" element={<Settings />} />
+          <Route path="/sync-calendars" element={<SyncCalendars />} />
+          <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/about-us" element={<AboutUs />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
 
 
-        {/* Dashboard Routes */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<Navigate to="my-bookings" replace />} />
-          <Route path="my-bookings" element={<MyBookings />} />
-          <Route path="booking-requests" element={<BookingRequests />} />
+          {/* Dashboard Routes */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<Navigate to="my-bookings" replace />} />
+            <Route path="my-bookings" element={<MyBookings />} />
+            <Route path="booking-requests" element={<BookingRequests />} />
 
-          {/* Profile Group */}
-          <Route path="profile">
-            <Route index element={<Profile />} />
-            <Route path="my-account" element={<MyAccount />} />
-            <Route path="manage-profiles" element={<ManageProfiles />} />
-            <Route path="availability" element={<Availability />} />
-            <Route path="history" element={<BookingHistory />} />
-            <Route path="history/:id" element={<BookingHistoryDetails />} />
-            <Route path="earnings" element={<MyEarnings />} />
-            <Route path="add-character" element={<AddCharacterProfile />} />
-            <Route path="edit-character" element={<EditCharacterProfile />} />
-            <Route path="report" element={<ReportIt />} />
+            {/* Profile Group */}
+            <Route path="profile">
+              <Route index element={<Profile />} />
+              <Route path="my-account" element={<MyAccount />} />
+              <Route path="manage-profiles" element={<ManageProfiles />} />
+              <Route path="availability" element={<Availability />} />
+              <Route path="history" element={<BookingHistory />} />
+              <Route path="history/:id" element={<BookingHistoryDetails />} />
+              <Route path="earnings" element={<MyEarnings />} />
+              <Route path="add-character" element={<AddCharacterProfile />} />
+              <Route path="edit-character" element={<EditCharacterProfile />} />
+              <Route path="report" element={<ReportIt />} />
+            </Route>
+
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="setting" element={<Settings />} />
+            <Route path="sync-calendars" element={<SyncCalendars />} />
+            <Route path="change-password" element={<ChangePassword />} />
+            <Route path="about-us" element={<AboutUs />} />
+            <Route path="privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="contact-us" element={<ContactUs />} />
+            <Route path="terms-and-conditions" element={<TermsAndConditions />} />
+
           </Route>
-
-          <Route path="notifications" element={<Notifications />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="setting" element={<Settings />} />
-          <Route path="sync-calendars" element={<SyncCalendars />} />
-          <Route path="change-password" element={<ChangePassword />} />
-          <Route path="about-us" element={<AboutUs />} />
-          <Route path="privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="contact-us" element={<ContactUs />} />
-          <Route path="terms-and-conditions" element={<TermsAndConditions />} />
-
-        </Route>
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </MessageProvider>
   );
 }
 

@@ -19,33 +19,35 @@ export default function Signin() {
     try {
       const response = await authApi.login({ email, password });
 
-    const { responseCode, responseMessage, responseData } = response.data;
+      const { responseCode, responseMessage, responseData } = response.data;
 
-    if (responseCode !== 200) {
-      setError(responseMessage || "Invalid credentials");
-      return;
-    }
+      if (responseCode !== 200) {
+        setError(responseMessage || "Invalid credentials");
+        return;
+      }
 
-    const token = responseData?.vAuthKey;
-    if (!token) {
-      setError("Token not received from server");
-      return;
-    }
-    if(token){
+      const token = responseData?.vAuthKey;
+      if (!token) {
+        setError("Token not received from server");
+        return;
+      }
+
+      // Store user data in local storage
+      localStorage.setItem("userData", JSON.stringify(responseData));
       localStorage.setItem("token", token);
-      navigate("/dashboard");
-    }
 
-  } catch (err) {
-    setError(
-      err?.response?.data?.responseMessage ||
-      err?.response?.data?.message ||
-      "Something went wrong"
-    );
-  } finally {
-    setLoading(false);
-  }
-};  
+      navigate("/dashboard");
+
+    } catch (err) {
+      setError(
+        err?.response?.data?.responseMessage ||
+        err?.response?.data?.message ||
+        "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="signin-wrapper">

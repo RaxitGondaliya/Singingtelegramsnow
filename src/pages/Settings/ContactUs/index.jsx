@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import Header from '../../../components/layout/Header/Header';
+import { useMessage } from '../../../context/MessageContext';
 import './ContactUs.scss';
 
 export default function ContactUs() {
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
+    const { showMessage } = useMessage();
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Handle form submission logic here
         console.log('Form submitted:', { subject, message });
-        alert('Thank you for contacting us! We will get back to you soon.');
+        showMessage('Thank you for contacting us! We will get back to you soon.', 'success');
         setSubject('');
         setMessage('');
     };

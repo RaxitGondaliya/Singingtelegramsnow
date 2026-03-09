@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // import { useNavigate } from 'react-router-dom';
 import { profileApi } from '../../../api/profileApi';
+import { useMessage } from '../../../context/MessageContext';
 import './MyAccount.scss';
 import Header from '../../../components/layout/Header/Header';
 
@@ -8,33 +9,55 @@ export default function MyAccount() {
 
     // const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('personal');
+    const { showMessage } = useMessage();
 
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        streetAddress: '',
-        zipCode: '',
-        gender: '',
-        dob: '',
-        radius: '',
-        mobileNumber: '',
-        ssn: '',
-        bankName: '',
-        branchLocation: '',
-        routingNumber: '',
-        accountHolderName: '',
-        accountNumber: ''
+    const [formData, setFormData] = useState(() => {
+        let user = {};
+        try {
+            const storedUser = localStorage.getItem('userData');
+            if (storedUser) {
+                user = JSON.parse(storedUser);
+            }
+        } catch (e) {
+            console.error("Error parsing userData from localStorage", e);
+        }
+
+        return {
+            firstName: user?.vFirstName || '',
+            lastName: user?.vLastName || '',
+            email: user?.vEmailId || '',
+            streetAddress: user?.vStreetAddress || '',
+            zipCode: user?.vZipCode || '',
+            gender: String(user?.tiGender) === "1" ? "Male" : String(user?.tiGender) === "2" ? "Female" : user?.tiGender ? "Other" : "",
+            dob: user?.vDob || '',
+            radius: user?.iRadius || '',
+            mobileNumber: user?.vMobileNumber || '',
+            ssn: user?.vSsnNumber || '',
+            dLatitude: user?.dLatitude || '',
+            dLongitude: user?.dLongitude || '',
+            vCity: user?.vCity || '',
+            vState: user?.vState || '',
+            vCountry: user?.vCountry || '',
+            vCountryCode: user?.vCountryCode || '',
+            iCityId: user?.iCityId || '',
+            txProfilePic: user?.txProfilePic || '',
+            txProfileThumb: user?.txProfileThumb || '',
+            bankName: '',
+            branchLocation: '',
+            routingNumber: '',
+            accountHolderName: '',
+            accountNumber: ''
+        };
     });
 
-    
+
     useEffect(() => {
 
         const fetchProfile = async () => {
             try {
                 const res = await profileApi.getProfile();
 
-                console.log("STATUS CODE:", res.status); 
+                console.log("STATUS CODE:", res.status);
                 console.log("PROFILE RESPONSE:", res.data);
 
                 if (res.data?.responseCode !== 200) return;
@@ -52,12 +75,21 @@ export default function MyAccount() {
                         String(user?.tiGender) === "1"
                             ? "Male"
                             : String(user?.tiGender) === "2"
-                            ? "Female"
-                            : "Other",
+                                ? "Female"
+                                : "Other",
                     dob: user?.vDob || '',
                     radius: user?.iRadius || '',
                     mobileNumber: user?.vMobileNumber || '',
-                    ssn: user?.vSsnNumber || ''
+                    ssn: user?.vSsnNumber || '',
+                    dLatitude: user?.dLatitude || '',
+                    dLongitude: user?.dLongitude || '',
+                    vCity: user?.vCity || '',
+                    vState: user?.vState || '',
+                    vCountry: user?.vCountry || '',
+                    vCountryCode: user?.vCountryCode || '',
+                    iCityId: user?.iCityId || '',
+                    txProfilePic: user?.txProfilePic || '',
+                    txProfileThumb: user?.txProfileThumb || ''
                 }));
 
             } catch (error) {
@@ -74,7 +106,7 @@ export default function MyAccount() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -84,14 +116,14 @@ export default function MyAccount() {
             console.log("UPDATE RESPONSE:", res.data);
 
             if (res.data?.responseCode === 200) {
-                alert("Profile Updated Successfully ✅");
+                showMessage(res.data?.responseMessage || 'Profile Updated Successfully', 'success');
             } else {
-                alert(res.data?.responseMessage || "Update Failed ❌");
+                showMessage(res.data?.responseMessage || 'Update Failed', 'error');
             }
 
         } catch (error) {
             console.log("UPDATE ERROR:", error);
-            alert("Update Failed ❌");
+            showMessage('Update Failed', 'error');
         }
     };
 
