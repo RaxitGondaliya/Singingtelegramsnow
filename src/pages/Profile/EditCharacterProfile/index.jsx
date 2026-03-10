@@ -271,6 +271,8 @@ export default function EditCharacterProfile() {
                     </div>
                 </div>
 
+
+                {/* multiple select */}
                 <div className="form-group">
                     <label className="form-label">Select Character</label>
                     <div className="select-wrapper">
