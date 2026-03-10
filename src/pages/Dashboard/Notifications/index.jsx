@@ -120,7 +120,7 @@ export default function Notifications() {
                         const time = notif.iCreatedAt ? formatNotificationDate(notif.iCreatedAt) : '';
 
                         return (
-                            <div key={notif.iNotificationId || notif.id || index} onClick={() => handleNotificationClick(notif)} style={{ cursor: isUnread ? 'pointer' : 'default' }}>
+                            <div key={notif.iNotificationId || notif.id || index} style={{ cursor: isUnread ? 'pointer' : 'default' }}>
                                 <div className={`notification-item ${isUnread ? 'unread' : ''}`}>
                                     {isUnread && <div className="notification-dot"></div>}
                                     <div className="notification-info">

@@ -18,11 +18,12 @@
         &::before {
             content: '';
             position: absolute;
-            top: 0;
+            top: 45px;
             left: 45px;
             bottom: 0;
             width: 1px;
             background-color: #ddd;
+            z-index: 0;
         }
 
         .notification-item {
