@@ -94,6 +94,9 @@ function App() {
               <Route path="report" element={<ReportIt />} />
               <Route path="change-mobile" element={<ChangeMobileNumber />} />
             </Route>
+
+          </Route>
+
         </Routes>
       </BrowserRouter>
     </MessageProvider>
