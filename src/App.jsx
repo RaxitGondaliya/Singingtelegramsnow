@@ -16,6 +16,7 @@ import BookingHistoryDetails from "./pages/Profile/BookingHistoryDetails";
 import MyEarnings from "./pages/Profile/MyEarnings";
 import AddCharacterProfile from "./pages/Profile/AddCharacterProfile";
 import EditCharacterProfile from "./pages/Profile/EditCharacterProfile";
+import RatingsAndReviews from "./pages/Profile/RatingsAndReviews";
 import Notifications from "./pages/Dashboard/Notifications";
 import Settings from "./pages/Settings/Settings";
 import SyncCalendars from "./pages/Settings/SyncCalendars";
@@ -67,6 +68,7 @@ function App() {
               <Route path="earnings" element={<MyEarnings />} />
               <Route path="add-character" element={<AddCharacterProfile />} />
               <Route path="edit-character" element={<EditCharacterProfile />} />
+              <Route path="ratings-reviews" element={<RatingsAndReviews />} />
               <Route path="report" element={<ReportIt />} />
               <Route path="change-mobile" element={<ChangeMobileNumber />} />
 
@@ -82,7 +84,24 @@ function App() {
             <Route path="contact-us" element={<ContactUs />} />
             <Route path="terms-and-conditions" element={<TermsAndConditions />} />
 
+            {/* Profile Group */}
+            <Route path="profile">
+              <Route index element={<Profile />} />
+              <Route path="my-account" element={<MyAccount />} />
+              <Route path="manage-profiles" element={<ManageProfiles />} />
+              <Route path="availability" element={<Availability />} />
+              <Route path="history" element={<BookingHistory />} />
+              <Route path="history/:id" element={<BookingHistoryDetails />} />
+              <Route path="earnings" element={<MyEarnings />} />
+              <Route path="add-character" element={<AddCharacterProfile />} />
+              <Route path="edit-character" element={<EditCharacterProfile />} />
+              <Route path="ratings-reviews" element={<RatingsAndReviews />} />
+              <Route path="report" element={<ReportIt />} />
+              <Route path="change-mobile" element={<ChangeMobileNumber />} />
+            </Route>
+
           </Route>
+
         </Routes>
       </BrowserRouter>
     </MessageProvider>

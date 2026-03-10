@@ -38,7 +38,7 @@ export default function Profile() {
                         </div>
                     </div>
                 </div>
-                <a href="#" className="ratings-reviews-link">
+                <a className="ratings-reviews-link" onClick={(e) => { e.preventDefault(); navigate('/dashboard/profile/ratings-reviews'); }} style={{ cursor: 'pointer' }}>
                     Ratings & Reviews <span>→</span>
                 </a>
             </div>

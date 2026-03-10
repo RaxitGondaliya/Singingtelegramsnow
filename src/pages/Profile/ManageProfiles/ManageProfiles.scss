@@ -69,6 +69,34 @@
                         -webkit-line-clamp: 2;
                         -webkit-box-orient: vertical;
                         overflow: hidden;
+                        margin-bottom: 8px;
+                    }
+
+                    .profile-price-status {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-top: auto;
+
+                        .profile-price {
+                            font-size: 18px;
+                            font-weight: 700;
+                            color: #333;
+                        }
+
+                        .status-badge {
+                            font-size: 14px;
+                            font-weight: 600;
+                            padding: 4px 10px;
+                            border-radius: 20px;
+                            // background-color: #e8f5e9;
+                            color: #4caf50; // Green for Active
+
+                            &.inactive {
+                                background-color: #ffebee;
+                                color: #f44336; // Red for Inactive, for example
+                            }
+                        }
                     }
                 }
             }

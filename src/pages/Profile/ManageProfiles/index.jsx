@@ -127,7 +127,7 @@ export default function ManageProfiles() {
                     className="add-profile-btn"
                     onClick={() => navigate('/dashboard/profile/add-character')}
                 >
-                    +Add Another Character Profile
+                    + Add Another Character Profile
                 </button>
             </div>
         </div>
