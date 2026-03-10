@@ -1,5 +1,5 @@
-import React, { useState,} from 'react';//
-import { useNavigate, } from 'react-router-dom';//useParams, useLocation 
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import './EditCharacterProfile.scss';
 
@@ -8,15 +8,39 @@ export default function EditCharacterProfile() {
 
     const [formData, setFormData] = useState({
         character: '',
-        characterStyle: '',
+        characterStyle: [],
         description: '',
         media: null,
         previewUrl: null 
     });
 
+    const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    const characterStyles = ["Funny Characters", "Classic", "Horror", "Action", "Romance"];
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsStyleDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleStyleToggle = (style) => {
+        setFormData(prev => ({
+            ...prev,
+            characterStyle: prev.characterStyle.includes(style)
+                ? prev.characterStyle.filter(item => item !== style)
+                : [...prev.characterStyle, style]
+        }));
     };
 
     const handleUpdate = () => {
@@ -69,16 +93,31 @@ export default function EditCharacterProfile() {
 
                 <div className="form-group">
                     <label className="form-label">Select Character Style</label>
-                    <div className="select-wrapper">
-                        <select 
-                            name="characterStyle" 
-                            value={formData.characterStyle} 
-                            onChange={handleInputChange} 
-                            className="form-select"
+                    <div className="select-wrapper" ref={dropdownRef}>
+                        <div 
+                            className="form-select custom-multi-select" 
+                            onClick={() => setIsStyleDropdownOpen(!isStyleDropdownOpen)}
                         >
-                            <option value="Funny Characters">Funny Characters</option>
-                            <option value="Classic">Classic</option>
-                        </select>
+                            {formData.characterStyle.length > 0 
+                                ? formData.characterStyle.join(', ') 
+                                : <span className="placeholder">Select character style</span>}
+                        </div>
+                        
+                        {isStyleDropdownOpen && (
+                            <div className="style-dropdown-list">
+                                {characterStyles.map((style, index) => {
+                                    const isChecked = formData.characterStyle.includes(style);
+                                    return (
+                                        <div key={index} className="style-option" onClick={() => handleStyleToggle(style)}>
+                                            <span>{style}</span>
+                                            <div className={`custom-checkbox ${isChecked ? 'checked' : ''}`}>
+                                                {isChecked && <span className="checkmark">✓</span>}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
 

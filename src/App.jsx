@@ -16,6 +16,7 @@ import BookingHistoryDetails from "./pages/Profile/BookingHistoryDetails";
 import MyEarnings from "./pages/Profile/MyEarnings";
 import AddCharacterProfile from "./pages/Profile/AddCharacterProfile";
 import EditCharacterProfile from "./pages/Profile/EditCharacterProfile";
+import RatingsAndReviews from "./pages/Profile/RatingsAndReviews";
 import Notifications from "./pages/Dashboard/Notifications";
 import Settings from "./pages/Settings/Settings";
 import SyncCalendars from "./pages/Settings/SyncCalendars";
@@ -67,6 +68,7 @@ function App() {
               <Route path="earnings" element={<MyEarnings />} />
               <Route path="add-character" element={<AddCharacterProfile />} />
               <Route path="edit-character" element={<EditCharacterProfile />} />
+              <Route path="ratings-reviews" element={<RatingsAndReviews />} />
               <Route path="report" element={<ReportIt />} />
             </Route>
 
@@ -91,6 +93,7 @@ function App() {
               <Route path="earnings" element={<MyEarnings />} />
               <Route path="add-character" element={<AddCharacterProfile />} />
               <Route path="edit-character" element={<EditCharacterProfile />} />
+              <Route path="ratings-reviews" element={<RatingsAndReviews />} />
               <Route path="report" element={<ReportIt />} />
               <Route path="change-mobile" element={<ChangeMobileNumber />} />
             </Route>

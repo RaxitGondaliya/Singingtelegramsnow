@@ -1,0 +1,194 @@
+.ratings-reviews-page {
+  background-color: #fff;
+  min-height: 100vh;
+  padding-bottom: 24px;
+
+  .ratings-content {
+
+    .overall-rating-section {
+      display: flex;
+      align-items: center;
+      justify-content: left;
+      padding: 24px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 20px;
+
+      .overall-stars {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .stars {
+          display: flex;
+          font-size: 24px;
+          color: #e0e0e0;
+          letter-spacing: 2px;
+
+          .star.filled {
+            color: #FFB800; // Orange-yellow color to match design
+          }
+        }
+
+        .rating-score {
+          font-size: 20px;
+          font-weight: 500;
+          color: #333;
+          margin-left: 4px;
+        }
+      }
+
+      .divider-vertical {
+        width: 1px;
+        height: 28px;
+        background-color: #999;
+      }
+
+      .total-reviews {
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+      }
+    }
+
+    .reviews-list {
+      padding: 0 20px;
+
+      .review-card {
+        padding: 24px 0;
+        border-bottom: 1px solid #f0f0f0;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .review-header {
+          display: flex;
+          align-items: flex-start;
+          margin-bottom: 12px;
+          gap: 16px;
+
+          .reviewer-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            flex-shrink: 0;
+
+            svg {
+              color: #999;
+            }
+          }
+
+          .reviewer-details-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+
+            .name-and-tag {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 4px;
+
+              .reviewer-name {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 600;
+                color: #333;
+              }
+
+              .review-tag {
+                font-size: 15px;
+                font-weight: 600;
+                color: #E6A02B; // Slightly distinct orange tag color 
+                text-align: right;
+                max-width: 150px;
+                line-height: 1.2;
+              }
+            }
+
+            .reviewer-rating {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+
+              .stars {
+                display: flex;
+                font-size: 16px;
+                color: #e0e0e0;
+                letter-spacing: 1px;
+
+                .star.filled {
+                  color: #FFB800;
+                }
+              }
+
+              .rating-score {
+                font-size: 14px;
+                font-weight: 500;
+                color: #333;
+              }
+            }
+          }
+        }
+
+        .review-body {
+          margin-bottom: 12px;
+
+          p {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #444;
+          }
+        }
+
+        .review-footer {
+          .review-date {
+            font-size: 14px;
+            color: #777;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Mobile responsiveness is mostly handled natively via flex layouts above
+@media (max-width: 480px) {
+  .ratings-reviews-page {
+    .ratings-content {
+      .overall-rating-section {
+        gap: 16px;
+        padding: 20px 12px;
+
+        .overall-stars {
+          .stars {
+            font-size: 22px;
+          }
+
+          .rating-score {
+            font-size: 18px;
+          }
+        }
+
+        .total-reviews {
+          font-size: 16px;
+        }
+      }
+
+      .reviews-list .review-card .review-header {
+        .reviewer-details-container .name-and-tag {
+          .review-tag {
+            font-size: 14px;
+            max-width: 100px;
+          }
+        }
+      }
+    }
+  }
+}
