@@ -1,44 +1,93 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import { characterApi } from '../../../api/characterApi';
 import { getImageUrl } from '../../../utils/imageUtils';
+import { useMessage } from '../../../context/MessageContext';
 import './ManageProfiles.scss';
 
 export default function ManageProfiles() {
     const navigate = useNavigate();
+    const { showMessage, showConfirm } = useMessage();
     const [characters, setCharacters] = useState([]);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchCharacters = async () => {
-            try {
-                setLoading(true);
-                const res = await characterApi.getCharactersList();
-                console.log('Characters list response:', res.data);
+    // Infinite Scroll States
+    const [loading, setLoading] = useState(true); // Initial full-page load
+    const [isFetchingNextPage, setIsFetchingNextPage] = useState(false); // Background next-page load
+    const [offset, setOffset] = useState('');
+    const [hasMore, setHasMore] = useState(true);
 
-                let data = [];
-                if (res.data?.responseData) {
-                    data = Array.isArray(res.data.responseData)
-                        ? res.data.responseData
-                        : [res.data.responseData];
-                } else if (res.data?.data) {
-                    data = Array.isArray(res.data.data)
-                        ? res.data.data
-                        : [res.data.data];
-                } else if (Array.isArray(res.data)) {
-                    data = res.data;
-                }
+    const observerRef = useRef();
 
-                setCharacters(data);
-            } catch (error) {
-                console.error('Error fetching characters:', error);
-            } finally {
-                setLoading(false);
+    // Intersection Observer Callback for the bottom element
+    const lastElementRef = useCallback(node => {
+        if (loading || isFetchingNextPage) return;
+        if (observerRef.current) observerRef.current.disconnect();
+
+        observerRef.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                fetchCharacters(offset);
             }
-        };
+        });
 
-        fetchCharacters();
+        if (node) observerRef.current.observe(node);
+    }, [loading, isFetchingNextPage, hasMore, offset]);
+
+    const fetchCharacters = async (currentOffset) => {
+        try {
+            if (!currentOffset) setLoading(true); // Only show global loader on first load
+            else setIsFetchingNextPage(true);
+
+            const res = await characterApi.getCharactersList(currentOffset);
+            console.log(`Characters list response (offset '${currentOffset}'):`, res.data);
+
+            let newPageData = [];
+            if (res.data?.responseData) {
+                newPageData = Array.isArray(res.data.responseData)
+                    ? res.data.responseData
+                    : [res.data.responseData];
+            } else if (res.data?.data) {
+                newPageData = Array.isArray(res.data.data)
+                    ? res.data.data
+                    : [res.data.data];
+            } else if (Array.isArray(res.data)) {
+                newPageData = res.data;
+            }
+
+            if (newPageData.length > 0) {
+                setCharacters(prev => {
+                    // Filter out strict duplicates by CharacterId if the API returned overlapping records
+                    const existingIds = new Set(prev.map(c => c.iCharacterId || c.id || c.iArtistCharacterId));
+                    const uniqueNewData = newPageData.filter(c => !existingIds.has(c.iCharacterId || c.id || c.iArtistCharacterId));
+                    return [...prev, ...uniqueNewData];
+                });
+            }
+
+            // Check pagination metadata from the response
+            const returnedOffset = res.data?.responseDataOffset;
+
+            // If the server provided a valid NEXT offset that is different from what we just requested, queue it up
+            if (newPageData.length > 0 && returnedOffset !== undefined && returnedOffset > 0 && String(returnedOffset) !== String(currentOffset)) {
+                setOffset(String(returnedOffset));
+                setHasMore(true);
+            } else {
+                // Reached the end or no pagination given, or no new data returned
+                setHasMore(false);
+            }
+
+        } catch (error) {
+            console.error('Error fetching characters:', error);
+            showMessage('Failed to load characters.', 'error');
+        } finally {
+            setLoading(false);
+            setIsFetchingNextPage(false);
+        }
+    };
+
+    // Initial Load Only
+    useEffect(() => {
+        fetchCharacters('');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const getStatusLabel = (tiStatus) => {
@@ -56,6 +105,32 @@ export default function ManageProfiles() {
             case 1: return 'active';
             case 2: return 'inactive';
             default: return 'active';
+        }
+    };
+
+    const handleDelete = async (characterId) => {
+        if (!characterId) {
+            showMessage('Character ID not found.', 'error');
+            return;
+        }
+
+        const confirmed = await showConfirm('Are you sure you want to delete this character?');
+        if (confirmed) {
+            try {
+                const res = await characterApi.deleteCharacter(characterId);
+                console.log('Delete response:', res.data);
+
+                if (res.data?.responseCode === 200) {
+                    showMessage(res.data?.responseMessage || 'Character deleted successfully.', 'success');
+                    // Remove from list
+                    setCharacters(prev => prev.filter(c => (c.iArtistCharacterId || c.id || c.iCharacterId) !== characterId));
+                } else {
+                    showMessage(res.data?.responseMessage || 'Failed to delete character.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting character:', error);
+                showMessage('An error occurred while deleting the character.', 'error');
+            }
         }
     };
 
@@ -108,7 +183,12 @@ export default function ManageProfiles() {
                                     </div>
                                 </div>
                                 <div className="card-actions">
-                                    <button className="action-btn btn-delete">Delete</button>
+                                    <button
+                                        className="action-btn btn-delete"
+                                        onClick={() => handleDelete(char.iArtistCharacterId || char.id || charId)}
+                                    >
+                                        Delete
+                                    </button>
                                     <button
                                         className="action-btn btn-edit"
                                         onClick={() => navigate('/dashboard/profile/edit-character', { state: { profileData: char } })}
@@ -119,6 +199,13 @@ export default function ManageProfiles() {
                             </div>
                         );
                     })
+                )}
+
+                {/* Sentinel element for infinite scroll */}
+                {hasMore && !loading && (
+                    <div ref={lastElementRef} style={{ width: '100%', padding: '20px', textAlign: 'center' }}>
+                        {isFetchingNextPage ? 'Loading more characters...' : ''}
+                    </div>
                 )}
             </div>
 

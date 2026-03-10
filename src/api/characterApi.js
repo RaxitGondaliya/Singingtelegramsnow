@@ -24,6 +24,24 @@ export const characterApi = {
         });
     },
 
+    // POST /character/addcharacter
+    addCharacter: async (characterData) => {
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        return apiClient.post('/character/addcharacter', characterData, {
+            headers: {
+                'Content-Type': 'application/json',
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
+    },
+
     // POST /character/editcharacter
     editCharacter: async (characterData) => {
         const nonce = Math.random().toString(36).substring(2, 15);
@@ -34,6 +52,27 @@ export const characterApi = {
         return apiClient.post('/character/editcharacter', characterData, {
             headers: {
                 'Content-Type': 'application/json',
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
+    },
+
+    // POST /character/deletecharacter
+    deleteCharacter: async (iArtistCharacterId) => {
+        const body = new URLSearchParams();
+        body.append('iArtistCharacterId', iArtistCharacterId);
+
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        return apiClient.post('/character/deletecharacter', body.toString(), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
                 'nonce': nonce,
                 'timestamp': timestamp,
                 'token': appToken,

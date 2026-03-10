@@ -26,21 +26,7 @@
                 font-weight: 500;
             }
 
-            .upload-container {
-                display: flex;
-                overflow-x: auto;
-                gap: 15px;
-                scroll-snap-type: x mandatory;
-                scrollbar-width: none;
-
-                &::-webkit-scrollbar {
-                    display: none;
-                }
-            }
-
             .edit-upload-box {
-                flex: 0 0 100%;
-                scroll-snap-align: start;
                 background-color: #fcfcfc;
                 border: 1px solid #eee;
                 border-radius: 8px;

@@ -12,28 +12,15 @@ export default function EditCharacterProfile() {
     const { showMessage } = useMessage();
     const fileInputRef = useRef(null);
 
-    const isEditMode = location.pathname.includes('edit-character');
-
     // Profile data passed from ManageProfiles via navigate state
     const profileData = location.state?.profileData || {};
 
     const [formData, setFormData] = useState({
         iArtistCharacterId: profileData.iCharacterId || profileData.iArtistCharacterId || profileData.id || '',
         iCharacterId: '',
-        iCharacterKeywordId: (() => {
-            const rawId = profileData.iCharacterKeywordId || profileData.iKeywordId;
-            if (Array.isArray(rawId)) return rawId.join(',');
-            if (rawId !== undefined && rawId !== null) return String(rawId);
-            return '';
-        })(),
+        iCharacterKeywordId: profileData.iCharacterKeywordId || profileData.iKeywordId || '',
         character: profileData.vCharacterName || profileData.name || '',
-        characterStyle: (() => {
-            const rawStyle = profileData.vCharacterStyle || profileData.characterStyle;
-            if (Array.isArray(rawStyle)) return rawStyle;
-            if (typeof rawStyle === 'string') return rawStyle.split(',').map(s => s.trim()).filter(Boolean);
-            if (typeof rawStyle === 'number') return [String(rawStyle)];
-            return [];
-        })(),
+        characterStyle: profileData.vCharacterStyle || profileData.characterStyle || '',
         description: profileData.txDescription || profileData.description || '',
         media: [],
         previewUrls: profileData.vImage
@@ -46,19 +33,6 @@ export default function EditCharacterProfile() {
     const [submitting, setSubmitting] = useState(false);
     const [styles, setStyles] = useState([]);
     const [myCharacters, setMyCharacters] = useState([]);
-    const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
-    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsStyleDropdownOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     useEffect(() => {
         const fetchDropdownData = async () => {
@@ -90,37 +64,14 @@ export default function EditCharacterProfile() {
                 // Auto-fill hidden IDs if they were missing but we passed strings
                 setFormData(prev => {
                     const newState = { ...prev };
-
-                    const currentStyles = Array.isArray(prev.characterStyle) ? prev.characterStyle : [];
-                    const currentIds = prev.iCharacterKeywordId ? String(prev.iCharacterKeywordId).split(',').map(id => id.trim()).filter(Boolean) : [];
-
-                    // Fill IDs from Strings
-                    if (currentIds.length === 0 && currentStyles.length > 0) {
-                        const matchIds = currentStyles.map(styleStr => {
-                            const sMatch = fetchedStyles.find(s => (s.vKeyword || s.name) === styleStr);
-                            return sMatch ? String(sMatch.iKeywordId || sMatch.iCharacterKeywordId || '') : '';
-                        }).filter(Boolean);
-                        if (matchIds.length > 0) newState.iCharacterKeywordId = matchIds.join(',');
+                    if (!newState.iCharacterKeywordId && prev.characterStyle) {
+                        const sMatch = fetchedStyles.find(s => (s.vKeyword || s.name) === prev.characterStyle);
+                        if (sMatch) newState.iCharacterKeywordId = sMatch.iKeywordId || sMatch.iCharacterKeywordId || '';
                     }
-
-                    // Fill Strings from IDs
-                    if (currentStyles.length === 0 && currentIds.length > 0) {
-                        const matchNames = currentIds.map(idStr => {
-                            const sMatch = fetchedStyles.find(s => String(s.iKeywordId || s.iCharacterKeywordId || '') === idStr);
-                            return sMatch ? (sMatch.vKeyword || s.name) : '';
-                        }).filter(Boolean);
-                        if (matchNames.length > 0) newState.characterStyle = matchNames;
-                    }
-
-                    // Same logic for Character Name/ID
                     if (!newState.iCharacterId && prev.character) {
                         const cMatch = fetchedChars.find(c => (c.vCharacterName || c.name) === prev.character);
                         if (cMatch) newState.iCharacterId = cMatch.iCharacterId || cMatch.id || '';
-                    } else if (!prev.character && prev.iCharacterId) {
-                        const cMatch = fetchedChars.find(c => String(c.iCharacterId || c.id || '') === String(prev.iCharacterId));
-                        if (cMatch) newState.character = cMatch.vCharacterName || cMatch.name || '';
                     }
-
                     return newState;
                 });
 
@@ -141,42 +92,13 @@ export default function EditCharacterProfile() {
                 if (selectedChar) {
                     newState.iCharacterId = selectedChar.iCharacterId || selectedChar.id || '';
                 }
-            }
-            return newState;
-        });
-    };
-
-    const handleStyleToggle = (styleObj) => {
-        const styleName = styleObj.vKeyword || styleObj.name;
-        const styleId = String(styleObj.iKeywordId || styleObj.iCharacterKeywordId || '');
-
-        setFormData(prev => {
-            const currentStyles = Array.isArray(prev.characterStyle) ? prev.characterStyle : [];
-            const currentIds = prev.iCharacterKeywordId ? String(prev.iCharacterKeywordId).split(',').map(s => s.trim()).filter(Boolean) : [];
-
-            let newStyles;
-            let newIds;
-
-            const isAlreadyChecked = currentStyles.includes(styleName) || (styleId && currentIds.includes(styleId));
-
-            if (isAlreadyChecked) {
-                newStyles = currentStyles.filter(s => s !== styleName);
-                if (styleId) newIds = currentIds.filter(id => id !== styleId);
-                else newIds = currentIds;
-            } else {
-                newStyles = [...currentStyles, styleName];
-                if (styleId && !currentIds.includes(styleId)) {
-                    newIds = [...currentIds, styleId];
-                } else {
-                    newIds = currentIds;
+            } else if (name === 'characterStyle') {
+                const selectedStyle = styles.find(s => (s.vKeyword || s.name) === value);
+                if (selectedStyle) {
+                    newState.iCharacterKeywordId = selectedStyle.iKeywordId || selectedStyle.iCharacterKeywordId || '';
                 }
             }
-
-            return {
-                ...prev,
-                characterStyle: newStyles.filter(Boolean),
-                iCharacterKeywordId: newIds.filter(Boolean).join(',')
-            };
+            return newState;
         });
     };
 
@@ -191,11 +113,6 @@ export default function EditCharacterProfile() {
             media: [...prev.media, ...files],
             previewUrls: [...prev.previewUrls, ...newPreviewUrls]
         }));
-
-        // When new files are added, scroll to the newly added images (which is current previewUrls length)
-        setTimeout(() => {
-            setCurrentSlideIndex(formData.previewUrls.length);
-        }, 100);
     };
 
     const handleRemoveMedia = (index) => {
@@ -213,26 +130,6 @@ export default function EditCharacterProfile() {
 
             return { ...prev, media: newMedia, previewUrls: newPreviews };
         });
-
-        // Adjust current slide index if we delete the current or a previous slide
-        setCurrentSlideIndex(prevIndex => {
-            if (prevIndex > index) return prevIndex - 1;
-            if (prevIndex === index && index === formData.previewUrls.length - 1) return Math.max(0, index - 1);
-            return prevIndex;
-        });
-    };
-
-    const handleScroll = (e) => {
-        const container = e.target;
-        const scrollPosition = container.scrollLeft;
-        const itemWidth = container.clientWidth;
-
-        // Calculate the current index based on scroll position (adding half width for round-to-nearest behavior)
-        const newIndex = Math.round(scrollPosition / itemWidth);
-
-        if (newIndex !== currentSlideIndex) {
-            setCurrentSlideIndex(newIndex);
-        }
     };
 
     const handleUpdate = async () => {
@@ -273,35 +170,29 @@ export default function EditCharacterProfile() {
             }
 
             const payload = {
+                iArtistCharacterId: formData.iArtistCharacterId || "",
                 iCharacterId: formData.iCharacterId || "",
                 iCharacterKeywordId: formData.iCharacterKeywordId || "",
                 vCharacterName: formData.character ? formData.character.trim() : '',
-                vCharacterStyle: Array.isArray(formData.characterStyle) ? formData.characterStyle.join(', ') : "",
+                vCharacterStyle: formData.characterStyle || "",
                 txDescription: formData.description ? formData.description.trim() : '',
                 txMedia: txMedia
             };
 
-            // Only append iArtistCharacterId if it exists (usually true for Edit, false for Add)
-            if (formData.iArtistCharacterId) {
-                payload.iArtistCharacterId = formData.iArtistCharacterId;
-            }
+            console.log('Edit character payload:', payload);
 
-            console.log(isEditMode ? 'Edit character payload:' : 'Add character payload:', payload);
-
-            const apiCall = isEditMode ? characterApi.editCharacter : characterApi.addCharacter;
-            const res = await apiCall(payload);
-
-            console.log(isEditMode ? 'Edit character response:' : 'Add character response:', res.data);
+            const res = await characterApi.editCharacter(payload);
+            console.log('Edit character response:', res.data);
 
             if (res.data?.responseCode === 200) {
-                showMessage(res.data?.responseMessage || (isEditMode ? 'Character Updated Successfully' : 'Character Added Successfully'), 'success');
+                showMessage(res.data?.responseMessage || 'Character Updated Successfully', 'success');
                 navigate('/dashboard/profile/manage-profiles');
             } else {
-                showMessage(res.data?.responseMessage || (isEditMode ? 'Update Failed' : 'Add Failed'), 'error');
+                showMessage(res.data?.responseMessage || 'Update Failed', 'error');
             }
         } catch (error) {
-            console.error(isEditMode ? 'Edit character error:' : 'Add character error:', error);
-            showMessage(isEditMode ? 'Failed to update character' : 'Failed to add character', 'error');
+            console.error('Edit character error:', error);
+            showMessage('Failed to update character', 'error');
         } finally {
             setSubmitting(false);
         }
@@ -319,12 +210,12 @@ export default function EditCharacterProfile() {
 
     return (
         <div className="edit-character-container">
-            <Header title={isEditMode ? "Edit Character Profile" : "Add Character Profile"} />
+            <Header title="Edit Character Profile" />
 
             <div className="edit-character-form">
                 <div className="form-group">
                     <label className="form-label">Upload Character Photos / Videos</label>
-                    <div className="upload-container" onScroll={handleScroll}>
+                    <div className="upload-container">
                         {formData.previewUrls.length > 0 ? (
                             formData.previewUrls.map((url, idx) => (
                                 <div key={idx} className="edit-upload-box">
@@ -368,19 +259,13 @@ export default function EditCharacterProfile() {
                         style={{ display: 'none' }}
                     />
                     <div className="upload-indicator">
-                        {formData.previewUrls.length > 0 ? (
-                            // Total dots = number of images + 1 for "Add More"
-                            Array.from({ length: formData.previewUrls.length + 1 }).map((_, idx) => (
-                                <span
-                                    key={idx}
-                                    className={`indicator-dot ${idx === currentSlideIndex ? 'active' : ''}`}
-                                ></span>
-                            ))
-                        ) : (
-                            // Default 2 dots for the empty state
+                        {formData.previewUrls.map((_, idx) => (
+                            <span key={idx} className={`indicator-dot ${idx === 0 ? 'active' : ''}`}></span>
+                        ))}
+                        {formData.previewUrls.length === 0 && (
                             <>
-                                <span className={`indicator-dot ${currentSlideIndex === 0 ? 'active' : ''}`}></span>
-                                <span className={`indicator-dot ${currentSlideIndex === 1 ? 'active' : ''}`}></span>
+                                <span className="indicator-dot active"></span>
+                                <span className="indicator-dot"></span>
                             </>
                         )}
                     </div>
@@ -414,47 +299,24 @@ export default function EditCharacterProfile() {
 
                 <div className="form-group">
                     <label className="form-label">Select Character Style</label>
-                    <div className="select-wrapper" ref={dropdownRef}>
-                        <div
-                            className="form-select custom-multi-select"
-                            onClick={() => setIsStyleDropdownOpen(!isStyleDropdownOpen)}
+                    <div className="select-wrapper">
+                        <select
+                            name="characterStyle"
+                            value={formData.characterStyle}
+                            onChange={handleInputChange}
+                            className="form-select"
                         >
-                            {Array.isArray(formData.characterStyle) && formData.characterStyle.length > 0
-                                ? formData.characterStyle.join(', ')
-                                : <span className="placeholder">Select Style</span>}
-                        </div>
-
-                        {isStyleDropdownOpen && (
-                            <div className="style-dropdown-list">
-                                {styles.map((styleObj, index) => {
-                                    const styleName = styleObj.vKeyword || styleObj.name;
-                                    const styleId = String(styleObj.iKeywordId || styleObj.iCharacterKeywordId || '');
-
-                                    const currentStyles = Array.isArray(formData.characterStyle) ? formData.characterStyle : [];
-                                    const currentIds = formData.iCharacterKeywordId ? String(formData.iCharacterKeywordId).split(',').map(s => s.trim()).filter(Boolean) : [];
-
-                                    const isChecked = currentStyles.includes(styleName) || (styleId && currentIds.includes(styleId));
-
-                                    return (
-                                        <div key={styleId || index} className="style-option" onClick={() => handleStyleToggle(styleObj)}>
-                                            <span>{styleName}</span>
-                                            <div className={`custom-checkbox ${isChecked ? 'checked' : ''}`}>
-                                                {isChecked && <span className="checkmark">✓</span>}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                {/* Fallback styles */}
-                                {Array.isArray(formData.characterStyle) && formData.characterStyle.filter(styleName => !styles.some(s => (s.vKeyword || s.name) === styleName)).map((styleName, index) => (
-                                    <div key={`fallback-${index}`} className="style-option" onClick={() => handleStyleToggle({ name: styleName, iKeywordId: '' })}>
-                                        <span>{styleName}</span>
-                                        <div className="custom-checkbox checked">
-                                            <span className="checkmark">✓</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                            <option value="">Select Style</option>
+                            {styles.map((styleObj, index) => (
+                                <option key={styleObj.iKeywordId || index} value={styleObj.vKeyword || styleObj.name}>
+                                    {styleObj.vKeyword || styleObj.name}
+                                </option>
+                            ))}
+                            {/* Fallback to show existing style if not in the list yet */}
+                            {formData.characterStyle && !styles.some(s => (s.vKeyword || s.name) === formData.characterStyle) && (
+                                <option value={formData.characterStyle}>{formData.characterStyle}</option>
+                            )}
+                        </select>
                     </div>
                 </div>
 
@@ -476,7 +338,7 @@ export default function EditCharacterProfile() {
                     onClick={handleUpdate}
                     disabled={submitting}
                 >
-                    {submitting ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update' : 'Add Character')}
+                    {submitting ? 'Updating...' : 'Update'}
                 </button>
             </div>
         </div>
