@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileApi } from '../../../api/profileApi';
+import { bankApi } from '../../../api/bankApi';
 import { useMessage } from '../../../context/MessageContext';
 import './MyAccount.scss';
 import Header from '../../../components/layout/Header/Header';
@@ -9,6 +10,8 @@ export default function MyAccount() {
 
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('personal');
+    const [hasBankDetails, setHasBankDetails] = useState(false);
+    const [bankLoading, setBankLoading] = useState(false);
     const { showMessage } = useMessage();
 
     const [formData, setFormData] = useState(() => {
@@ -101,6 +104,39 @@ export default function MyAccount() {
 
     }, []);
 
+    // Fetch bank details when the bank tab is activated
+    useEffect(() => {
+        if (activeTab !== 'bank') return;
+
+        const fetchBankInfo = async () => {
+            try {
+                setBankLoading(true);
+                const res = await bankApi.getBankInfo();
+                console.log('BANK INFO RESPONSE:', res.data);
+
+                const bank = res.data?.responseData || res.data?.data || res.data;
+
+                if (bank && (bank.vBankName || bank.iAccountNumber)) {
+                    setHasBankDetails(true);
+                    setFormData(prev => ({
+                        ...prev,
+                        bankName: bank.vBankName || '',
+                        branchLocation: bank.vBranchLocation || '',
+                        routingNumber: bank.iRoutingNumber || '',
+                        accountHolderName: bank.vAccountHolderName || '',
+                        accountNumber: bank.iAccountNumber || ''
+                    }));
+                }
+            } catch (error) {
+                console.log('BANK INFO ERROR:', error);
+            } finally {
+                setBankLoading(false);
+            }
+        };
+
+        fetchBankInfo();
+    }, [activeTab]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -124,6 +160,39 @@ export default function MyAccount() {
         } catch (error) {
             console.log("UPDATE ERROR:", error);
             showMessage('Update Failed', 'error');
+        }
+    };
+
+    const handleBankSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const bankData = {
+                bankName: formData.bankName,
+                branchLocation: formData.branchLocation,
+                routingNumber: formData.routingNumber,
+                accountHolderName: formData.accountHolderName,
+                accountNumber: formData.accountNumber
+            };
+
+            let res;
+            if (hasBankDetails) {
+                res = await bankApi.editBankDetails(bankData);
+            } else {
+                res = await bankApi.addBankDetails(bankData);
+            }
+
+            console.log('BANK SUBMIT RESPONSE:', res.data);
+
+            if (res.data?.responseCode === 200) {
+                setHasBankDetails(true);
+                showMessage(res.data?.responseMessage || 'Bank Details Saved Successfully', 'success');
+            } else {
+                showMessage(res.data?.responseMessage || 'Failed to save bank details', 'error');
+            }
+        } catch (error) {
+            console.log('BANK SUBMIT ERROR:', error);
+            showMessage('Failed to save bank details', 'error');
         }
     };
 
@@ -233,34 +302,40 @@ export default function MyAccount() {
                     </div>
                 ) : (
                     <div className="bank-details">
-                        <form className="account-form" onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label>Bank Name</label>
-                                <input type="text" name="bankName" value={formData.bankName} onChange={handleChange} />
-                            </div>
+                        {bankLoading ? (
+                            <div style={{ padding: '20px', textAlign: 'center' }}>Loading bank details...</div>
+                        ) : (
+                            <form className="account-form" onSubmit={handleBankSubmit}>
+                                <div className="form-group">
+                                    <label>Bank Name</label>
+                                    <input type="text" name="bankName" value={formData.bankName} onChange={handleChange} />
+                                </div>
 
-                            <div className="form-group">
-                                <label>Branch Location</label>
-                                <input type="text" name="branchLocation" value={formData.branchLocation} onChange={handleChange} />
-                            </div>
+                                <div className="form-group">
+                                    <label>Branch Location</label>
+                                    <input type="text" name="branchLocation" value={formData.branchLocation} onChange={handleChange} />
+                                </div>
 
-                            <div className="form-group">
-                                <label>Bank Routing Number</label>
-                                <input type="text" name="routingNumber" value={formData.routingNumber} onChange={handleChange} />
-                            </div>
+                                <div className="form-group">
+                                    <label>Bank Routing Number</label>
+                                    <input type="text" name="routingNumber" value={formData.routingNumber} onChange={handleChange} />
+                                </div>
 
-                            <div className="form-group">
-                                <label>Account Holder's Name</label>
-                                <input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={handleChange} />
-                            </div>
+                                <div className="form-group">
+                                    <label>Account Holder's Name</label>
+                                    <input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={handleChange} />
+                                </div>
 
-                            <div className="form-group">
-                                <label>Account Number</label>
-                                <input type="text" name="accountNumber" value={formData.accountNumber} onChange={handleChange} />
-                            </div>
+                                <div className="form-group">
+                                    <label>Account Number</label>
+                                    <input type="text" name="accountNumber" value={formData.accountNumber} onChange={handleChange} />
+                                </div>
 
-                            <button type="submit" className="update-btn">Update</button>
-                        </form>
+                                <button type="submit" className="update-btn">
+                                    {hasBankDetails ? 'Update' : 'Save'}
+                                </button>
+                            </form>
+                        )}
                     </div>
                 )}
             </div>

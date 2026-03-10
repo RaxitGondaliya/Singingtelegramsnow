@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import { bookingApi } from '../../../api/bookingApi';
+import { getImageUrl } from '../../../utils/imageUtils';
 import './BookingHistoryDetails.scss';
 
 const BookingHistoryDetails = () => {
@@ -63,7 +64,7 @@ const BookingHistoryDetails = () => {
     const data = bookingDetails;
 
     // Formatting helpers
-    const getAvatar = () => data.txProfilePic || data.vProfilePic || data.txCharacterPic || data.vImage;
+    const getAvatar = () => getImageUrl(data.txProfilePic || data.vProfilePic || data.txCharacterPic || data.vImage, '');
     const getUserName = () => data.vUserName || `${data.vFirstName || ''} ${data.vLastName || ''}`.trim() || 'Unknown User';
 
     // Sometimes backend returns nested objects, sometimes flat
@@ -78,11 +79,19 @@ const BookingHistoryDetails = () => {
     const statusMap = {
         1: 'Pending',
         2: 'Confirmed',
-        3: 'Completed',
-        4: 'Cancelled',
+        3: 'Declined',
+        4: 'Completed',
         5: 'Reported'
     };
     const paymentStatus = data.vPaymentStatus || data.paymentStatus || (data.tiStatus ? statusMap[data.tiStatus] : 'Completed');
+
+    // Determine the color class based on tiStatus
+    const statusColorMap = {
+        2: 'status-confirmed',   // blue
+        3: 'status-declined',    // red
+        4: 'status-completed',   // green
+    };
+    const statusColorClass = statusColorMap[data.tiStatus] || 'paid';
 
     // Time/Date formatting
     let dateTimeStr = `${data.dBookingDate || ''} ${data.tFromTime || ''} - ${data.tToTime || ''}`;
@@ -91,11 +100,7 @@ const BookingHistoryDetails = () => {
     }
 
     // Image fallback
-    let charImg = data.vImage || data.txCharacterPic || data.vCharacterImage;
-    if (charImg && !charImg.startsWith('http')) {
-        charImg = `https://placehold.co/60x60?text=${charImg.slice(0, 5)}`;
-    }
-    if (!charImg) charImg = 'https://placehold.co/60x60';
+    const charImg = getImageUrl(data.vImage || data.txCharacterPic || data.vCharacterImage, 'https://placehold.co/60x60');
 
     return (
         <div className="details-page">
@@ -115,7 +120,7 @@ const BookingHistoryDetails = () => {
                         <div className="user-meta">
                             <h3 className="user-name">{getUserName()}</h3>
                             <p className="user-phone">📞 {phoneStr || 'N/A'}</p>
-                            <p className="payment-status">Payment Status: <span className="paid">{paymentStatus}</span></p>
+                            <p className="payment-status">Payment Status: <span className={statusColorClass}>{paymentStatus}</span></p>
                         </div>
                     </div>
 
@@ -212,11 +217,13 @@ const BookingHistoryDetails = () => {
 
                     {/* Action Button */}
                     <div className="details-footer">
-                        <div className="footer-button-wrapper">
-                            <button className="btn-payout" onClick={() => setIsPayoutOpen(true)}>
-                                Payout Details
-                            </button>
-                        </div>
+                        {data.tiStatus !== 3 && data.tiStatus !== '3' && (
+                            <div className="footer-button-wrapper">
+                                <button className="btn-payout" onClick={() => setIsPayoutOpen(true)}>
+                                    Payout Details
+                                </button>
+                            </div>
+                        )}
                         <p className="cancel-policy">Booking Cancellation Policy</p>
                     </div>
                 </div>
@@ -233,24 +240,24 @@ const BookingHistoryDetails = () => {
                         <div className="sheet-content">
                             <div className="payout-row">
                                 <span>Singing Telegram Base</span>
-                                <strong>${paymentObj.fPayableAmount || paymentObj.dBasePayout || data.dProviderBaseAmount || data.fPrice || '0.00'}</strong>
+                                <strong>${paymentObj.fPayableAmount.toFixed(2) || '0.00'}</strong>
                             </div>
                             <div className="payout-row">
                                 <span>Tip Amount</span>
-                                <strong>${paymentObj.fTipAmount || paymentObj.dTipAmount || data.dDriverTip || data.fTipPercentage || '0.00'}</strong>
+                                <strong>${paymentObj.fTipAmount.toFixed(2) || paymentObj.dTipAmount.toFixed(2) || data.dDriverTip.toFixed(2) || data.fTipPercentage.toFixed(2) || '0.00'}</strong>
                             </div>
                             <div className="payout-row">
                                 <span>Travel Fee</span>
-                                <strong>${paymentObj.fTravelFee || paymentObj.dTravelFee || data.dTravelFee || '0.00'}</strong>
+                                <strong>${paymentObj.fTravelFee.toFixed(2) || paymentObj.dTravelFee.toFixed(2) || data.dTravelFee.toFixed(2) || '0.00'}</strong>
                             </div>
                             <div className="payout-row">
                                 <span>Add-Ons Reimbursement</span>
-                                <strong>${paymentObj.fAddOnAmount || paymentObj.dAddOnReimbursement || data.dAddOnCharges || '0.00'}</strong>
+                                <strong>${paymentObj.fAddOnAmount?.toFixed(2) || paymentObj.dAddOnReimbursement.toFixed(2) || data.dAddOnCharges.toFixed(2) || '0.00'}</strong>
                             </div>
                             <hr className="payout-divider" />
                             <div className="payout-row total">
                                 <span>Total Payout</span>
-                                <strong>${paymentObj.fTotalAmount || paymentObj.dTotalPayout || data.dDriverTotalAmount || data.fPrice || '0.00'}</strong>
+                                <strong>${paymentObj.fTotalAmount?.toFixed(2) || paymentObj.dTotalPayout?.toFixed(2) || data.dDriverTotalAmount?.toFixed(2) || data.fPrice?.toFixed(2) || '0.00'}</strong>
                             </div>
                         </div>
                     </div>

@@ -50,8 +50,19 @@
                         color: #666;
                         margin: 0;
 
-                        .paid {
+                        .paid,
+                        .status-completed {
                             color: #28a745;
+                            font-weight: bold;
+                        }
+
+                        .status-confirmed {
+                            color: #3498db;
+                            font-weight: bold;
+                        }
+
+                        .status-declined {
+                            color: #e74c3c;
                             font-weight: bold;
                         }
                     }
@@ -84,6 +95,7 @@
                         font-size: 12px;
                         display: block;
                     }
+
                     .value-orange {
                         color: $accent-color;
                         margin: 0;
@@ -189,8 +201,10 @@
     // Payout Bottom Sheet / Modal
     .payout-overlay {
         position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         background: rgba(0, 0, 0, 0.5);
         display: flex;
         align-items: flex-end;
@@ -244,7 +258,9 @@
                     font-size: 15px;
                     color: #555;
 
-                    strong { color: #000; }
+                    strong {
+                        color: #000;
+                    }
 
                     &.total {
                         margin-top: 15px;
@@ -265,6 +281,11 @@
 }
 
 @keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
 }

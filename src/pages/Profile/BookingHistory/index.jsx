@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import { bookingApi } from '../../../api/bookingApi';
+import { getImageUrl } from '../../../utils/imageUtils';
 import './BookingHistory.scss';
 
 const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
@@ -149,21 +150,15 @@ export default function BookingHistory() {
         const statusMap = {
             1: 'Pending',
             2: 'Confirmed',
-            3: 'Completed',
-            4: 'Cancelled',
+            3: 'Declined',
+            4: 'Completed',
             5: 'Reported'
         };
 
         const timeStr = req.time || req.vBookingTime || (req.tFromTime && req.tToTime ? `${req.tFromTime} - ${req.tToTime}` : null) || `${req.vStartTime || '00:00'} - ${req.vEndTime || '00:00'}`;
 
-        // Use a placeholder URL if vImage is just a filename
-        let imageSrc = req.charImage || req.txProfilePic || req.txCharacterPic || req.vCharacterImage;
-        if (!imageSrc && req.vImage) {
-            imageSrc = `https://placehold.co/100x100?text=${req.vImage.slice(0, 10)}`;
-        }
-        if (!imageSrc || imageSrc === '') {
-            imageSrc = 'https://placehold.co/100x100';
-        }
+        // Construct full image URL from filename
+        const imageSrc = getImageUrl(req.charImage || req.txProfilePic || req.txCharacterPic || req.vCharacterImage || req.vImage);
 
         return {
             id: req.id || req.iBookingId || Math.random(),
