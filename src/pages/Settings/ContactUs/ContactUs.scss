@@ -54,7 +54,8 @@
                     margin-bottom: 8px;
                 }
 
-                input {
+                input,
+                textarea {
                     width: 100%;
                     border: none;
                     border-bottom: 1px solid #333;
@@ -63,9 +64,28 @@
                     background: transparent;
                     outline: none;
                     color: #333;
+                    transition: border-bottom 0.2s;
 
                     &:focus {
                         border-bottom: 2px solid $accent-color;
+                    }
+
+                    &:disabled {
+                        opacity: 0.7;
+                        cursor: not-allowed;
+                    }
+                }
+
+                textarea {
+                    resize: none;
+                    border: 1px solid #eee;
+                    padding: 10px;
+                    border-radius: 4px;
+                    font-family: inherit;
+
+                    &:focus {
+                        border-color: $accent-color;
+                        border-bottom: 1px solid $accent-color;
                     }
                 }
             }
@@ -82,16 +102,51 @@
                 cursor: pointer;
                 margin-top: 40px;
                 box-shadow: 0 4px 12px rgba(252, 163, 17, 0.2);
-                transition: transform 0.2s, background-color 0.2s;
+                transition: transform 0.2s, background-color 0.2s, opacity 0.2s;
 
-                &:hover {
+                &:hover:not(:disabled) {
                     background-color: darken($accent-color, 10%);
                 }
 
-                &:active {
+                &:active:not(:disabled) {
                     transform: scale(0.98);
                 }
+
+                &:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                    background-color: #ccc;
+                    box-shadow: none;
+                }
+
+                &.loading {
+                    position: relative;
+                    color: transparent;
+
+                    &::after {
+                        content: "";
+                        position: absolute;
+                        width: 20px;
+                        height: 20px;
+                        top: calc(50% - 10px);
+                        left: calc(50% - 10px);
+                        border: 2px solid $white;
+                        border-radius: 50%;
+                        border-top-color: transparent;
+                        animation: spin 0.8s linear infinite;
+                    }
+                }
             }
+        }
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
         }
     }
 
