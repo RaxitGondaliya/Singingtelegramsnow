@@ -22,6 +22,7 @@ import Settings from "./pages/Settings/Settings";
 import SyncCalendars from "./pages/Settings/SyncCalendars";
 import ChangePassword from "./pages/Settings/ChangePassword";
 import AboutUs from "./pages/Settings/AboutUs";
+import CancellationPolicy from "./pages/Profile/CancellationPolicy";
 
 import PrivacyPolicy from "./pages/Settings/PrivacyPolicy";
 import ContactUs from "./pages/Settings/ContactUs";
@@ -75,6 +76,7 @@ function App() {
             </Route>
 
             <Route path="notifications" element={<Notifications />} />
+            <Route path="cancellation-policy" element={<CancellationPolicy />} />
             <Route path="settings" element={<Settings />} />
             <Route path="setting" element={<Settings />} />
             <Route path="sync-calendars" element={<SyncCalendars />} />

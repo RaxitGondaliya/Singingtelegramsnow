@@ -16,6 +16,7 @@
         .settings-section {
             display: flex;
             flex-direction: column;
+            cursor: pointer;
 
             .settings-item-wrapper {
                 display: flex;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import { bookingApi } from '../../../api/bookingApi';
 import { getImageUrl } from '../../../utils/imageUtils';
@@ -7,6 +7,7 @@ import './BookingHistoryDetails.scss';
 
 const BookingHistoryDetails = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [isPayoutOpen, setIsPayoutOpen] = useState(false);
     const [bookingDetails, setBookingDetails] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -224,7 +225,7 @@ const BookingHistoryDetails = () => {
                                 </button>
                             </div>
                         )}
-                        <p className="cancel-policy">Booking Cancellation Policy</p>
+                        <p className="cancel-policy" onClick={() => navigate('/dashboard/cancellation-policy')} style={{ cursor: 'pointer' }}>Booking Cancellation Policy</p>
                     </div>
                 </div>
             </div>

@@ -3,14 +3,27 @@
 
 .terms-conditions-container {
     background-color: $white;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 
     .terms-content {
         padding: 20px;
         color: $black;
         line-height: 1.4;
-        max-width: 800px;
+        max-width: 1000px;
         margin: 0 auto;
+        overflow-y: auto;
+        flex: 1;
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        &::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
 
         h2 {
             font-size: 18px;

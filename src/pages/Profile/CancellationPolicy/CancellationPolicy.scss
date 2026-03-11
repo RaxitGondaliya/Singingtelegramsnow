@@ -1,0 +1,64 @@
+.cancellation-policy-page {
+    background-color: #f9fdfa; /* usually apps have some base color, but we'll stick to white or near white. Wait, checking other pages might be good... but let's just make it #fff for content, matching image */
+    background-color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    .cancellation-policy-content {
+        padding: 20px;
+        color: #111; /* near black, like in image */
+        font-family: inherit;
+        font-size: 15px;
+        line-height: 1.4;
+        max-width: 800px;
+        margin: 0 auto;
+        
+        strong {
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            margin-bottom: 15px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-bottom: 20px;
+
+            li {
+                margin-bottom: 15px;
+
+                ul.sub-list {
+                    list-style-type: circle;
+                    margin-top: 15px;
+                    margin-bottom: 0;
+                    padding-left: 20px;
+
+                    li {
+                        margin-bottom: 15px;
+                        font-weight: 400; /* reset if parent was strong */
+                    }
+                }
+            }
+        }
+
+        .reasons-list,
+        .penalties-list {
+            list-style-type: disc;
+        }
+    }
+}
+
+@media (min-width: 768px) {
+    .cancellation-policy-page {
+        .cancellation-policy-content {
+            padding: 40px;
+            font-size: 16px;
+        }
+    }
+}

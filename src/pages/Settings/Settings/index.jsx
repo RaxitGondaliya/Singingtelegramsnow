@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Settings.scss';
 import Header from '../../../components/layout/Header/Header';
@@ -8,6 +8,23 @@ import { authApi } from '../../../api';
 export default function Settings() {
     const navigate = useNavigate();
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+    const [userEmail, setUserEmail] = useState('testing@singing.Com');
+
+    useEffect(() => {
+        try {
+            const userDataString = localStorage.getItem('userData');
+            if (userDataString) {
+                const userData = JSON.parse(userDataString);
+                if (userData && userData.vEmailId) {
+                    setUserEmail(userData.vEmailId);
+                } else if (userData && userData.email) {
+                    setUserEmail(userData.email);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to parse userData from localStorage:', error);
+        }
+    }, []);
 
     const settingsItems = [
         { id: 'notifications', label: 'Manage Notifications', type: 'toggle', value: notificationsEnabled, onChange: () => setNotificationsEnabled(!notificationsEnabled) },
@@ -92,7 +109,7 @@ export default function Settings() {
                     >
                         <div className="sign-out-info">
                             <span className="sign-out-label">Sign Out</span>
-                            <p className="user-email">testing@singing.Com</p>
+                            <p className="user-email">{userEmail}</p>
                         </div>
                     </div>
                 </div>
