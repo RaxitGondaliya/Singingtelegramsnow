@@ -57,8 +57,13 @@ export default function ManageProfiles() {
             if (newPageData.length > 0) {
                 setCharacters(prev => {
                     // Filter out strict duplicates by CharacterId if the API returned overlapping records
-                    const existingIds = new Set(prev.map(c => c.iCharacterId || c.id || c.iArtistCharacterId));
-                    const uniqueNewData = newPageData.filter(c => !existingIds.has(c.iCharacterId || c.id || c.iArtistCharacterId));
+                    // Using a more robust ID check to match what's used in rendering
+                    const getCharId = (c) => c.iArtistCharacterId || c.iCharacterId || c.id;
+                    const existingIds = new Set(prev.map(getCharId).filter(Boolean));
+                    const uniqueNewData = newPageData.filter(c => {
+                        const id = getCharId(c);
+                        return !id || !existingIds.has(id);
+                    });
                     return [...prev, ...uniqueNewData];
                 });
             }
@@ -154,7 +159,7 @@ export default function ManageProfiles() {
                     </div>
                 ) : (
                     characters.map((char, index) => {
-                        const charId = char.iCharacterId || char.id || index;
+                        const charId = char.iArtistCharacterId || char.iCharacterId || char.id || `temp-${index}`;
                         const charName = char.vCharacterName || char.name || 'Unknown';
                         const charDesc = char.txDescription || char.description || '';
                         const charPrice = char.fPrice || char.price || '0.00';
@@ -163,7 +168,22 @@ export default function ManageProfiles() {
                             ? char.eStatus.toLowerCase()
                             : getStatusClass(char.tiStatus);
 
-                        const charImage = getImageUrl(char.vImage || char.txCharacterPic || char.image);
+                        // Robust image selection
+                        let rawImage = char.vImage || char.txCharacterPic || char.vCharacterImage || char.image;
+                        
+                        // Handle txMedia array or stringified JSON
+                        if (!rawImage && char.txMedia) {
+                            try {
+                                const media = typeof char.txMedia === 'string' ? JSON.parse(char.txMedia) : char.txMedia;
+                                if (Array.isArray(media) && media.length > 0) {
+                                    rawImage = media[0].vMedia || media[0].vMediaName || media[0].vThumb;
+                                }
+                            } catch (e) {
+                                console.warn('Failed to parse txMedia:', e);
+                            }
+                        }
+
+                        const charImage = getImageUrl(rawImage);
 
                         return (
                             <div key={charId} className="profile-card">

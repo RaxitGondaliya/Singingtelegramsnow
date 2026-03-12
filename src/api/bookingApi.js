@@ -113,5 +113,22 @@ export const bookingApi = {
                 resolve({ data: { message: `Request ${action}ed successfully` } });
             }, 1000);
         });
+    },
+
+    getMyEarnings: async (month = '', year = '') => {
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        return apiClient.get(`/booking/myearnings?month=${month}&year=${year}`, {
+            headers: {
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
     }
 };
+
