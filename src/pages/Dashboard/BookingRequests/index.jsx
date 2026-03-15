@@ -14,10 +14,12 @@ export default function BookingRequests() {
             try {
                 setLoading(true);
                 const response = await bookingApi.getBookingRequests();
-                console.log('Booking requests response:', response.data);
+                console.log('Complete API response for Booking Requests:', response.data);
 
                 let data = [];
-                if (response.data && response.data.status === 200) {
+                if (response.data && Array.isArray(response.data.responseData)) {
+                    data = response.data.responseData;
+                } else if (response.data && response.data.status === 200) {
                     data = response.data.data || [];
                 } else if (response.data && Array.isArray(response.data.data)) {
                     data = response.data.data;
@@ -48,11 +50,11 @@ export default function BookingRequests() {
             id: req.id || req.iBookingId || Math.random(),
             date: req.date || dateObj.getDate().toString(),
             month: req.month || dateObj.toLocaleString('default', { month: 'short' }),
-            userName: req.userName || req.vUserName || `${req.vFirstName || ''} ${req.vLastName || ''}`.trim() || 'Unknown User',
-            characterImg: req.characterImg || req.txCharacterPic || req.vCharacterImage || 'https://via.placeholder.com/60?text=Image',
-            characterName: req.characterName || req.vCharacterName || 'Unknown Character',
-            time: req.time || req.vBookingTime || `${req.vStartTime || '00:00'} - ${req.vEndTime || '00:00'}`,
-            location: req.location || req.vAddress || req.vLocation || 'Unknown Location',
+            userName: req.vUserName || req.userName || `${req.vFirstName || ''} ${req.vLastName || ''}`.trim() || 'Unknown User',
+            characterImg: req.vImage || req.txProfilePic || req.characterImg || req.txCharacterPic || req.vCharacterImage || 'https://via.placeholder.com/60?text=Image',
+            characterName: req.vCharacterName || req.characterName || 'Unknown Character',
+            time: (req.tFromTime && req.tToTime) ? `${req.tFromTime} - ${req.tToTime}` : (req.time || req.vBookingTime || `${req.vStartTime || '00:00'} - ${req.vEndTime || '00:00'}`),
+            location: req.vStreetAddress || req.location || req.vAddress || req.vLocation || 'Unknown Location',
             ...req
         };
     };
@@ -84,7 +86,15 @@ export default function BookingRequests() {
                     bookingRequests.map((rawReq, index) => {
                         const request = formatRequest(rawReq);
                         return (
-                            <div className="booking-card" key={request.id || index}>
+                            <div
+                                className="booking-card"
+                                key={request.id || index}
+                                onClick={() => {
+                                    if (request.iBookingId || request.id) {
+                                        navigate(`/dashboard/profile/history/${request.iBookingId || request.id}`);
+                                    }
+                                }}
+                            >
                                 <div className="date-badge">
                                     <span className="day">{request.date}</span>
                                     <span className="month">{request.month}</span>
@@ -125,11 +135,25 @@ export default function BookingRequests() {
                                     </div>
                                 </div>
 
-                                <div className="divider"></div>
-
                                 <div className="card-actions">
-                                    <button className="btn-decline">Decline</button>
-                                    <button className="btn-confirm">Confirm</button>
+                                    <button
+                                        className="btn-decline"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            bookingApi.cancelBooking(request.iBookingId, request.iReasonId, request.txDescription);
+                                        }}
+                                    >
+                                        Decline
+                                    </button>
+                                    <button
+                                        className="btn-confirm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            bookingApi.confirmBooking(request.iBookingId);
+                                        }}
+                                    >
+                                        Confirm
+                                    </button>
                                 </div>
                             </div>
                         );

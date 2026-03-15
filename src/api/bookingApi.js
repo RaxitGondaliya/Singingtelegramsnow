@@ -4,7 +4,7 @@ import { generateAppToken } from './authApi';
 export const bookingApi = {
     getMyBookings: async () => {
         // Real call: return apiClient.get('/bookings/my');
-        
+
         // Dummy implementation
         return new Promise((resolve) => {
             setTimeout(() => {
@@ -33,6 +33,64 @@ export const bookingApi = {
             }
         });
     },
+
+    cancelBooking: async (iBookingId, iReasonId, txDescription) => {
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        const payload = {
+            iBookingId,
+            iReasonId,
+            txDescription
+        };
+
+        const params = new URLSearchParams();
+        params.append('iBookingId', iBookingId);
+        params.append('iReasonId', iReasonId);
+        params.append('txDescription', txDescription);
+
+        console.log("Cancel Booking Payload:", payload);
+
+        return apiClient.put('/booking/cancelbooking', params.toString(), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
+    },
+
+    confirmBooking: async (iBookingId) => {
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        const payload = {
+            iBookingId
+        };
+
+        const params = new URLSearchParams();
+        params.append('iBookingId', iBookingId);
+
+        console.log("Confirm Booking Payload:", payload);
+
+        //API temporarily disabled for testing
+        return apiClient.put('/booking/confirmbooking', params.toString(), {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
+    },
+
 
     getBookingHistory: async (offset = '') => {
         const nonce = Math.random().toString(36).substring(2, 15);
@@ -107,7 +165,7 @@ export const bookingApi = {
     respondToRequest: async (id, action) => {
         // Action: 'accept' or 'reject'
         // Real call: return apiClient.post(`/bookings/requests/${id}/${action}`);
-        
+
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve({ data: { message: `Request ${action}ed successfully` } });
