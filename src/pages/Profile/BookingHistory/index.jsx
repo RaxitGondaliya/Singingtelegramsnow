@@ -43,6 +43,13 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
         navigate('/dashboard/profile/report', { state: { iBookingId: booking.id } });
     };
 
+    const handleMarkAsRead = (e) => {
+        e.stopPropagation();
+        setActiveMenu(null);
+        // Placeholder function (no API integration required)
+        console.log('Mark as Read clicked for booking:', booking.id);
+    };
+
     return (
         /* 4. Added handleCardClick here */
         <div className="booking-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
@@ -94,6 +101,11 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
                         <button className="dots-btn" onClick={toggleMenu}>⋮</button>
                         {isMenuOpen && (
                             <div className="dropdown-menu">
+                                {(booking.status === 'Confirm' || booking.status === 'Confirmed') && (
+                                    <button className="dropdown-item" onClick={handleMarkAsRead}>
+                                        Mark as Read
+                                    </button>
+                                )}
                                 <button className="dropdown-item" onClick={handleReportRedirect}>
                                     Report It
                                 </button>
