@@ -23,10 +23,8 @@ export const notificationApi = {
             const response = await apiClient.get('/user/getnotificationcount', {
                 headers: getHeaders()
             });
-            console.log("Notification API Response:", response.data);
             return response;
         } catch (error) {
-            console.error("Notification API Error:", error);
             throw error;
         }
     },
@@ -37,7 +35,6 @@ export const notificationApi = {
             const response = await apiClient.get(`/user/notificationlist?offset=${offset}`, {
                 headers: getHeaders()
             });
-            console.log("Notification API Response:", response.data);
             return response;
         } catch (error) {
             console.error("Notification API Error:", error);
@@ -54,7 +51,6 @@ export const notificationApi = {
             const response = await apiClient.post('/user/updatenotificationcount', body.toString(), {
                 headers: getHeaders()
             });
-            console.log("Notification API Response:", response.data);
             return response;
         } catch (error) {
             console.error("Notification API Error:", error);
@@ -71,7 +67,6 @@ export const notificationApi = {
             const response = await apiClient.post('/user/updatenotificationflag', body.toString(), {
                 headers: getHeaders()
             });
-            console.log("Notification API Response:", response.data);
             return response;
         } catch (error) {
             console.error("Notification API Error:", error);
@@ -88,7 +83,6 @@ export const notificationApi = {
             const response = await apiClient.put('/user/updatenotificationreadflag', body.toString(), {
                 headers: getHeaders()
             });
-            console.log("Notification API Response:", response.data);
             return response;
         } catch (error) {
             console.error("Notification API Error:", error);

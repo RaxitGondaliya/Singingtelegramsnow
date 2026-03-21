@@ -19,7 +19,6 @@ const BookingHistoryDetails = () => {
             try {
                 setLoading(true);
                 const response = await bookingApi.getBookingDetails(id);
-                console.log('Booking details response:', response.data);
 
                 if (response.data && response.data.responseData) {
                     setBookingDetails(response.data.responseData);
@@ -82,7 +81,7 @@ const BookingHistoryDetails = () => {
         2: 'Confirmed',
         3: 'Declined',
         4: 'Completed',
-        5: 'Reported'
+        5: 'Cancelled by Entertainer'
     };
     const paymentStatus = data.vPaymentStatus || data.paymentStatus || (data.tiStatus ? statusMap[data.tiStatus] : 'Completed');
 

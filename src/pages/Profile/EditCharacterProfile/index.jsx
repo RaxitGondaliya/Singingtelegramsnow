@@ -286,12 +286,10 @@ export default function EditCharacterProfile() {
                 payload.iArtistCharacterId = formData.iArtistCharacterId;
             }
 
-            console.log(isEditMode ? 'Edit character payload:' : 'Add character payload:', payload);
 
             const apiCall = isEditMode ? characterApi.editCharacter : characterApi.addCharacter;
             const res = await apiCall(payload);
 
-            console.log(isEditMode ? 'Edit character response:' : 'Add character response:', res.data);
 
             if (res.data?.responseCode === 200) {
                 showMessage(res.data?.responseMessage || (isEditMode ? 'Character Updated Successfully' : 'Character Added Successfully'), 'success');

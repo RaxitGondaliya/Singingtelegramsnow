@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import './CancellationPolicy.scss';
 
 const CancellationPolicy = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [bookingId, setBookingId] = useState(location.state?.bookingId || null);
+    
     return (
         <div className="cancellation-policy-page">
             <Header title="Cancellation Policy" />
@@ -55,6 +60,17 @@ const CancellationPolicy = () => {
                         <strong>When an performer cancels 4 iobs in a single year, they will be placed on probation and not appear in search results until the admin reistates their profile.</strong>
                     </li>
                 </ul>
+
+                {bookingId && (
+                    <div className="policy-actions">
+                        <button 
+                            className="agree-btn" 
+                            onClick={() => navigate('/dashboard/profile/cancel-booking', { state: { bookingId } })}
+                        >
+                            Agree & Continue
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

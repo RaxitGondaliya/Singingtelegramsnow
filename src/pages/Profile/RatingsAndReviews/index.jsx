@@ -13,7 +13,6 @@ export default function RatingsAndReviews() {
             try {
                 setLoading(true);
                 const response = await ratingApi.getRatingsAndReviews();
-                console.log('Ratings and reviews response:', response.data);
 
                 let data = [];
                 let total = 0;
@@ -21,7 +20,7 @@ export default function RatingsAndReviews() {
 
                 if (response.data && response.data.responseCode === 200 && response.data.responseData) {
                     const responseData = response.data.responseData;
-                    
+
                     if (Array.isArray(responseData.reviews)) {
                         data = responseData.reviews;
                     } else if (Array.isArray(responseData)) {
@@ -30,20 +29,20 @@ export default function RatingsAndReviews() {
 
                     average = parseFloat(responseData.fAvgRating || responseData.dAverageRating) || 0;
                     total = parseInt(responseData.iTotalReviews) || data.length;
-                    
+
                 } else if (response.data && Array.isArray(response.data.data)) {
                     data = response.data.data;
                     total = data.length;
                 }
 
                 if (total > 0 && average === 0 && data.length > 0) {
-                     const sum = data.reduce((acc, curr) => acc + (parseFloat(curr.dRating || curr.rating || 0)), 0);
-                     average = sum / data.length;
+                    const sum = data.reduce((acc, curr) => acc + (parseFloat(curr.dRating || curr.rating || 0)), 0);
+                    average = sum / data.length;
                 }
 
                 setReviews(data);
                 setStats({ average: average, total: total });
-                
+
             } catch (error) {
                 console.error('Error fetching ratings and reviews:', error);
             } finally {
@@ -66,7 +65,7 @@ export default function RatingsAndReviews() {
                 dateObj = new Date(parsedDate * 1000);
             }
         }
-        
+
         const formattedDate = dateObj.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -75,7 +74,7 @@ export default function RatingsAndReviews() {
 
         // Use a placeholder URL if no image is present
         let imageSrc = req.vReviewerImage || req.vProfilePic || req.txProfilePic || req.imageUrl;
-        
+
         return {
             id: req.id || req.iRatingId || req.iReviewId || Math.random() + idx,
             name: req.vReviewerName || req.vUserName || req.name || 'Unknown User',
@@ -115,7 +114,7 @@ export default function RatingsAndReviews() {
     return (
         <div className="ratings-reviews-page">
             <Header title="Ratings & Reviews" />
-            
+
             <div className="ratings-content">
                 <div className="overall-rating-section">
                     <div className="overall-stars">
@@ -139,7 +138,7 @@ export default function RatingsAndReviews() {
                                 <div className="review-header">
                                     <div className="reviewer-avatar">
                                         {review.image ? (
-                                             <img src={review.image} alt={review.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                            <img src={review.image} alt={review.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                                         ) : (
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>

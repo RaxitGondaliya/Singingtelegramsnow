@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { bookingApi } from '../../../api/bookingApi';
+import { useMessage } from '../../../context/MessageContext';
 import './BookingRequests.scss';
 
 export default function BookingRequests() {
     const navigate = useNavigate();
+    const { showConfirm } = useMessage();
 
     const [bookingRequests, setBookingRequests] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -14,7 +16,6 @@ export default function BookingRequests() {
             try {
                 setLoading(true);
                 const response = await bookingApi.getBookingRequests();
-                console.log('Complete API response for Booking Requests:', response.data);
 
                 let data = [];
                 if (response.data && Array.isArray(response.data.responseData)) {
@@ -138,9 +139,14 @@ export default function BookingRequests() {
                                 <div className="card-actions">
                                     <button
                                         className="btn-decline"
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                             e.stopPropagation();
-                                            bookingApi.cancelBooking(request.iBookingId, request.iReasonId, request.txDescription);
+                                            const confirmed = await showConfirm('Are you sure you want to cancel this booking?');
+                                            if (confirmed) {
+                                                navigate('/dashboard/profile/cancel-policy', { 
+                                                    state: { bookingId: request.iBookingId } 
+                                                });
+                                            }
                                         }}
                                     >
                                         Decline

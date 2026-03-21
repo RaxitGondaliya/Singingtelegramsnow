@@ -42,8 +42,6 @@ export default function Notifications() {
                 notificationApi.getNotificationCount()
             ]);
 
-            console.log("Notification List:", listResponse?.data);
-            console.log("Notification Count:", countResponse?.data);
 
             if (listResponse?.data?.responseData) {
                 setNotifications(listResponse.data.responseData);

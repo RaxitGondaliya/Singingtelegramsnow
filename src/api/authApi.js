@@ -80,7 +80,6 @@ export const authApi = {
         
         const appToken = generateAppToken(nonce, timestamp);
         
-        console.log("API Headers:", { nonce, timestamp, token: appToken });
 
         return apiClient.post('/oauth/signup', body, {
             headers: {

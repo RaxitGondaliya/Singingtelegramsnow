@@ -179,10 +179,8 @@ export default function EditCharacterProfile() {
                 txMedia: txMedia
             };
 
-            console.log('Edit character payload:', payload);
 
             const res = await characterApi.editCharacter(payload);
-            console.log('Edit character response:', res.data);
 
             if (res.data?.responseCode === 200) {
                 showMessage(res.data?.responseMessage || 'Character Updated Successfully', 'success');

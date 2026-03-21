@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import { bookingApi } from '../../../api/bookingApi';
 import { getImageUrl } from '../../../utils/imageUtils';
+import { useMessage } from '../../../context/MessageContext';
 import './BookingHistory.scss';
 
-const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
+const BookingCard = ({ booking, activeMenu, setActiveMenu, onRefresh }) => {
     const isMenuOpen = activeMenu === booking.id;
     const menuRef = useRef(null);
     const navigate = useNavigate();
+    const { showMessage, showConfirm } = useMessage();
 
     // 1. New Handler: Navigates to the Details page
     const handleCardClick = () => {
@@ -37,21 +39,45 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
     }, [isMenuOpen, setActiveMenu]);
 
     const handleReportRedirect = (e) => {
-        e.stopPropagation(); // 3. Prevents navigating to details when clicking Report
+        e.stopPropagation();
         setActiveMenu(null);
         localStorage.setItem('reportBookingId', booking.id);
         navigate('/dashboard/profile/report', { state: { iBookingId: booking.id } });
     };
 
-    const handleMarkAsRead = (e) => {
+    const handleMarkAsCompleted = async (e) => {
         e.stopPropagation();
         setActiveMenu(null);
-        // Placeholder function (no API integration required)
-        console.log('Mark as Read clicked for booking:', booking.id);
+
+        const confirmed = await showConfirm('Are you sure you want to mark this booking as completed?');
+        if (!confirmed) return;
+
+        try {
+            const response = await bookingApi.completeBooking(booking.id);
+            const data = response.data || {};
+
+            // Prioritize responseCode or status from the data body
+            // Some APIs return 200 HTTP status but an error code in the body
+            const isSuccess = (data.responseCode === 200 || data.responseCode === '200' ||
+                data.status === 200 || data.status === '200' || data.status === 1 || data.status === '1') ||
+                (!data.responseCode && !data.status && response.status === 200);
+
+            if (isSuccess) {
+                showMessage(data.responseMessage || data.message || 'Booking marked as completed successfully!', 'success');
+                if (onRefresh) onRefresh();
+            } else {
+                showMessage(data.responseMessage || data.message || 'Failed to complete booking', 'error');
+            }
+        } catch (error) {
+            console.error('Error completing booking:', error);
+            const errorMsg = error.response?.data?.responseMessage ||
+                error.response?.data?.message ||
+                'An error occurred while completing the booking.';
+            showMessage(errorMsg, 'error');
+        }
     };
 
     return (
-        /* 4. Added handleCardClick here */
         <div className="booking-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
             <div className="date-badge">
                 <span className="date-day">{booking.day}</span>
@@ -102,8 +128,8 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu }) => {
                         {isMenuOpen && (
                             <div className="dropdown-menu">
                                 {(booking.status === 'Confirm' || booking.status === 'Confirmed') && (
-                                    <button className="dropdown-item" onClick={handleMarkAsRead}>
-                                        Mark as Read
+                                    <button className="dropdown-item" onClick={handleMarkAsCompleted}>
+                                        Mark as Completed
                                     </button>
                                 )}
                                 <button className="dropdown-item" onClick={handleReportRedirect}>
@@ -123,32 +149,31 @@ export default function BookingHistory() {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                setLoading(true);
-                const response = await bookingApi.getBookingHistory();
-                console.log('Booking history response:', response.data);
+    const fetchHistory = async () => {
+        try {
+            setLoading(true);
+            const response = await bookingApi.getBookingHistory();
 
-                let data = [];
-                if (response.data && response.data.responseData) {
-                    data = response.data.responseData;
-                } else if (response.data && response.data.status === 200) {
-                    data = response.data.data || [];
-                } else if (response.data && Array.isArray(response.data.data)) {
-                    data = response.data.data;
-                } else if (Array.isArray(response.data)) {
-                    data = response.data;
-                }
-
-                setBookings(data);
-            } catch (error) {
-                console.error('Error fetching booking history:', error);
-            } finally {
-                setLoading(false);
+            let data = [];
+            if (response.data && response.data.responseData) {
+                data = response.data.responseData;
+            } else if (response.data && response.data.status === 200) {
+                data = response.data.data || [];
+            } else if (response.data && Array.isArray(response.data.data)) {
+                data = response.data.data;
+            } else if (Array.isArray(response.data)) {
+                data = response.data;
             }
-        };
 
+            setBookings(data);
+        } catch (error) {
+            console.error('Error fetching booking history:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchHistory();
     }, []);
 
@@ -164,7 +189,7 @@ export default function BookingHistory() {
             2: 'Confirmed',
             3: 'Declined',
             4: 'Completed',
-            5: 'Reported'
+            5: 'Cancelled by Entertainer'
         };
 
         const timeStr = req.time || req.vBookingTime || (req.tFromTime && req.tToTime ? `${req.tFromTime} - ${req.tToTime}` : null) || `${req.vStartTime || '00:00'} - ${req.vEndTime || '00:00'}`;
@@ -213,6 +238,7 @@ export default function BookingHistory() {
                                     booking={formattedBooking}
                                     activeMenu={activeMenu}
                                     setActiveMenu={setActiveMenu}
+                                    onRefresh={fetchHistory}
                                 />
                             );
                         })

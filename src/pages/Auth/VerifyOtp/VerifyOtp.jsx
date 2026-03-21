@@ -60,11 +60,9 @@ export default function VerifyOtp() {
 
   const handleResend = async () => {
     if (timer > 0) {
-    console.log("Resend blocked - timer still running:", timer);
-    return;
-  }
+      return;
+    }
 
-  console.log("Resend OTP API calling...");
 
     setResendLoading(true);
     setError("");

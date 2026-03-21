@@ -23,6 +23,7 @@ import SyncCalendars from "./pages/Settings/SyncCalendars";
 import ChangePassword from "./pages/Settings/ChangePassword";
 import AboutUs from "./pages/Settings/AboutUs";
 import CancellationPolicy from "./pages/Profile/CancellationPolicy";
+import CancelBooking from "./pages/Dashboard/CancelBooking";
 
 import PrivacyPolicy from "./pages/Settings/PrivacyPolicy";
 import ContactUs from "./pages/Settings/ContactUs";
@@ -100,6 +101,8 @@ function App() {
               <Route path="ratings-reviews" element={<RatingsAndReviews />} />
               <Route path="report" element={<ReportIt />} />
               <Route path="change-mobile" element={<ChangeMobileNumber />} />
+              <Route path="cancel-policy" element={<CancellationPolicy />} />
+              <Route path="cancel-booking" element={<CancelBooking />} />
             </Route>
 
           </Route>

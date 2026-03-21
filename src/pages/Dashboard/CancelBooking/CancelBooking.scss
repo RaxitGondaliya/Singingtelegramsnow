@@ -1,0 +1,100 @@
+.cancel-booking-page {
+    background-color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    .form-container {
+        padding: 20px 24px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        margin-top: 20px;
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+
+            label {
+                font-size: 15px;
+                color: #888;
+                font-weight: 500;
+            }
+
+            .select-wrapper, .input-wrapper {
+                position: relative;
+                
+                select, textarea {
+                    width: 100%;
+                    padding: 8px 0;
+                    border: none;
+                    background: transparent;
+                    font-size: 17px;
+                    color: #333;
+                    outline: none;
+                    font-family: inherit;
+                    appearance: none;
+                }
+
+                textarea {
+                    min-height: 100px;
+                    resize: none;
+                    overflow: hidden;
+                    display: block;
+                    width: 100%;
+                    line-height: normal;
+                }
+
+                .underline {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    height: 1px;
+                    background-color: #ccc;
+                }
+
+                select:focus + .underline,
+                textarea:focus + .underline {
+                    background-color: #ff9800;
+                    height: 2px;
+                }
+            }
+
+            .select-wrapper {
+                background: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23333' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right center;
+                cursor: pointer;
+            }
+        }
+
+        .button-footer {
+            margin-top: auto;
+            padding: 40px 0 20px;
+            
+            .submit-btn {
+                background-color: #ff9800;
+                color: #fff;
+                width: 100%;
+                padding: 16px;
+                border-radius: 8px;
+                border: none;
+                font-size: 18px;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+                transition: all 0.2s ease;
+
+                &:active {
+                    transform: scale(0.98);
+                }
+
+                &:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+            }
+        }
+    }
+}

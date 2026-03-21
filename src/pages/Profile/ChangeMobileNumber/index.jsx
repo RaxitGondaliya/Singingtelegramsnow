@@ -13,7 +13,6 @@ export default function ChangeMobileNumber() {
         }
 
         // Simulating OTP send / API call
-        console.log('Sending OTP to: +1', mobileNumber);
         alert(`OTP sent to +1 ${mobileNumber}`);
     };
 

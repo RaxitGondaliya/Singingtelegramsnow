@@ -59,10 +59,6 @@ export default function MyAccount() {
         const fetchProfile = async () => {
             try {
                 const res = await profileApi.getProfile();
-
-                console.log("STATUS CODE:", res.status);
-                console.log("PROFILE RESPONSE:", res.data);
-
                 if (res.data?.responseCode !== 200) return;
 
                 const user = res.data.responseData;
@@ -96,7 +92,6 @@ export default function MyAccount() {
                 }));
 
             } catch (error) {
-                console.log("PROFILE ERROR:", error);
             }
         };
 
@@ -112,8 +107,6 @@ export default function MyAccount() {
             try {
                 setBankLoading(true);
                 const res = await bankApi.getBankInfo();
-                console.log('BANK INFO RESPONSE:', res.data);
-
                 const bank = res.data?.responseData || res.data?.data || res.data;
 
                 if (bank && (bank.vBankName || bank.iAccountNumber)) {
@@ -128,7 +121,6 @@ export default function MyAccount() {
                     }));
                 }
             } catch (error) {
-                console.log('BANK INFO ERROR:', error);
             } finally {
                 setBankLoading(false);
             }
@@ -148,9 +140,6 @@ export default function MyAccount() {
 
         try {
             const res = await profileApi.updateProfile(formData);
-
-            console.log("UPDATE RESPONSE:", res.data);
-
             if (res.data?.responseCode === 200) {
                 showMessage(res.data?.responseMessage || 'Profile Updated Successfully', 'success');
             } else {
@@ -158,7 +147,6 @@ export default function MyAccount() {
             }
 
         } catch (error) {
-            console.log("UPDATE ERROR:", error);
             showMessage('Update Failed', 'error');
         }
     };
@@ -182,7 +170,6 @@ export default function MyAccount() {
                 res = await bankApi.addBankDetails(bankData);
             }
 
-            console.log('BANK SUBMIT RESPONSE:', res.data);
 
             if (res.data?.responseCode === 200) {
                 setHasBankDetails(true);
@@ -191,7 +178,6 @@ export default function MyAccount() {
                 showMessage(res.data?.responseMessage || 'Failed to save bank details', 'error');
             }
         } catch (error) {
-            console.log('BANK SUBMIT ERROR:', error);
             showMessage('Failed to save bank details', 'error');
         }
     };

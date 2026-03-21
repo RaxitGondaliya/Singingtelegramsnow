@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { availabilityApi } from '../../../api/availabilityApi';
+import { bookingApi } from '../../../api/bookingApi';
+import { useMessage } from '../../../context/MessageContext';
 import Header from '../../../components/layout/Header/Header';
 import './ManageAvailability.scss';
 
 export default function Availability() {
     const navigate = useNavigate();
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -13,10 +16,60 @@ export default function Availability() {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [slideDirection, setSlideDirection] = useState('');
-    
-    const [dayStatus, setDayStatus] = useState('not-available'); 
-    const [selectedSlots, setSelectedSlots] = useState([]); 
 
+    const [dayStatus, setDayStatus] = useState('not-available');
+    const [selectedSlots, setSelectedSlots] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [existingBookings, setExistingBookings] = useState([]);
+    const [bookedSlots, setBookedSlots] = useState([]);
+    const { showMessage, showAlert } = useMessage();
+
+    React.useEffect(() => {
+        const fetchExistingBookings = async () => {
+            try {
+                const dateStr = formatDate(selectedDate);
+                const response = await bookingApi.getBookings(dateStr);
+
+                let bookingsData = [];
+                let bookedList = [];
+
+                if (response.data && response.data.responseData) {
+                    const respData = response.data.responseData;
+                    bookingsData = respData.availability || [];
+                }
+
+                // Identify slots where tiIsbook is 1
+                bookingsData.forEach(item => {
+                    if (item.tiIsbook === 1 || item.tiIsbook === '1') {
+                        const slotStr = `${item.tFromTime} - ${item.tToTime}`;
+                        bookedList.push(slotStr);
+                    }
+                });
+
+                setExistingBookings(bookingsData);
+                setBookedSlots(bookedList);
+
+                // Also set initial selected slots based on tiIsavailable
+                const availableList = [];
+                bookingsData.forEach(item => {
+                    if (item.tiIsavailable === 1 || item.tiIsavailable === '1') {
+                        availableList.push(`${item.tFromTime} - ${item.tToTime}`);
+                    }
+                });
+                setSelectedSlots(availableList);
+
+                // Set day status based on results
+                if (availableList.length === 0) setDayStatus('not-available');
+                else if (availableList.length === timeSlots.length) setDayStatus('available');
+                else setDayStatus('specific-slots');
+
+            } catch (error) {
+                console.error("Error fetching bookings for availability:", error);
+            }
+        };
+
+        fetchExistingBookings();
+    }, [selectedDate]);
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const timeSlots = [
         "09:00 AM - 10:00 AM", "10:00 AM - 11:00 AM", "11:00 AM - 12:00 PM",
@@ -40,10 +93,10 @@ export default function Availability() {
             daysArray.push({ date: null, currentMonth: false, fullDate: null });
         }
         for (let i = 1; i <= daysInMonth; i++) {
-            daysArray.push({ 
-                date: i, 
-                currentMonth: true, 
-                fullDate: new Date(year, month, i) 
+            daysArray.push({
+                date: i,
+                currentMonth: true,
+                fullDate: new Date(year, month, i)
             });
         }
         return daysArray;
@@ -73,30 +126,85 @@ export default function Availability() {
 
     // Toggles individual slots
     const handleSlotToggle = (slot) => {
-        setDayStatus('specific-slots'); 
-        setSelectedSlots(prev => 
-            prev.includes(slot) 
-                ? prev.filter(item => item !== slot) 
+        setDayStatus('specific-slots');
+        setSelectedSlots(prev =>
+            prev.includes(slot)
+                ? prev.filter(item => item !== slot)
                 : [...prev, slot]
         );
     };
 
-    const handleUpdate = () => {
-        console.log("Saving selection:", { dayStatus, selectedSlots });
-        navigate('/dashboard/profile');
+    const formatDate = (date) => {
+        const d = new Date(date);
+        let month = '' + (d.getMonth() + 1);
+        let day = '' + d.getDate();
+        const year = d.getFullYear();
+
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+
+        return [year, month, day].join('-');
+    };
+
+    const handleUpdate = async () => {
+        setLoading(true);
+        try {
+            const dateStr = formatDate(selectedDate);
+            const statusStr = dayStatus === 'available' ? 'Available' : dayStatus === 'not-available' ? 'Unavailable' : 'Specific';
+
+
+            const txAvailability = {
+                dAvailabilityDate: dateStr,
+                tiIsavailable: dayStatus === 'not-available' ? 0 : 1,
+                tiIsSpecificTime: dayStatus === 'specific-slots' ? 1 : 0,
+                eStatus: statusStr,
+                txSlots: selectedSlots
+            };
+
+            if (!availabilityApi) {
+                console.error("availabilityApi is UNDEFINED!");
+                window.alert("Critical error: availabilityApi service is missing.");
+                return;
+            }
+
+            const response = await availabilityApi.manageAvailability(txAvailability);
+
+            const data = response.data || {};
+
+            const isSuccess = (data.responseCode === 200 || data.responseCode === '200' ||
+                data.status === 200 || data.status === '200' ||
+                data.status === 1 || data.status === '1') ||
+                (!data.responseCode && !data.status && response.status === 200);
+
+            if (isSuccess) {
+                showMessage(data.responseMessage || data.message || 'Availability updated successfully!', 'success');
+                navigate('/dashboard/profile');
+            } else {
+                showMessage(data.responseMessage || data.message || 'Failed to update availability', 'error');
+            }
+        } catch (error) {
+            console.error("Failed to update availability", error);
+            window.alert("API Error: " + (error.message || "Unknown error"));
+            const errorMsg = error.response?.data?.responseMessage ||
+                error.response?.data?.message ||
+                'An error occurred while updating availability.';
+            showMessage(errorMsg, 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const days = generateCalendarDays();
-    
-    const isSelected = (d) => 
-        d && d.getDate() === selectedDate.getDate() && 
-        d.getMonth() === selectedDate.getMonth() && 
+
+    const isSelected = (d) =>
+        d && d.getDate() === selectedDate.getDate() &&
+        d.getMonth() === selectedDate.getMonth() &&
         d.getFullYear() === selectedDate.getFullYear();
 
     return (
         <div className="availability-container">
             <Header title="Manage Availability" onBack={() => navigate('/dashboard/profile')} />
-            
+
             <div className="content-layout">
                 <div className="calendar-section">
                     <div className="calendar-header">
@@ -115,8 +223,8 @@ export default function Availability() {
                             {days.map((day, idx) => {
                                 const isPast = day.fullDate && day.fullDate < today && day.currentMonth;
                                 return (
-                                    <div 
-                                        key={idx} 
+                                    <div
+                                        key={idx}
                                         className={`day-cell 
                                             ${!day.currentMonth ? 'empty' : ''} 
                                             ${isSelected(day.fullDate) ? 'selected' : ''} 
@@ -144,10 +252,10 @@ export default function Availability() {
                     <div className="availability-options">
                         <label className="option-row">
                             <span>Full Day Not Available</span>
-                            <input 
-                                type="radio" 
-                                name="avail" 
-                                checked={dayStatus === 'not-available'} 
+                            <input
+                                type="radio"
+                                name="avail"
+                                checked={dayStatus === 'not-available'}
                                 onChange={() => {
                                     setDayStatus('not-available');
                                     setSelectedSlots([]); // Clears all checkmarks
@@ -158,10 +266,10 @@ export default function Availability() {
 
                         <label className="option-row">
                             <span>Full Day Available</span>
-                            <input 
-                                type="radio" 
-                                name="avail" 
-                                checked={dayStatus === 'available'} 
+                            <input
+                                type="radio"
+                                name="avail"
+                                checked={dayStatus === 'available'}
                                 onChange={() => {
                                     setDayStatus('available');
                                     setSelectedSlots([...timeSlots]); // Checks ALL time slots
@@ -175,10 +283,26 @@ export default function Availability() {
                         {timeSlots.map((slot, index) => {
                             const isChecked = selectedSlots.includes(slot);
                             return (
-                                <div key={index} className="slot-row" onClick={() => handleSlotToggle(slot)}>
-                                    <span>{slot}</span>
-                                    <div className={`custom-checkbox ${isChecked ? 'checked' : ''}`} 
-                                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div
+                                    key={index}
+                                    className={`slot-row ${bookedSlots.includes(slot) ? 'disabled' : ''}`}
+                                    onClick={() => {
+                                        if (bookedSlots.includes(slot)) {
+                                            showAlert('You already have booking scheduling for this duration');
+                                        } else {
+                                            handleSlotToggle(slot);
+                                        }
+                                    }}
+                                    style={{ cursor: bookedSlots.includes(slot) ? 'pointer' : 'pointer' }}
+                                >
+                                    <span style={{ color: bookedSlots.includes(slot) ? '#999' : 'inherit' }}>{slot}</span>
+                                    <div className={`custom-checkbox ${isChecked ? 'checked' : ''} ${bookedSlots.includes(slot) ? 'booked-locked' : ''}`}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            opacity: bookedSlots.includes(slot) ? 0.6 : 1
+                                        }}>
                                         {isChecked && <span style={{ color: 'white', fontSize: '10px' }}>✓</span>}
                                     </div>
                                 </div>
@@ -186,7 +310,9 @@ export default function Availability() {
                         })}
                     </div>
 
-                    <button className="update-btn" onClick={handleUpdate}>Update</button>
+                    <button className="update-btn" onClick={handleUpdate} disabled={loading}>
+                        {loading ? 'Updating...' : 'Update'}
+                    </button>
                 </div>
             </div>
 

@@ -35,11 +35,10 @@ export default function ManageProfiles() {
 
     const fetchCharacters = async (currentOffset) => {
         try {
-            if (!currentOffset) setLoading(true); // Only show global loader on first load
+            if (!currentOffset) setLoading(true);
             else setIsFetchingNextPage(true);
 
             const res = await characterApi.getCharactersList(currentOffset);
-            console.log(`Characters list response (offset '${currentOffset}'):`, res.data);
 
             let newPageData = [];
             if (res.data?.responseData) {
@@ -56,8 +55,6 @@ export default function ManageProfiles() {
 
             if (newPageData.length > 0) {
                 setCharacters(prev => {
-                    // Filter out strict duplicates by CharacterId if the API returned overlapping records
-                    // Using a more robust ID check to match what's used in rendering
                     const getCharId = (c) => c.iArtistCharacterId || c.iCharacterId || c.id;
                     const existingIds = new Set(prev.map(getCharId).filter(Boolean));
                     const uniqueNewData = newPageData.filter(c => {
@@ -68,15 +65,12 @@ export default function ManageProfiles() {
                 });
             }
 
-            // Check pagination metadata from the response
             const returnedOffset = res.data?.responseDataOffset;
 
-            // If the server provided a valid NEXT offset that is different from what we just requested, queue it up
             if (newPageData.length > 0 && returnedOffset !== undefined && returnedOffset > 0 && String(returnedOffset) !== String(currentOffset)) {
                 setOffset(String(returnedOffset));
                 setHasMore(true);
             } else {
-                // Reached the end or no pagination given, or no new data returned
                 setHasMore(false);
             }
 
@@ -89,10 +83,8 @@ export default function ManageProfiles() {
         }
     };
 
-    // Initial Load Only
     useEffect(() => {
         fetchCharacters('');
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const getStatusLabel = (tiStatus) => {
@@ -123,7 +115,6 @@ export default function ManageProfiles() {
         if (confirmed) {
             try {
                 const res = await characterApi.deleteCharacter(characterId);
-                console.log('Delete response:', res.data);
 
                 if (res.data?.responseCode === 200) {
                     showMessage(res.data?.responseMessage || 'Character deleted successfully.', 'success');
@@ -170,7 +161,7 @@ export default function ManageProfiles() {
 
                         // Robust image selection
                         let rawImage = char.vImage || char.txCharacterPic || char.vCharacterImage || char.image;
-                        
+
                         // Handle txMedia array or stringified JSON
                         if (!rawImage && char.txMedia) {
                             try {
