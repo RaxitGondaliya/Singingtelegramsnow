@@ -40,7 +40,7 @@ export default function EditCharacterProfile() {
             ? [getImageUrl(profileData.vImage)]
             : profileData.txCharacterPic
                 ? [getImageUrl(profileData.txCharacterPic)]
-                : []
+                : ['https://img.freepik.com/premium-vector/snowflakes-stencil-vector03-mandala-style_566680-13576.jpg?semt=ais_rp_progressive&w=740&q=80']
     });
 
     const [submitting, setSubmitting] = useState(false);
@@ -186,11 +186,14 @@ export default function EditCharacterProfile() {
 
         const newPreviewUrls = files.map(file => URL.createObjectURL(file));
 
-        setFormData(prev => ({
-            ...prev,
-            media: [...prev.media, ...files],
-            previewUrls: [...prev.previewUrls, ...newPreviewUrls]
-        }));
+        setFormData(prev => {
+            const isReplacingOld = prev.media.length === 0;
+            return {
+                ...prev,
+                media: isReplacingOld ? files : [...prev.media, ...files],
+                previewUrls: isReplacingOld ? newPreviewUrls : [...prev.previewUrls, ...newPreviewUrls]
+            };
+        });
 
         // When new files are added, scroll to the newly added images (which is current previewUrls length)
         setTimeout(() => {
@@ -239,32 +242,42 @@ export default function EditCharacterProfile() {
         try {
             setSubmitting(true);
 
-            // Build txMedia array from uploaded files (as base64) or existing URLs
+            // This array must contain ALL images (old and new) to avoid count() error
             const txMedia = [];
 
-            // Add existing image URLs that weren't removed
-            for (const url of formData.previewUrls) {
-                if (!url.startsWith('blob:')) {
-                    const filename = url.split('/').pop();
-                    const isVideo = filename.match(/\.(mp4|mov|wmv|avi|mkv|flv)$/i);
-                    const ext = filename.split('.').pop() || 'jpeg';
-                    txMedia.push({
-                        vMedia: filename,
-                        vMediaName: filename,
-                        vMediaType: isVideo ? 'Video' : 'Image',
-                        vFileType: ext,
-                        vThumb: filename
-                    });
-                }
+            // 1. IMPORTANT: Loop through existing previewUrls
+            // If the URL is from the server (doesn't start with 'blob:'), 
+            // we must add it to txMedia so the backend sees it.
+            if (formData.previewUrls && formData.previewUrls.length > 0) {
+                formData.previewUrls.forEach((url) => {
+                    if (!url.startsWith('blob:')) {
+                        const cleanUrl = url.split('?')[0];
+                        const extractedFilename = cleanUrl.substring(cleanUrl.lastIndexOf('/') + 1);
+
+                        // Use full URL for external fallback image, otherwise standard filename
+                        const filename = url.includes('freepik.com') ? url : extractedFilename;
+                        const isVideo = extractedFilename.match(/\.(mp4|mov|wmv|avi|mkv|flv)$/i);
+                        const ext = extractedFilename.split('.').pop() || 'jpeg';
+
+                        txMedia.push({
+                            vMedia: filename, // Send filename for existing images (or full url for fallback)
+                            vMediaName: extractedFilename,
+                            vMediaType: isVideo ? 'Video' : 'Image',
+                            vFileType: ext,
+                            vThumb: filename
+                        });
+                    }
+                });
             }
 
-            // Convert new files to base64
+            // 2. Convert newly uploaded files to base64 and add them to txMedia
             for (const file of formData.media) {
                 const base64 = await fileToBase64(file);
                 const isVideo = file.type.startsWith('video/');
                 const ext = file.name.split('.').pop() || (isVideo ? 'mp4' : 'jpeg');
+
                 txMedia.push({
-                    vMedia: base64,
+                    vMedia: base64, // Send Base64 string for new uploads
                     vMediaName: file.name,
                     vMediaType: isVideo ? 'Video' : 'Image',
                     vFileType: ext,
@@ -273,33 +286,32 @@ export default function EditCharacterProfile() {
             }
 
             const payload = {
-                iCharacterId: formData.iCharacterId || "",
-                iCharacterKeywordId: formData.iCharacterKeywordId || "",
+                iCharacterId: String(formData.iCharacterId || ""),
+                iCharacterKeywordId: String(formData.iCharacterKeywordId || ""),
                 vCharacterName: formData.character ? formData.character.trim() : '',
-                vCharacterStyle: Array.isArray(formData.characterStyle) ? formData.characterStyle.join(', ') : "",
+                vCharacterStyle: Array.isArray(formData.characterStyle) ? formData.characterStyle.join(',') : "",
                 txDescription: formData.description ? formData.description.trim() : '',
-                txMedia: txMedia
+                txMedia: txMedia // Now this array will NOT be empty
             };
 
-            // Only append iArtistCharacterId if it exists (usually true for Edit, false for Add)
             if (formData.iArtistCharacterId) {
                 payload.iArtistCharacterId = formData.iArtistCharacterId;
             }
 
+            console.log("Final Payload being sent:", payload);
 
             const apiCall = isEditMode ? characterApi.editCharacter : characterApi.addCharacter;
             const res = await apiCall(payload);
 
-
             if (res.data?.responseCode === 200) {
-                showMessage(res.data?.responseMessage || (isEditMode ? 'Character Updated Successfully' : 'Character Added Successfully'), 'success');
+                showMessage(res.data?.responseMessage || 'Character Updated Successfully', 'success');
                 navigate('/dashboard/profile/manage-profiles');
             } else {
-                showMessage(res.data?.responseMessage || (isEditMode ? 'Update Failed' : 'Add Failed'), 'error');
+                showMessage(res.data?.responseMessage || 'Update Failed', 'error');
             }
         } catch (error) {
-            console.error(isEditMode ? 'Edit character error:' : 'Add character error:', error);
-            showMessage(isEditMode ? 'Failed to update character' : 'Failed to add character', 'error');
+            console.error('Submission error:', error);
+            showMessage('Failed to update character', 'error');
         } finally {
             setSubmitting(false);
         }
