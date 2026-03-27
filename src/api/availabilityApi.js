@@ -15,14 +15,43 @@ export const availabilityApi = {
         const timezoneName = "America/New_York";
         const formattedOffset = "-04:00"; 
 
-        return apiClient.post('/availability/manageavailability', {
-            ...txAvailability,
+        const payload = {
+            dAvailabilityDate: txAvailability.dAvailabilityDate,
+            tiIsavailable: txAvailability.tiIsavailable,
+            tiIsAvailabile: txAvailability.tiIsavailable,
+            tiIsSpecificTime: txAvailability.tiIsSpecificTime,
+            eStatus: txAvailability.eStatus,
+            txSlots: txAvailability.txSlots,
             vTimezoneOffset: offsetVal,
             vTimezone: timezoneName,
-            vFormattedOffset: formattedOffset
-        }, {
+            vFormattedOffset: formattedOffset,
+            vType: txAvailability.vType || "day"
+        };
+
+        return apiClient.post('/availability/manageavailability', payload, {
             headers: {
                 'Content-Type': 'application/json',
+                'nonce': nonce,
+                'timestamp': timestamp,
+                'token': appToken,
+                'vAuthKey': authKey
+            }
+        });
+    },
+
+    getAvailabilityDates: async (month, year) => {
+        const nonce = Math.random().toString(36).substring(2, 15);
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const appToken = generateAppToken(nonce, timestamp);
+        const authKey = localStorage.getItem('vAuthKey') || localStorage.getItem('token') || '';
+
+        const formData = new FormData();
+        formData.append('month', month);
+        formData.append('year', year);
+
+        return apiClient.post('/availability/getavailabilitydates', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
                 'nonce': nonce,
                 'timestamp': timestamp,
                 'token': appToken,

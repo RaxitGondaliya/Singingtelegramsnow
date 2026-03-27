@@ -22,7 +22,28 @@ export default function Availability() {
     const [loading, setLoading] = useState(false);
     const [existingBookings, setExistingBookings] = useState([]);
     const [bookedSlots, setBookedSlots] = useState([]);
+    const [availabilityType, setAvailabilityType] = useState('day');
+    const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+    const [monthAvailabilities, setMonthAvailabilities] = useState([]);
     const { showMessage, showAlert } = useMessage();
+
+    const fetchMonthAvailability = async (dateParam) => {
+        try {
+            const m = (dateParam.getMonth() + 1).toString().padStart(2, '0');
+            const y = dateParam.getFullYear().toString();
+            const response = await availabilityApi.getAvailabilityDates(m, y);
+            if (response.data && response.data.responseData) {
+                const availData = Array.isArray(response.data.responseData) ? response.data.responseData : [];
+                setMonthAvailabilities(availData);
+            }
+        } catch (error) {
+            console.error("Error fetching getavailabilitydates:", error);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchMonthAvailability(currentDate);
+    }, [currentDate]);
 
     React.useEffect(() => {
         const fetchExistingBookings = async () => {
@@ -78,6 +99,24 @@ export default function Availability() {
         "06:00 PM - 07:00 PM", "07:00 PM - 08:00 PM", "08:00 PM - 09:00 PM",
         "09:00 PM - 10:00 PM", "10:00 PM - 11:00 PM"
     ];
+
+    const getWeekRange = (date) => {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day;
+        const start = new Date(d.setDate(diff));
+        const end = new Date(new Date(start).setDate(start.getDate() + 6));
+
+        const sMonth = months[start.getMonth()];
+        const sDay = start.getDate().toString().padStart(2, '0');
+        const eMonth = months[end.getMonth()];
+        const eDay = end.getDate().toString().padStart(2, '0');
+
+        if (sMonth === eMonth) {
+            return `${sMonth} ${sDay} - ${eDay}, ${end.getFullYear()}`;
+        }
+        return `${sMonth} ${sDay} - ${eMonth} ${eDay}, ${end.getFullYear()}`;
+    };
 
     const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
     const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -158,7 +197,8 @@ export default function Availability() {
                 tiIsavailable: dayStatus === 'not-available' ? 0 : 1,
                 tiIsSpecificTime: dayStatus === 'specific-slots' ? 1 : 0,
                 eStatus: statusStr,
-                txSlots: selectedSlots
+                txSlots: selectedSlots,
+                vType: availabilityType
             };
 
             if (!availabilityApi) {
@@ -178,7 +218,8 @@ export default function Availability() {
 
             if (isSuccess) {
                 showMessage(data.responseMessage || data.message || 'Availability updated successfully!', 'success');
-                navigate('/dashboard/profile');
+                fetchMonthAvailability(currentDate);
+                // Removed navigate('/dashboard/profile') so user stays on calendar
             } else {
                 showMessage(data.responseMessage || data.message || 'Failed to update availability', 'error');
             }
@@ -222,17 +263,47 @@ export default function Availability() {
                         <div className="days-grid">
                             {days.map((day, idx) => {
                                 const isPast = day.fullDate && day.fullDate < today && day.currentMonth;
+
+                                const checkHasAvail = (d) => {
+                                    if (!d || d < today) return false;
+                                    const fDate = formatDate(d);
+                                    return monthAvailabilities.some(item => {
+                                        if (typeof item === 'string') return item.startsWith(fDate);
+                                        if (item.dAvailabilityDate) {
+                                            return item.dAvailabilityDate.startsWith(fDate) && (item.tiIsAvailabile === 1 || item.tiIsAvailabile === '1');
+                                        }
+                                        if (item.date) return item.date.startsWith(fDate);
+                                        return false;
+                                    });
+                                };
+
+                                const currentHasAvail = checkHasAvail(day.fullDate);
+                                const prevDay = idx > 0 ? days[idx - 1] : null;
+                                const nextDay = idx < days.length - 1 ? days[idx + 1] : null;
+
+                                const prevHasAvail = prevDay && checkHasAvail(prevDay.fullDate);
+                                const nextHasAvail = nextDay && checkHasAvail(nextDay.fullDate);
+
+                                const isStartOfWeek = idx % 7 === 0;
+                                const isEndOfWeek = idx % 7 === 6;
+
+                                const isStreakStart = currentHasAvail && (!prevHasAvail || isStartOfWeek);
+                                const isStreakEnd = currentHasAvail && (!nextHasAvail || isEndOfWeek);
+
                                 return (
                                     <div
                                         key={idx}
                                         className={`day-cell 
                                             ${!day.currentMonth ? 'empty' : ''} 
                                             ${isSelected(day.fullDate) ? 'selected' : ''} 
-                                            ${isPast ? 'disabled' : ''}`
+                                            ${isPast ? 'disabled' : ''}
+                                            ${currentHasAvail ? 'has-availability' : ''}
+                                            ${isStreakStart ? 'streak-start' : ''}
+                                            ${isStreakEnd ? 'streak-end' : ''}`
                                         }
                                         onClick={() => handleDateClick(day)}
                                     >
-                                        {day.date}
+                                        <span className="date-text">{day.date}</span>
                                     </div>
                                 );
                             })}
@@ -243,9 +314,40 @@ export default function Availability() {
                 <div className="edit-availability-section">
                     <div className="section-header">
                         <h3>Edit Availability</h3>
-                        <div className="selected-date-display">
-                            {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                            <span className="dropdown-icon">▼</span>
+                        <div className="selected-date-display" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}>
+                            {availabilityType === 'week' ? getWeekRange(selectedDate) : selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            <span className="dropdown-icon">{isTypeDropdownOpen ? '▲' : '▼'}</span>
+
+                            {isTypeDropdownOpen && (
+                                <div className="type-dropdown-menu" style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    right: 0,
+                                    backgroundColor: '#fff',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    borderRadius: '8px',
+                                    zIndex: 10,
+                                    width: '320px',
+                                    padding: '10px 0',
+                                    marginTop: '10px',
+                                    border: '1px solid #ddd'
+                                }}>
+                                    <div className="type-option" style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderBottom: '1px solid #f0f0f0' }} onClick={(e) => { e.stopPropagation(); setAvailabilityType('week'); setIsTypeDropdownOpen(false); }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0 }}>
+                                            <input type="radio" checked={availabilityType === 'week'} readOnly style={{ marginRight: '15px', accentColor: '#f58220', width: '18px', height: '18px' }} />
+                                            <span style={{ fontSize: '15px', fontWeight: '500', color: availabilityType === 'week' ? '#000' : '#444' }}>Weekly</span>
+                                        </label>
+                                        <span style={{ color: '#f58220', fontSize: '14px', fontWeight: '500' }}>{getWeekRange(selectedDate)}</span>
+                                    </div>
+                                    <div className="type-option" style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setAvailabilityType('day'); setIsTypeDropdownOpen(false); }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0 }}>
+                                            <input type="radio" checked={availabilityType === 'day'} readOnly style={{ marginRight: '15px', accentColor: '#f58220', width: '18px', height: '18px' }} />
+                                            <span style={{ fontSize: '15px', fontWeight: '500', color: availabilityType === 'day' ? '#000' : '#444' }}>Single Day</span>
+                                        </label>
+                                        <span style={{ color: '#f58220', fontSize: '14px', fontWeight: '500' }}>{selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
