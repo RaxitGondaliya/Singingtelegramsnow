@@ -79,11 +79,11 @@
                     color: $primary-color;
                 }
 
-                &.desktop-only {
-                    @media (max-width: 768px) {
-                        display: none;
-                    }
-                }
+                // &.desktop-only {
+                //     @media (max-width: 768px) {
+                //         display: none;
+                //     }
+                // }
             }
         }
 

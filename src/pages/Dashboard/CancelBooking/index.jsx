@@ -48,12 +48,12 @@ const CancelBooking = () => {
             const response = await bookingApi.cancelBooking(bookingId, selectedReason, comment);
             const data = response.data || {};
 
-            // if (data.responseCode === 200 || data.status === 200 || data.status === 1) {
-            //     showMessage(data.responseMessage || 'Booking cancelled successfully', 'success');
-            //     navigate('/dashboard/my-bookings');
-            // } else {
-            //     showMessage(data.responseMessage || 'Failed to cancel booking', 'error');
-            // }
+            if (data.responseCode === 200 || data.status === 200 || data.status === 1) {
+                showMessage(data.responseMessage || 'Booking cancelled successfully', 'success');
+                navigate('/dashboard/booking-requests');
+            } else {
+                showMessage(data.responseMessage || 'Failed to cancel booking', 'error');
+            }
         } catch (error) {
             console.error('Error cancelling booking:', error);
             showMessage('An error occurred during cancellation.', 'error');
