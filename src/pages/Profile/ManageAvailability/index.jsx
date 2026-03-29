@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { availabilityApi } from '../../../api/availabilityApi';
-import { bookingApi } from '../../../api/bookingApi';
 import { useMessage } from '../../../context/MessageContext';
 import Header from '../../../components/layout/Header/Header';
 import './ManageAvailability.scss';
@@ -46,51 +45,44 @@ export default function Availability() {
     }, [currentDate]);
 
     React.useEffect(() => {
-        const fetchExistingBookings = async () => {
-            try {
-                const dateStr = formatDate(selectedDate);
-                const response = await bookingApi.getBookings(dateStr);
+        const dateStr = formatDate(selectedDate);
 
-                let bookingsData = [];
-                let bookedList = [];
+        // Find if we already have data for this specific day in our month-wide fetch
+        const existingDay = monthAvailabilities.find(item => {
+            const itemDate = typeof item === 'string' ? item : (item.dAvailabilityDate || item.date);
+            return itemDate && itemDate.startsWith(dateStr);
+        });
 
-                if (response.data && response.data.responseData) {
-                    const respData = response.data.responseData;
-                    bookingsData = respData.availability || [];
+        if (existingDay && existingDay.txSlots) {
+            const bookingsData = existingDay.txSlots || [];
+            let bookedList = [];
+            let availableList = [];
+
+            bookingsData.forEach(item => {
+                const slotStr = `${item.tFromTime} - ${item.tToTime}`;
+                if (item.tiIsbook === 1 || item.tiIsbook === '1') {
+                    bookedList.push(slotStr);
                 }
+                if (item.tiIsavailable === 1 || item.tiIsavailable === '1' || item.tiIsAvailabile === 1 || item.tiIsAvailabile === '1') {
+                    availableList.push(slotStr);
+                }
+            });
 
-                // Identify slots where tiIsbook is 1
-                bookingsData.forEach(item => {
-                    if (item.tiIsbook === 1 || item.tiIsbook === '1') {
-                        const slotStr = `${item.tFromTime} - ${item.tToTime}`;
-                        bookedList.push(slotStr);
-                    }
-                });
+            setExistingBookings(bookingsData);
+            setBookedSlots(bookedList);
+            setSelectedSlots(availableList);
 
-                setExistingBookings(bookingsData);
-                setBookedSlots(bookedList);
-
-                // Also set initial selected slots based on tiIsavailable
-                const availableList = [];
-                bookingsData.forEach(item => {
-                    if (item.tiIsavailable === 1 || item.tiIsavailable === '1') {
-                        availableList.push(`${item.tFromTime} - ${item.tToTime}`);
-                    }
-                });
-                setSelectedSlots(availableList);
-
-                // Set day status based on results
-                if (availableList.length === 0) setDayStatus('not-available');
-                else if (availableList.length === timeSlots.length) setDayStatus('available');
-                else setDayStatus('specific-slots');
-
-            } catch (error) {
-                console.error("Error fetching bookings for availability:", error);
-            }
-        };
-
-        fetchExistingBookings();
-    }, [selectedDate]);
+            if (availableList.length === 0) setDayStatus('not-available');
+            else if (availableList.length === timeSlots.length) setDayStatus('available');
+            else setDayStatus('specific-slots');
+        } else {
+            // Default state if no data exists for this day yet
+            setExistingBookings([]);
+            setBookedSlots([]);
+            setSelectedSlots([]);
+            setDayStatus('not-available');
+        }
+    }, [selectedDate, monthAvailabilities]);
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const timeSlots = [
         "09:00 AM - 10:00 AM", "10:00 AM - 11:00 AM", "11:00 AM - 12:00 PM",
@@ -192,12 +184,17 @@ export default function Availability() {
             const statusStr = dayStatus === 'available' ? 'Available' : dayStatus === 'not-available' ? 'Unavailable' : 'Specific';
 
 
+            const vTimeSlotsArray = timeSlots
+                .map((slotStr, idx) => ({ slotStr, id: idx + 1 }))
+                .filter(item => selectedSlots.includes(item.slotStr))
+                .map(item => ({ iAvailabilityTimeId: item.id }));
+
             const txAvailability = {
                 dAvailabilityDate: dateStr,
                 tiIsavailable: dayStatus === 'not-available' ? 0 : 1,
                 tiIsSpecificTime: dayStatus === 'specific-slots' ? 1 : 0,
-                eStatus: statusStr,
-                txSlots: selectedSlots,
+                eStatus: 'Specific',
+                vTimeSlots: vTimeSlotsArray,
                 vType: availabilityType
             };
 

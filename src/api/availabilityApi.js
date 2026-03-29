@@ -21,7 +21,7 @@ export const availabilityApi = {
             tiIsAvailabile: txAvailability.tiIsavailable,
             tiIsSpecificTime: txAvailability.tiIsSpecificTime,
             eStatus: txAvailability.eStatus,
-            txSlots: txAvailability.txSlots,
+            vTimeSlots: txAvailability.vTimeSlots,
             vTimezoneOffset: offsetVal,
             vTimezone: timezoneName,
             vFormattedOffset: formattedOffset,
