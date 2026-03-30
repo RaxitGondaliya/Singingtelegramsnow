@@ -1,145 +1,156 @@
-@use "../../../styles/abstracts/variables" as *;
-@use "../../../styles/abstracts/mixins" as *;
+@use '../../../styles/abstracts/variables' as *;
 
-.verify-wrapper {
-  width: 100%;
-  min-height: 100vh;
-  @include flex-center;
-  background: #fdfdfd;
-  padding: 20px;
-
-  @media (max-width: 768px) {
-    background: $white;
-    align-items: flex-start;
-    padding: 10px;
-  }
+.signin-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    padding: 2rem 1.5rem;
 }
 
-.verify-box {
-  width: 100%;
-  max-width: 500px;
-  background: $white;
-  padding: 30px;
-  min-height: 600px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-
-  @media (max-width: 768px) {
-    padding: 20px;
-    min-height: 95vh;
-  }
-
-  .box-header {
-    margin-bottom: 30px;
-    .back-arrow {
-      font-size: 28px;
-      color: orange;
-      cursor: pointer;
-    }
-  }
-
-  .content-area {
-    flex-grow: 1;
-
-    h2 {
-      font-size: 26px;
-      margin-bottom: 25px;
-      font-weight: 500;
-      color: #333;
+.signin-card {
+    background: white;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    position: relative;
+    
+    @media (min-width: 768px) {
+        padding: 4rem;
     }
 
-    .description {
-      color: #666;
-      font-size: 16px;
-      line-height: 1.4;
-      margin-bottom: 10px;
-      strong { color: #333; }
-    }
-
-    .timer-display {
-      text-align: center;
-      font-size: 20px;
-      color: #bbb;
-      margin: 40px 0;
-    }
-
-    .otp-input-wrapper {
-      display: flex;
-      justify-content: space-between;
-      gap: 15px;
-      margin-bottom: 50px;
-
-      input {
-        width: 60px;
+    h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 0.5rem;
         text-align: center;
-        font-size: 24px;
-        border: none;
-        border-bottom: 2px solid #333;
-        background: transparent;
-        outline: none;
-        padding-bottom: 5px;
-
-        @media (max-width: 400px) { width: 50px; }
-      }
     }
 
-    .resend-link {
-      text-align: center;
-      color: orange;
-      font-weight: 500;
-      cursor: pointer;
-      font-size: 18px;
-      margin-bottom: 30px;
+    .subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+        margin-bottom: 2.5rem;
+        
+        strong { color: #333; }
     }
+}
 
-    .next-btn {
-      width: 100%;
-      padding: 16px;
-      background: #e0e0e0; 
-      border: none;
-      color: $white;
-      font-size: 18px;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: not-allowed;
-      transition: all 0.3s ease;
-
-      &.active {
-        background: orange; 
-        cursor: pointer;
-      }
-    }
-  }
-
-  .bottom-link {
-    text-align: center;
-    color: #999;
-    font-size: 16px;
-    margin-top: auto; 
-    padding-bottom: 20px;
+.back-btn {
+    color: #333;
     cursor: pointer;
-  }
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    padding: 0;
+    
+    svg { width: 32px; height: 32px; }
+}
 
-.toast-message {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #444;
-  color: white;
-  padding: 18px 24px;
-  border-radius: 40px;
-  font-size: 15px;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-  z-index: 1000;
-  animation: fadeIn 0.3s ease-in-out; 
+.otp-timer {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: $primary-color;
+    text-align: center;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+}
 
-  @keyframes fadeIn {
+.otp-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    input {
+        width: 60px;
+        height: 60px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        background-color: #fdfdfd;
+        transition: all 0.2s;
+        
+        &:focus {
+            border-color: $primary-color;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba($primary-color, 0.05);
+        }
+    }
+}
+
+.resend-link {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    font-weight: 700;
+    border: none;
+    background: none;
+    color: #333;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    
+    &:disabled { opacity: 0.3; cursor: not-allowed; }
+    &:not(:disabled):hover { text-decoration: underline; }
+}
+
+.signin-btn {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 12px;
+    background-color: $primary-color;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba($primary-color, 0.2);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba($primary-color, 0.3); }
+}
+
+.error-alert {
+    background-color: #ffebee;
+    color: #d32f2f;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    border: 1px solid #ffcdd2;
+    text-align: center;
+}
+
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 99px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1000;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
     from { opacity: 0; transform: translate(-50%, 20px); }
     to { opacity: 1; transform: translate(-50%, 0); }
-  }
-}
 }

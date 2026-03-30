@@ -1,128 +1,83 @@
-@use "../../../styles/abstracts/variables" as *;
-@use "../../../styles/abstracts/mixins" as *;
+@use '../../../styles/abstracts/variables' as *;
 
-.auth-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: url("../../../assets/bg.jpg") center center / cover no-repeat;
-  @include flex-center;
-  flex-direction: column;
-  justify-content: space-between;
-  text-align: center;
+.auth-landing-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    padding: 2rem 1.5rem;
+}
 
-  .logo {
-    width: 220px;
-    margin-top: 80px;
+.auth-landing-wrapper {
+    max-width: 500px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-    @include mobile-first(769px) {
-      width: 300px;
+.landing-logo {
+    width: 80%;
+    max-width: 350px;
+    margin-bottom: 5rem;
+    object-fit: contain;
+}
+
+.landing-card {
+    background: white;
+    padding: 2.5rem;
+    width: 100%;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.auth-actions {
+    display: flex;
+    gap: 1.25rem;
+    width: 100%;
+    margin-bottom: 2rem;
+    flex-direction: column;
+
+    @media (min-width: 600px) {
+        flex-direction: row;
     }
-
-    @include mobile-first(1025px) {
-      width: 260px;
-    }
-  }
-
-  .bottom {
-    width: 90%;
-    max-width: 420px;
-    margin-bottom: 60px;
 
     button {
-      width: 100%;
-      height: 58px;
-      border-radius: 0;
-      border: none;
-      font-size: $font-size-large;
-      font-weight: $font-weight-bold;
-      margin-bottom: 18px;
-      cursor: pointer;
-      @include flex-center;
-      position: relative;
-
-      img {
-        position: absolute;
-        left: 18px;
-        width: 24px;
-        height: 24px;
-      }
-
-      span {
-        margin-left: 52px;
-        display: block;
-        text-align: center;
-      }
-
-      &.google {
-        background: $primary-color;
-        color: $white;
-      }
-
-      &.facebook {
-        background: $secondary-color;
-        color: $white;
-      }
-
-      &.outline {
-        background: transparent;
-        border: 2px solid $white;
-        color: $white;
-      }
-    }
-
-    .row {
-      display: flex;
-      gap: 12px;
-    }
-
-    .terms {
-      color: $white;
-      font-size: 15px;
-      margin-top: 18px;
-      line-height: 1.6;
-      text-align: center;
-
-      .link {
-        color: $accent-color;
-        text-decoration: underline;
-        cursor: pointer;
-      }
-    }
-  }
-
-  .login-box {
-    background: $background-overlay;
-    padding: 30px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    color: $white;
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 12px;
-      border-radius: 6px;
-      border: none;
-    }
-
-    .switch {
-      display: flex;
-      margin-bottom: 15px;
-
-      button {
         flex: 1;
-        padding: 10px;
-        border: none;
+        padding: 1rem;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: 2px solid $primary-color;
+        background: transparent;
+        color: $primary-color;
+        transition: all 0.2s;
 
-        &.active {
-          background: $accent-color;
-          color: $white;
+        &:hover { background-color: rgba($primary-color, 0.05); }
+
+        &.secondary {
+            border-color: #333;
+            color: #333;
+            &:hover { background-color: rgba(#333, 0.05); }
         }
-      }
     }
-  }
+}
+
+.landing-footer {
+    text-align: center;
+    font-size: 0.9375rem;
+    color: #666;
+    line-height: 1.8;
+
+    .link {
+        color: $primary-color;
+        text-decoration: underline;
+        font-weight: 600;
+        cursor: pointer;
+    }
 }

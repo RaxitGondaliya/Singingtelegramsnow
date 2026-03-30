@@ -17,10 +17,7 @@ export default function ChangePassword() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setPasswords(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setPasswords(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
@@ -32,12 +29,12 @@ export default function ChangePassword() {
         }
 
         if (passwords.new !== passwords.confirm) {
-            showMessage('New password and confirm password do not match.', 'error');
+            showMessage('Passwords do not match.', 'error');
             return;
         }
 
         if (passwords.new.length < 6) {
-            showMessage('Password must be at least 6 characters long.', 'error');
+            showMessage('Password must be at least 6 characters.', 'error');
             return;
         }
 
@@ -49,16 +46,15 @@ export default function ChangePassword() {
             });
 
             if (response.data && (response.data.responseCode === 200 || response.data.status === '1')) {
-                showMessage(response.data.responseMessage || response.data.message || 'Password changed successfully!', 'success');
+                showMessage(response.data.responseMessage || 'Password changed successfully!', 'success');
                 setPasswords({ current: '', new: '', confirm: '' });
-                // Optional: navigate back or to profile
-                // setTimeout(() => navigate('/profile'), 2000);
+                setTimeout(() => navigate('/dashboard/settings'), 1500);
             } else {
-                showMessage(response.data.responseMessage || response.data.message || 'Failed to change password.', 'error');
+                showMessage(response.data.responseMessage || 'Failed to change password.', 'error');
             }
         } catch (error) {
-            console.error('Change Password Error:', error);
-            showMessage('An error occurred. Please try again later.', 'error');
+            console.error('Change Pass error:', error);
+            showMessage('An error occurred. Please try again.', 'error');
         } finally {
             setLoading(false);
         }
@@ -66,53 +62,62 @@ export default function ChangePassword() {
 
     return (
         <div className="change-password-container">
-            <Header title="Change Password" />
+            <Header title="Change Password" onBack={() => navigate(-1)} />
 
-            <form className="change-password-content" onSubmit={handleSubmit}>
-                <div className="input-group">
-                    <label>Current Password</label>
-                    <input
-                        type="password"
-                        name="current"
-                        value={passwords.current}
-                        onChange={handleChange}
-                        disabled={loading}
-                        required
-                    />
-                </div>
+            <div className="change-password-wrapper">
+                <main className="change-card">
+                    <h2>Update Password</h2>
 
-                <div className="input-group">
-                    <label>New Password</label>
-                    <input
-                        type="password"
-                        name="new"
-                        value={passwords.new}
-                        onChange={handleChange}
-                        disabled={loading}
-                        required
-                    />
-                </div>
+                    <form className="change-form" onSubmit={handleSubmit}>
+                        <div className="input-field">
+                            <label>Current Password</label>
+                            <input 
+                                type="password" 
+                                name="current"
+                                value={passwords.current}
+                                onChange={handleChange}
+                                placeholder="Enter current password"
+                                required
+                                disabled={loading}
+                            />
+                        </div>
 
-                <div className="input-group">
-                    <label>Confirm Password</label>
-                    <input
-                        type="password"
-                        name="confirm"
-                        value={passwords.confirm}
-                        onChange={handleChange}
-                        disabled={loading}
-                        required
-                    />
-                </div>
+                        <div className="input-field">
+                            <label>New Password</label>
+                            <input 
+                                type="password" 
+                                name="new"
+                                value={passwords.new}
+                                onChange={handleChange}
+                                placeholder="Minimum 6 characters"
+                                required
+                                disabled={loading}
+                            />
+                        </div>
 
-                <button 
-                    type="submit" 
-                    className={`change-password-btn ${loading ? 'loading' : ''}`}
-                    disabled={loading}
-                >
-                    {loading ? 'Changing...' : 'Change Password'}
-                </button>
-            </form>
+                        <div className="input-field">
+                            <label>Confirm New Password</label>
+                            <input 
+                                type="password" 
+                                name="confirm"
+                                value={passwords.confirm}
+                                onChange={handleChange}
+                                placeholder="Re-type new password"
+                                required
+                                disabled={loading}
+                            />
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            className="submit-btn" 
+                            disabled={loading}
+                        >
+                            {loading ? 'Changing Password...' : 'Change Password'}
+                        </button>
+                    </form>
+                </main>
+            </div>
         </div>
     );
 }

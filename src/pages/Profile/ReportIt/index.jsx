@@ -62,34 +62,35 @@ const ReportIt = () => {
                 showMessage(response.data.responseMessage || 'Report submitted successfully', 'success');
                 setTimeout(() => navigate(-1), 2000);
             } else {
-                showMessage(response.data?.responseMessage || 'Failed to submit report. Please try again.', 'error');
+                showMessage(response.data?.responseMessage || 'Failed to submit report.', 'error');
             }
         } catch (err) {
             console.error('Error submitting report:', err);
-            showMessage('An error occurred. Please try again later.', 'error');
+            showMessage('An error occurred. Please try again.', 'error');
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        <div className="report-page">
-            <Header title="Report It" />
+        <div className="report-container">
+            <Header title="Report It" onBack={() => navigate(-1)} />
 
-            <div className="report-container">
-                <form className="report-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label">Reason</label>
-                        <div className="select-wrapper">
-                            <select
-                                value={reason}
+            <div className="report-wrapper">
+                <main className="report-card">
+                    <h2>Report User</h2>
+
+                    <form className="report-form" onSubmit={handleSubmit}>
+                        <div className="input-field">
+                            <label>Reason</label>
+                            <select 
+                                value={reason} 
                                 onChange={(e) => setReason(e.target.value)}
-                                className="form-select"
+                                disabled={loading}
                                 required
                             >
                                 <option value="" disabled>{loading ? "Loading reasons..." : "Select Reason"}</option>
                                 {reasonsList && reasonsList.map((item, index) => {
-
                                     const value = typeof item === 'object' ? (item.id || item.iReasonId || item.value || JSON.stringify(item)) : item;
                                     const label = typeof item === 'object' ? (item.vReason || item.name || item.title || item.label || JSON.stringify(item)) : item;
 
@@ -101,24 +102,26 @@ const ReportIt = () => {
                                 })}
                             </select>
                         </div>
-                    </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Your Comment</label>
-                        <textarea
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            className="form-textarea"
-                            rows="4"
-                        />
-                    </div>
+                        <div className="input-field">
+                            <label>Your Comment</label>
+                            <textarea 
+                                placeholder="Provide more details about the issue..."
+                                value={comment} 
+                                onChange={(e) => setComment(e.target.value)}
+                                rows={5}
+                            />
+                        </div>
 
-                    <div className="button-container">
-                        <button type="submit" className="btn-submit" disabled={submitting}>
-                            {submitting ? 'Submitting...' : 'Submit'}
+                        <button 
+                            type="submit" 
+                            className="submit-btn" 
+                            disabled={submitting}
+                        >
+                            {submitting ? 'Submitting Report...' : 'Submit Report'}
                         </button>
-                    </div>
-                </form>
+                    </form>
+                </main>
             </div>
         </div>
     );

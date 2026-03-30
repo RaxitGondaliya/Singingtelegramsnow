@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Settings.scss';
 import Header from '../../../components/layout/Header/Header';
-import ToggleSwitch from '../../../components/common/ToggleSwitch/ToggleSwitch';
 import { authApi } from '../../../api';
+import './Settings.scss';
+
+// SVG Icons
+const ChevronRight = () => (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+);
 
 export default function Settings() {
     const navigate = useNavigate();
@@ -15,16 +21,22 @@ export default function Settings() {
             const userDataString = localStorage.getItem('userData');
             if (userDataString) {
                 const userData = JSON.parse(userDataString);
-                if (userData && userData.vEmailId) {
-                    setUserEmail(userData.vEmailId);
-                } else if (userData && userData.email) {
-                    setUserEmail(userData.email);
-                }
+                setUserEmail(userData?.vEmailId || userData?.email || 'N/A');
             }
-        } catch (error) {
-            console.error('Failed to parse userData from localStorage:', error);
-        }
+        } catch (err) { console.error('Failed to parse userData:', err); }
     }, []);
+
+    const handleNavigation = (id) => {
+        const routes = {
+            'sync': '/dashboard/sync-calendars',
+            'password': '/dashboard/change-password',
+            'about': '/dashboard/about-us',
+            'contact': '/dashboard/contact-us',
+            'terms': '/dashboard/terms-and-conditions',
+            'privacy': '/dashboard/privacy-policy'
+        };
+        if (routes[id]) navigate(routes[id]);
+    };
 
     const settingsItems = [
         { id: 'notifications', label: 'Manage Notifications', type: 'toggle', value: notificationsEnabled, onChange: () => setNotificationsEnabled(!notificationsEnabled) },
@@ -40,79 +52,47 @@ export default function Settings() {
         { id: 'privacy', label: 'Privacy Policy', type: 'link' },
     ];
 
-    return (
-        <div className="settings-container">
-            <Header title="Settings" />
-
-            <div className="settings-content">
-                <div className="settings-section">
-                    {settingsItems.map((item) => (
-                        <div key={item.id} className="settings-item-wrapper">
-                            <div
-                                className="settings-item"
-                                onClick={() => {
-                                    if (item.type === 'link') {
-                                        if (item.id === 'sync') navigate('/dashboard/sync-calendars');
-                                        if (item.id === 'password') navigate('/dashboard/change-password');
-                                        if (item.id === 'about') navigate('/dashboard/about-us');
-                                        if (item.id === 'contact') navigate('/dashboard/contact-us');
-                                    }
-                                }}
-                            >
-                                <span className="settings-item-label">{item.label}</span>
-                                {item.type === 'toggle' ? (
-                                    <ToggleSwitch
-                                        active={item.value}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            item.onChange();
-                                        }}
-                                    />
-                                ) : (
-                                    <span className="chevron">›</span>
-                                )}
-                            </div>
-                            <div className="settings-divider" />
-                        </div>
-                    ))}
-                </div>
-
-                <div className="section-spacer" />
-
-                <div className="settings-section">
-                    {legalItems.map((item) => (
-                        <div key={item.id} className="settings-item-wrapper">
-                            <div
-                                className="settings-item"
-                                onClick={() => {
-                                    if (item.id === 'privacy') navigate('/dashboard/privacy-policy');
-                                    if (item.id === 'terms') navigate('/dashboard/terms-and-conditions');
-                                }}
-                            >
-                                <span className="settings-item-label">{item.label}</span>
-                                <span className="chevron">›</span>
-                            </div>
-                            <div className="settings-divider" />
-                        </div>
-                    ))}
-                </div>
-
-                <div className="section-spacer" />
-
-                <div className="settings-section sign-out-section">
-                    <div
-                        className="settings-item sign-out-item"
-                        onClick={() => {
-                            authApi.logout();
-                            navigate('/Signin');   
-                        }}
+    const renderList = (items) => (
+        <div className="settings-card">
+            <div className="settings-list">
+                {items.map((item) => (
+                    <div 
+                        key={item.id}
+                        className="settings-item"
+                        onClick={() => item.type === 'link' && handleNavigation(item.id)}
                     >
-                        <div className="sign-out-info">
-                            <span className="sign-out-label">Sign Out</span>
-                            <p className="user-email">{userEmail}</p>
+                        <span className="label">{item.label}</span>
+                        <div className="action">
+                            {item.type === 'toggle' ? (
+                                <label className="toggle-switch">
+                                    <input type="checkbox" checked={item.value} onChange={item.onChange} />
+                                    <span className="slider"></span>
+                                </label>
+                            ) : (
+                                <ChevronRight />
+                            )}
                         </div>
                     </div>
-                </div>
+                ))}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="settings-container">
+            <Header title="Settings" onBack={() => navigate(-1)} />
+
+            <div className="settings-wrapper">
+                {renderList(settingsItems)}
+                {renderList(legalItems)}
+
+                <button 
+                    className="signout-card" 
+                    onClick={() => { authApi.logout(); navigate('/Signin'); }}
+                >
+                    <span className="label">Sign Out</span>
+                    <span className="email">{userEmail}</span>
+                </button>
             </div>
         </div>
     );

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Notifications.scss';
 import Header from '../../../components/layout/Header/Header';
 import { notificationApi } from '../../../api/notificationApi';
+import './Notifications.scss';
 
 const formatNotificationDate = (timestamp) => {
     const notifDate = new Date(timestamp * 1000);
@@ -10,19 +10,9 @@ const formatNotificationDate = (timestamp) => {
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
 
-    if (notifDate.toDateString() === today.toDateString()) {
-        return "Today";
-    }
-
-    if (notifDate.toDateString() === yesterday.toDateString()) {
-        return "Yesterday";
-    }
-
-    return notifDate.toLocaleDateString('en-US', {
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric'
-    });
+    if (notifDate.toDateString() === today.toDateString()) return "Today";
+    if (notifDate.toDateString() === yesterday.toDateString()) return "Yesterday";
+    return notifDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 };
 
 export default function Notifications() {
@@ -35,104 +25,71 @@ export default function Notifications() {
     const fetchNotifications = async () => {
         try {
             setLoading(true);
-
-            // Fetch Notification List and Count in parallel
             const [listResponse, countResponse] = await Promise.all([
                 notificationApi.getNotificationList(0),
                 notificationApi.getNotificationCount()
             ]);
-
-
-            if (listResponse?.data?.responseData) {
-                setNotifications(listResponse.data.responseData);
-            } else {
-                setNotifications([]);
-            }
-
+            if (listResponse?.data?.responseData) setNotifications(listResponse.data.responseData);
             if (countResponse?.data?.responseData?.notificationCount !== undefined) {
                 setNotificationCount(countResponse.data.responseData.notificationCount);
             }
-
         } catch (err) {
             console.error('Notification API Error:', err);
             setError('Failed to load notifications');
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
 
-    useEffect(() => {
-        fetchNotifications();
-    }, []);
+    useEffect(() => { fetchNotifications(); }, []);
 
-    const handleNotificationClick = async (notification) => {
-        // If it's unread
-        if (notification.eRead === 'No' || notification.eRead === false || notification.isRead === false || !notification.isRead || notification.eRead === "0" || notification.eRead === 0) {
+    const handleNotificationClick = async (notif) => {
+        const isUnread = notif.eRead === 'No' || notif.eRead === false || notif.isRead === false || !notif.isRead || notif.eRead === "0" || notif.eRead === 0;
+        if (isUnread) {
             try {
-                const notifId = notification.iNotificationId || notification.id;
-
+                const notifId = notif.iNotificationId || notif.id;
                 if (notifId) {
                     await notificationApi.updateNotificationReadFlag(notifId);
-
-                    // Optimistically update local state to reflect read status
-                    setNotifications(prevNotifs =>
-                        prevNotifs.map(n =>
-                            (n.iNotificationId === notifId || n.id === notifId)
-                                ? { ...n, eRead: 'Yes', isRead: true }
-                                : n
-                        )
-                    );
-
-                    // Decrease notification count if applicable
+                    setNotifications(prev => prev.map(n => (n.iNotificationId === notifId || n.id === notifId) ? { ...n, eRead: 'Yes', isRead: true } : n));
                     setNotificationCount(prev => Math.max(0, prev - 1));
                 }
-            } catch (err) {
-                console.error('Notification API Error:', err);
-            }
+            } catch (err) { console.error('Error marking as read:', err); }
         }
     };
 
     return (
         <div className="notifications-container">
-            <Header title={
-                <span>
-                    Notifications
-                    {/* {notificationCount > 0 && (
-                        <span className="notification-count" style={{ marginLeft: '8px', fontSize: '1rem', background: '#e74c3c', color: 'white', padding: '2px 8px', borderRadius: '50%' }}>
-                            {notificationCount}
-                        </span>
-                    )} */}
-                </span>
-            } />
+            <Header title="Notifications" onBack={() => navigate(-1)} />
 
-            <div className="notifications-content">
+            <div className="notifications-list-wrapper">
                 {loading ? (
-                    <div className="notification-loading">Loading notifications...</div>
+                    <div className="loading-wrap"><div className="spin" /></div>
                 ) : error ? (
-                    <div className="notification-error">{error}</div>
+                    <div className="error-wrap"><h3>Error</h3><p>{error}</p></div>
                 ) : notifications && notifications.length > 0 ? (
-                    notifications.map((notif, index) => {
-                        const isUnread = notif.eRead === 'No' || notif.eRead === false || notif.isRead === false || !notif.isRead || notif.eRead === "0" || notif.eRead === 0;
-                        const title = notif.vMessageTitle || notif.vTitle || notif.title || '';
-                        const desc = notif.txMessage || notif.message || notif.description || '';
-                        const time = notif.iCreatedAt ? formatNotificationDate(notif.iCreatedAt) : '';
+                    <ul className="notifications-list">
+                        {notifications.map((notif, idx) => {
+                            const isUnread = notif.eRead === 'No' || notif.eRead === false || notif.isRead === false || !notif.isRead || notif.eRead === "0" || notif.eRead === 0;
+                            const title = notif.vMessageTitle || notif.vTitle || '';
+                            const desc = notif.txMessage || notif.message || '';
+                            const time = notif.iCreatedAt ? formatNotificationDate(notif.iCreatedAt) : '';
 
-                        return (
-                            <div key={notif.iNotificationId || notif.id || index} style={{ cursor: isUnread ? 'pointer' : 'default' }}>
-                                <div className={`notification-item ${isUnread ? 'unread' : ''}`}>
-                                    {isUnread && <div className="notification-dot"></div>}
-                                    <div className="notification-info">
-                                        {title && <h2 className="notification-title">{title}</h2>}
-                                        {desc && <p className="notification-desc">{desc}</p>}
-                                        {time && <span className="notification-time">{time}</span>}
+                            return (
+                                <li 
+                                    key={notif.iNotificationId || notif.id || idx}
+                                    className={`notification-item ${isUnread ? 'unread' : 'read'}`}
+                                    onClick={() => handleNotificationClick(notif)}
+                                >
+                                    {isUnread && <div className="unread-dot" />}
+                                    <div className="content">
+                                        {title && <h4>{title}</h4>}
+                                        {desc && <p>{desc}</p>}
+                                        {time && <span className="time">{time}</span>}
                                     </div>
-                                </div>
-                                {index !== notifications.length - 1 && <div className="notification-divider"></div>}
-                            </div>
-                        );
-                    })
+                                </li>
+                            );
+                        })}
+                    </ul>
                 ) : (
-                    <div className="notification-empty">No notifications found</div>
+                    <div className="empty-wrap"><h3>No Notifications</h3><p>You're all caught up!</p></div>
                 )}
             </div>
         </div>

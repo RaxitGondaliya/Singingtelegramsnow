@@ -1,11 +1,8 @@
-import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import './Dashboard.scss';
-import { useEffect } from "react";
+import { useLocation, Outlet } from "react-router-dom";
 import BottomNav from "../../../components/layout/BottomNav/BottomNav";
-
+import './DashboardLayout.scss';
 
 export default function DashboardLayout() {
-    const navigate = useNavigate();
     const location = useLocation();
 
     // Determine active tab based on current path
@@ -26,16 +23,14 @@ export default function DashboardLayout() {
     const shouldHideNav = isNotificationsPage || isSettingsPage;
 
     return (
-        <div className={`dashboard-container ${shouldHideNav ? 'hide-nav' : ''}`}>
-            {/* Main Content Area (Outlet renders the child route) */}
-            <div className="dashboard-content">
-                <Outlet />
-            </div>
+        <div className="dashboard-wrapper">
+            <aside className={`nav-wrapper ${shouldHideNav ? 'hidden' : ''}`}>
+                <BottomNav activeTab={activeTab} />
+            </aside>
 
-            {/* Bottom Navigation / Sidebar */}
-            <BottomNav activeTab={activeTab} />
+            <main className={`main-content ${shouldHideNav ? 'full-screen' : ''}`}>
+                <Outlet />
+            </main>
         </div>
     );
 }
-
-

@@ -1,93 +1,136 @@
-@use "../../../styles/abstracts/variables" as *;
-@use "../../../styles/abstracts/mixins" as *;
+@use '../../../styles/abstracts/variables' as *;
 
 .profile-container {
-    background-color: $white;
     min-height: 100vh;
+    background-color: #f8f9fa;
+    padding-bottom: 5rem;
+}
 
-    .profile-header {
-        padding: 20px;
-        position: relative;
-        border-bottom: 8px solid #f5f5f5;
+.profile-header {
+    background-color: $primary-color;
+    color: white;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    padding: 0.75rem 1.5rem 1.5rem;
+    position: relative;
+    box-shadow: 0 4px 12px rgba($primary-color, 0.15);
+
+    .top-actions {
         display: flex;
-        flex-direction: column;
+        justify-content: flex-end;
+        margin-bottom: 0.25rem;
 
-        .notification-bell {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 24px;
-            color: $accent-color;
-        }
-
-        .profile-main-content {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 20px;
-
-            .profile-avatar-container {
-                width: 80px;
-                height: 80px;
+        .notify-btn {
+            position: relative;
+            color: white;
+            .badge {
+                position: absolute;
+                top: 2px;
+                right: 2px;
+                width: 8px;
+                height: 8px;
+                background-color: #ff3b30;
                 border-radius: 50%;
-                border: 1px solid #ccc;
-                background-color: #f8f8f8;
-                @include flex-center;
-                flex-shrink: 0;
-
-                .avatar-icon {
-                    font-size: 40px;
-                    color: #aaa;
-                }
-            }
-
-            .profile-info {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-
-                .profile-name {
-                    font-size: 22px;
-                    font-weight: 500;
-                    margin: 0;
-                    color: #333;
-                }
-
-                .profile-rating {
-                    display: flex;
-                    align-items: center;
-                    gap: 5px;
-                    color: #e0e0e0;
-                    font-size: 14px;
-                    margin-top: 5px;
-
-                    .rating-value {
-                        color: #333;
-                        font-weight: 500;
-                        margin-left: 5px;
-                    }
-                }
-            }
-        }
-
-        .ratings-reviews-link {
-            align-self: flex-end;
-            margin-top: 5px;
-            color: #333;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 400;
-
-            span {
-                color: $accent-color;
-                font-size: 18px;
             }
         }
     }
 
-    .profile-menu {
-        padding: 0 15px;
+    .user-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+
+        .avatar-box {
+            width: 56px;
+            height: 56px;
+            background: white;
+            color: $primary-color;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.25rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .name-and-stars {
+            h2 {
+                font-size: 1.25rem;
+                font-weight: 700;
+                margin-bottom: 4px;
+            }
+
+            .star-row {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+                color: #FFD700;
+                span { color: white; margin-left: 8px; font-weight: 600; font-size: 0.875rem; }
+            }
+        }
+    }
+
+    .ratings-link {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        &:hover { opacity: 0.8; }
+    }
+}
+
+.menu-card {
+    background: white;
+    margin: -1rem 1rem 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+
+    .menu-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        .menu-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: left;
+            background: none;
+            border: none;
+            width: 100%;
+            font-family: inherit;
+
+            &:hover { background-color: #f9f9f9; }
+
+            &:not(:last-child) { border-bottom: 1px solid #f0f0f0; }
+
+            .icon-wrap {
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: $primary-color;
+                margin-right: 1rem;
+            }
+
+            .label {
+                font-size: 0.9375rem;
+                font-weight: 500;
+                color: #333;
+                flex: 1;
+            }
+            
+            .arrow {
+                color: #ccc;
+            }
+        }
     }
 }

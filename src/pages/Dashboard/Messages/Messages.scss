@@ -1,52 +1,72 @@
-@use "../../../styles/abstracts/variables" as *;
-@use "../../../styles/abstracts/mixins" as *;
+@use '../../../styles/abstracts/variables' as *;
 
 .messages-container {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding-bottom: 5rem;
+}
+
+.messages-header {
+    background: $primary-linear-gradient;
+    color: white;
+    padding: 2.5rem 1.5rem 3rem;
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba($primary-color, 0.2);
+
+    h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+
+    .noti-btn {
+        position: relative;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        cursor: pointer;
+        transition: background 0.2s;
+        
+        &:hover { background: rgba(255, 255, 255, 0.3); }
+
+        .badge-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background-color: #ff3b30;
+            border-radius: 50%;
+            border: 2px solid $primary-color;
+        }
+    }
+}
+
+.empty-messages {
     display: flex;
     flex-direction: column;
-    height: 100%;
-
-    .messages-header {
-        @include flex-center;
-        padding: 15px 20px;
-        background-color: $white;
-        border-bottom: 1px solid #eee;
-        position: relative;
-
-        h1 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            margin: 0;
-        }
-
-        .notification-icon {
-            position: absolute;
-            right: 20px;
-            font-size: 20px;
-            cursor: pointer;
-
-            .dot {
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 8px;
-                height: 8px;
-                background-color: red;
-                border-radius: 50%;
-                border: 1px solid $white;
-            }
-        }
+    align-items: center;
+    justify-content: center;
+    height: 40vh;
+    color: #999;
+    
+    .icon-box {
+        width: 100px;
+        height: 100px;
+        background: #f0f4f9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        svg { width: 40px; height: 40px; color: $primary-color; opacity: 0.5; }
     }
 
-    .messages-content {
-        flex: 1;
-        @include flex-center;
-        background-color: #f9f9f9;
-
-        .no-messages-msg {
-            color: #888;
-            font-size: 16px;
-        }
-    }
+    p { font-size: 1.125rem; font-weight: 600; margin: 0; }
 }

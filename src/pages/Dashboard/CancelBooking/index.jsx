@@ -56,22 +56,23 @@ const CancelBooking = () => {
             }
         } catch (error) {
             console.error('Error cancelling booking:', error);
-            showMessage('An error occurred during cancellation.', 'error');
+            showMessage('An error occurred. Please try again.', 'error');
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        <div className="cancel-booking-page">
-            <Header title="Cancel Booking" />
+        <div className="cancel-booking-container">
+            <Header title="Cancel Booking" onBack={() => navigate(-1)} />
 
-            <div className="form-container">
-                <div className="form-group">
-                    <label>Reason</label>
-                    <div className="select-wrapper">
-                        <select
-                            value={selectedReason}
+            <div className="cancel-booking-wrapper">
+                <main className="cancel-card">
+                    <div className="form-group">
+                        <label htmlFor="reason-select">Reason</label>
+                        <select 
+                            id="reason-select"
+                            value={selectedReason} 
                             onChange={(e) => setSelectedReason(e.target.value)}
                         >
                             <option value="">Select Reason</option>
@@ -81,35 +82,27 @@ const CancelBooking = () => {
                                 </option>
                             ))}
                         </select>
-                        <div className="underline"></div>
                     </div>
-                </div>
 
-                <div className="form-group">
-                    <label>Your Comment</label>
-                    <div className="input-wrapper">
-                        <textarea
-                            rows="1"
-                            value={comment}
+                    <div className="form-group">
+                        <label htmlFor="comment-text">Comment</label>
+                        <textarea 
+                            id="comment-text"
+                            placeholder="Tell us why you're cancelling..."
+                            value={comment} 
                             onChange={(e) => setComment(e.target.value)}
-                            onInput={(e) => {
-                                e.target.style.height = 'auto';
-                                e.target.style.height = e.target.scrollHeight + 'px';
-                            }}
+                            rows={5}
                         />
-                        <div className="underline"></div>
                     </div>
-                </div>
 
-                <div className="button-footer">
-                    <button
-                        className="submit-btn"
-                        onClick={handleSubmit}
+                    <button 
+                        className="submit-btn" 
+                        onClick={handleSubmit} 
                         disabled={submitting}
                     >
                         {submitting ? 'Submitting...' : 'Submit'}
                     </button>
-                </div>
+                </main>
             </div>
         </div>
     );

@@ -1,37 +1,51 @@
-@use "../../../styles/abstracts/variables" as *;
-@use "../../../styles/abstracts/mixins" as *;
+@use '../../../styles/abstracts/variables' as *;
 
-.common-header {
-    @include flex-center;
-    height: 56px;
-    padding: 0 20px;
-    background-color: $white;
+.premium-header {
     position: sticky;
     top: 0;
-    border-bottom: 1px solid #f0f0f0;
     z-index: 1000;
-    width: 100%;
+    background-color: white;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border-bottom: 1px solid #f0f0f0;
 
-    h1 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 500;
-        color: #444;
+    .toolbar {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
-    .back-arrow {
-        position: absolute;
-        left: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 26px;
-        color: $accent-color;
-        cursor: pointer;
-        background: none;
-        border: none;
-        @include flex-center;
-        padding: 0;
+    .back-btn {
         width: 40px;
         height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent;
+        color: #333;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background 0.2s;
+        
+        &:hover { background-color: #f5f5f5; }
+        &:active { background-color: #eeeeee; }
     }
+
+    .title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #333;
+        flex: 1;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .header-spacer { width: 40px; }
 }

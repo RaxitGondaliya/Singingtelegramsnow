@@ -1,212 +1,139 @@
-@use "../../../styles/abstracts/variables" as *;
-@use "../../../styles/abstracts/mixins" as *;
+@use '../../../styles/abstracts/variables' as *;
 
-.earnings-page {
-    background-color: #fcfcfc;
+.my-earnings-container {
     min-height: 100vh;
+    background-color: #f8f9fa;
+    padding-bottom: 5rem;
+}
 
-    .earnings-container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 15px;
+.earnings-wrapper {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
 
-        .stats-dashboard-card {
-            background: $white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            margin-bottom: 20px;
+.card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
 
-            .card-filter-header {
-                @include flex-between;
-                padding-bottom: 12px;
-                cursor: pointer;
+    @media (min-width: 600px) {
+        padding: 2.5rem;
+    }
+}
 
-                .sort-label {
-                    font-weight: 700;
-                    font-size: 18px;
-                    color: #333;
-                }
+.sort-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
 
-                .month-selector {
-                    display: flex;
-                    align-items: center;
-
-                    .month-text {
-                        color: $accent-color;
-                        font-weight: 700;
-                        font-size: 16px;
-                        margin-right: 8px;
-                    }
-
-                    .orange-circle-arrow {
-                        background: $accent-color;
-                        width: 28px;
-                        height: 28px;
-                        border-radius: 50%;
-                        @include flex-center;
-                        box-shadow: 0 2px 5px rgba(252, 163, 17, 0.3);
-
-                        .css-arrow {
-                            border: solid $white;
-                            border-width: 0 2.5px 2.5px 0;
-                            display: inline-block;
-                            padding: 3px;
-                            transition: transform 0.3s ease;
-
-                            &.down {
-                                transform: rotate(45deg);
-                                margin-bottom: 3px;
-                            }
-
-                            &.up {
-                                transform: rotate(-135deg);
-                                margin-top: 3px;
-                            }
-                        }
-                    }
-                }
-            }
-
-            .card-divider {
-                border: 0;
-                border-top: 1px solid #eee;
-                margin: 0 0 20px 0;
-            }
-
-            .wheel-picker-container {
-                position: relative;
-                height: 180px;
-                overflow: hidden;
-                background: $white;
-                display: flex;
-
-                .selection-highlight {
-                    position: absolute;
-                    top: 50%;
-                    left: 5%;
-                    right: 5%;
-                    height: 45px;
-                    transform: translateY(-50%);
-                    border-top: 1px solid #eee;
-                    border-bottom: 1px solid #eee;
-                    pointer-events: none;
-                }
-
-                .picker-view {
-                    display: flex;
-                    width: 100%;
-                    height: 100%;
-
-                    .picker-column {
-                        flex: 1;
-                        overflow-y: scroll;
-                        scroll-snap-type: y mandatory;
-                        text-align: center;
-                        scrollbar-width: none;
-
-                        &::-webkit-scrollbar {
-                            display: none;
-                        }
-
-                        .picker-item {
-                            height: 45px;
-                            @include flex-center;
-                            font-size: 18px;
-                            font-weight: 700;
-                            color: #bbb;
-                            scroll-snap-align: center;
-
-                            &.active {
-                                color: #333;
-                                font-size: 22px;
-                            }
-                        }
-
-                        .spacer {
-                            height: 67px;
-                        }
-                    }
-                }
-            }
-
-            .earnings-grid {
-                display: flex;
-                flex-direction: column;
-                text-align: center;
-
-                .val-large {
-                    font-size: 48px;
-                    color: $accent-color;
-                    margin: 0;
-                    font-weight: 700;
-                }
-
-                .secondary-stats-row {
-                    display: flex;
-                    justify-content: space-around;
-                    margin-top: 20px;
-
-                    .stat-item {
-                        .val-small {
-                            font-size: 28px;
-                            color: #333;
-                            margin: 0;
-                            font-weight: 700;
-                        }
-
-                        .lbl-text {
-                            color: #888;
-                            font-size: 14px;
-                        }
-                    }
-                }
-            }
-        }
-
-        .details-card {
-            background: $white;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-
-            .row {
-                @include flex-between;
-                padding: 18px 20px;
-                border-bottom: 1px solid #f7f7f7;
-                font-weight: 500;
-
-                &:last-child {
-                    border-bottom: none;
-                }
-
-                .c-orange {
-                    color: $accent-color;
-                    font-weight: 700;
-                }
-
-                .c-green {
-                    color: #2ecc71;
-                    font-weight: 700;
-                }
-
-                .c-red {
-                    color: #e74c3c;
-                    font-weight: 700;
-                }
-            }
-        }
-
-        .btn-pdf {
-            width: 100%;
-            background: $accent-color;
-            color: $white;
+    label { font-size: 0.875rem; font-weight: 600; color: #666; }
+    
+    .select-group {
+        display: flex;
+        gap: 12px;
+        
+        select {
+            padding: 8px 12px;
             border: none;
-            padding: 16px;
             border-radius: 8px;
-            font-size: 18px;
+            background-color: rgba($primary-color, 0.1);
+            color: $primary-color;
             font-weight: 700;
+            font-size: 0.8125rem;
             cursor: pointer;
+            &:focus { outline: none; }
         }
     }
+}
+
+.divider {
+    height: 1px;
+    background-color: #eee;
+    margin: 2rem 0;
+}
+
+.main-total {
+    text-align: center;
+    margin-bottom: 3rem;
+    
+    .amount {
+        font-size: 3rem;
+        font-weight: 800;
+        color: $primary-color;
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+    
+    .label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+    }
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    
+    .stat-box {
+        background-color: #fcfcfc;
+        border: 1px solid #f0f0f0;
+        padding: 1.5rem 1rem;
+        border-radius: 12px;
+        text-align: center;
+        
+        .amount { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+        .label { font-size: 0.75rem; font-weight: 600; color: #999; }
+    }
+}
+
+.list-summary {
+    .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 0;
+        border-bottom: 1px solid #f0f0f0;
+        
+        &:last-child { border-bottom: none; }
+        
+        .label { font-weight: 600; color: #333; }
+        .value { font-size: 1.25rem; font-weight: 700; }
+        
+        &.warning .value { color: #f57c00; }
+        &.success .value { color: #2e7d32; }
+        &.error .value { color: #d32f2f; }
+    }
+}
+
+.export-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    background: $primary-color;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba($primary-color, 0.2);
+    cursor: pointer;
+    
+    &:hover { background: darken($primary-color, 10%); }
+    
+    svg { width: 20px; height: 20px; }
+}
+
+.loading-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 3rem;
 }

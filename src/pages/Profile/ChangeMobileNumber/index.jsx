@@ -11,8 +11,6 @@ export default function ChangeMobileNumber() {
             alert('Please enter a valid mobile number');
             return;
         }
-
-        // Simulating OTP send / API call
         alert(`OTP sent to +1 ${mobileNumber}`);
     };
 
@@ -20,28 +18,33 @@ export default function ChangeMobileNumber() {
         <div className="change-mobile-container">
             <Header title="Change Number" />
 
-            <div className="change-mobile-content">
-                <h2 className="page-title">Change Mobile Number</h2>
+            <div className="change-mobile-wrapper">
+                <main className="change-card">
+                    <h2>Change Mobile Number</h2>
 
-                <form className="mobile-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="input-label">Mobile Number</label>
-                        <div className="phone-input-container">
-                            <span className="country-code">+1</span>
-                            <input
-                                type="tel"
-                                className="phone-input"
-                                value={mobileNumber}
-                                onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))} // Numeric only
-                                placeholder=""
-                            />
+                    <form className="change-form" onSubmit={handleSubmit}>
+                        <div className="input-field">
+                            <label>Mobile Number</label>
+                            <div className="phone-input-wrapper">
+                                <span className="country-code">+1</span>
+                                <input 
+                                    type="tel" 
+                                    value={mobileNumber} 
+                                    onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
+                                    placeholder="Number"
+                                    required
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <button type="submit" className="send-otp-btn">
-                        Send OTP
-                    </button>
-                </form>
+                        <button 
+                            type="submit" 
+                            className="submit-btn"
+                        >
+                            Send OTP
+                        </button>
+                    </form>
+                </main>
             </div>
         </div>
     );

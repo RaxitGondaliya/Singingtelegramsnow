@@ -1,0 +1,52 @@
+@use '../abstracts/variables' as *;
+
+.legal-container {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding-bottom: 5rem;
+}
+
+.legal-content-wrapper {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.legal-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+
+    @media (min-width: 600px) {
+        padding: 4rem;
+    }
+
+    h1, h2 {
+        color: $primary-color;
+        margin-bottom: 2rem;
+        text-align: center;
+        font-weight: 800;
+    }
+
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.5rem; }
+
+    p {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #444;
+        margin-bottom: 1.5rem;
+        text-align: justify;
+    }
+
+    ul, ol {
+        margin-bottom: 2rem;
+        padding-left: 1.5rem;
+        li {
+            margin-bottom: 0.75rem;
+            color: #444;
+            line-height: 1.6;
+        }
+    }
+}

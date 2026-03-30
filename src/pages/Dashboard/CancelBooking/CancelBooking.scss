@@ -1,100 +1,61 @@
-.cancel-booking-page {
-    background-color: #fff;
+@use '../../../styles/abstracts/variables' as *;
+
+.cancel-booking-container {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    background-color: #f8f9fa;
+    padding-bottom: 5rem;
+}
 
-    .form-container {
-        padding: 20px 24px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 32px;
-        margin-top: 20px;
+.cancel-booking-wrapper {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+.cancel-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+}
 
-            label {
-                font-size: 15px;
-                color: #888;
-                font-weight: 500;
-            }
-
-            .select-wrapper, .input-wrapper {
-                position: relative;
-                
-                select, textarea {
-                    width: 100%;
-                    padding: 8px 0;
-                    border: none;
-                    background: transparent;
-                    font-size: 17px;
-                    color: #333;
-                    outline: none;
-                    font-family: inherit;
-                    appearance: none;
-                }
-
-                textarea {
-                    min-height: 100px;
-                    resize: none;
-                    overflow: hidden;
-                    display: block;
-                    width: 100%;
-                    line-height: normal;
-                }
-
-                .underline {
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                    height: 1px;
-                    background-color: #ccc;
-                }
-
-                select:focus + .underline,
-                textarea:focus + .underline {
-                    background-color: #ff9800;
-                    height: 2px;
-                }
-            }
-
-            .select-wrapper {
-                background: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23333' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right center;
-                cursor: pointer;
-            }
-        }
-
-        .button-footer {
-            margin-top: auto;
-            padding: 40px 0 20px;
-            
-            .submit-btn {
-                background-color: #ff9800;
-                color: #fff;
-                width: 100%;
-                padding: 16px;
-                border-radius: 8px;
-                border: none;
-                font-size: 18px;
-                font-weight: 600;
-                cursor: pointer;
-                box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
-                transition: all 0.2s ease;
-
-                &:active {
-                    transform: scale(0.98);
-                }
-
-                &:disabled {
-                    opacity: 0.7;
-                    cursor: not-allowed;
-                }
-            }
-        }
+.form-group {
+    margin-bottom: 1.5rem;
+    
+    label {
+        display: block;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: #999;
+        text-transform: uppercase;
+        margin-bottom: 8px;
     }
+
+    select, textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.9375rem;
+        background-color: #fdfdfd;
+        transition: all 0.2s;
+        
+        &:focus { outline: none; border-color: $primary-color; box-shadow: 0 0 0 3px rgba($primary-color, 0.05); }
+    }
+
+    textarea { resize: vertical; min-height: 120px; }
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    background-color: $primary-color;
+    color: white;
+    font-weight: 700;
+    font-size: 1.0625rem;
+    box-shadow: 0 4px 12px rgba($primary-color, 0.2);
+    margin-top: 1rem;
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
 }

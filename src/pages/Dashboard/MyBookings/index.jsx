@@ -5,6 +5,55 @@ import { getImageUrl } from '../../../utils/imageUtils';
 import { useMessage } from '../../../context/MessageContext';
 import './MyBookings.scss';
 
+// SVG Icons
+const BellIcon = () => (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+    </svg>
+);
+
+const ChevronLeft = () => (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+);
+
+const ChevronRight = () => (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+);
+
+const PersonIcon = () => (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+);
+
+const ClockIcon = () => (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>
+);
+
+const LocationIcon = () => (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+);
+
+const MoreIcon = () => (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="1"></circle>
+        <circle cx="12" cy="5" r="1"></circle>
+        <circle cx="12" cy="19" r="1"></circle>
+    </svg>
+);
+
 
 export default function MyBookings() {
     const navigate = useNavigate();
@@ -13,21 +62,18 @@ export default function MyBookings() {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [isPickerOpen, setIsPickerOpen] = useState(false);
-    const [slideDirection, setSlideDirection] = useState('');
-    const [touchStart, setTouchStart] = useState(null);
-    const [touchEnd, setTouchEnd] = useState(null);
     const [activeMenu, setActiveMenu] = useState(null);
-    const [bookingDates, setBookingDates] = useState([]); // List of dates that have bookings
+    const [bookingDates, setBookingDates] = useState([]); 
     const [showCancelModal, setShowCancelModal] = useState(false);
-    const [selectedBookingForCancel, setSelectedBookingForCancel] = useState(null);
     const [cancelReason, setCancelReason] = useState('');
     const [cancelComment, setCancelComment] = useState('');
     const [reasonsList, setReasonsList] = useState([]);
     const [submittingCancel, setSubmittingCancel] = useState(false);
+    const [touchStart, setTouchStart] = useState(null);
+    const [touchEnd, setTouchEnd] = useState(null);
+    
     const menuRef = useRef(null);
-    const { showMessage, showAlert, showConfirm } = useMessage();
-
-    // Minimum swipe distance in pixels
+    const { showMessage, showConfirm } = useMessage();
     const minSwipeDistance = 50;
 
     const formatDate = (date) => {
@@ -35,10 +81,8 @@ export default function MyBookings() {
         let month = '' + (d.getMonth() + 1);
         let day = '' + d.getDate();
         const year = d.getFullYear();
-
         if (month.length < 2) month = '0' + month;
         if (day.length < 2) day = '0' + day;
-
         return [year, month, day].join('-');
     };
 
@@ -55,16 +99,8 @@ export default function MyBookings() {
             setLoading(true);
             const formattedDate = formatDate(selectedDate);
             const response = await bookingApi.getMyBookings(formattedDate);
-
-            let data = [];
-            if (response.data && response.data.responseData) {
-                data = response.data.responseData;
-            } else if (response.data && Array.isArray(response.data.data)) {
-                data = response.data.data;
-            } else if (Array.isArray(response.data)) {
-                data = response.data;
-            }
-
+            let data = response.data?.responseData || response.data?.data || response.data || [];
+            if (!Array.isArray(data)) data = [];
             setBookings(data);
         } catch (err) {
             console.error("Failed to fetch bookings", err);
@@ -78,235 +114,85 @@ export default function MyBookings() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth() + 1;
             const response = await bookingApi.getMyBookingDates(month, year);
-
-            let highlightedDates = [];
-
+            let highlighted = [];
             if (response.data && Array.isArray(response.data.responseData)) {
-                // The API returns an array of objects like { dBookingDate: "2026-03-22", tiIsAvailabile: 1 }
-                highlightedDates = response.data.responseData
+                highlighted = response.data.responseData
                     .filter(item => item.tiIsAvailabile === 1 || item.tiIsAvailabile === '1')
                     .map(item => item.dBookingDate);
             }
-
-            setBookingDates(highlightedDates);
+            setBookingDates(highlighted);
         } catch (err) {
             console.error("Failed to fetch booking highlights", err);
         }
     };
 
-
-    // Helper to get days in a month
-    const getDaysInMonth = (year, month) => {
-        return new Date(year, month + 1, 0).getDate();
-    };
-
-    // Helper to get day of week for first day (0 = Sun, 6 = Sat)
-    const getFirstDayOfMonth = (year, month) => {
-        return new Date(year, month, 1).getDay();
-    };
+    // Calendar logic
+    const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+    const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
     const generateCalendarDays = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-
         const daysInMonth = getDaysInMonth(year, month);
-        const firstDay = getFirstDayOfMonth(year, month); // 0-6
+        const firstDay = getFirstDayOfMonth(year, month); 
         const daysInPrevMonth = getDaysInMonth(year, month - 1);
-
         const daysArray = [];
 
-        // Previous month padding (Empty slots)
         for (let i = 0; i < firstDay; i++) {
-            daysArray.push({
-                date: null, // Empty slot
-                currentMonth: false,
-                fullDate: new Date(year, month - 1, daysInPrevMonth - firstDay + 1 + i)
-            });
+            daysArray.push({ date: null, currentMonth: false, fullDate: new Date(year, month - 1, daysInPrevMonth - firstDay + 1 + i) });
         }
-
-        // Current month days
         for (let i = 1; i <= daysInMonth; i++) {
-            daysArray.push({
-                date: i,
-                currentMonth: true,
-                fullDate: new Date(year, month, i)
-            });
+            daysArray.push({ date: i, currentMonth: true, fullDate: new Date(year, month, i) });
         }
-
-        // Next month padding (Empty slots)
-        const remainingCells = 42 - daysArray.length;
-        for (let i = 1; i <= remainingCells; i++) {
-            daysArray.push({
-                date: null, // Empty slot
-                currentMonth: false,
-                fullDate: new Date(year, month + 1, i)
-            });
+        const remaining = 42 - daysArray.length;
+        for (let i = 1; i <= remaining; i++) {
+            daysArray.push({ date: null, currentMonth: false, fullDate: new Date(year, month + 1, i) });
         }
-
-
         return daysArray;
     };
 
-    const handlePrevMonth = () => {
-        setSlideDirection('slide-right');
-        setTimeout(() => {
-            setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-            setSlideDirection('');
-        }, 300);
-    };
+    const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
-    const handleNextMonth = () => {
-        setSlideDirection('slide-left');
-        setTimeout(() => {
-            setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-            setSlideDirection('');
-        }, 300);
-    };
-
-    const onTouchStart = (e) => {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
-    };
-
-    const onTouchMove = (e) => {
-        setTouchEnd(e.targetTouches[0].clientX);
-    };
-
-    const onTouchEnd = () => {
+    const onTouchStart = (e) => { setTouchEnd(null); setTouchStart(e.targetTouches[0].clientX); };
+    const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+    const onTouchEndSwipe = () => {
         if (!touchStart || !touchEnd) return;
         const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
-
-        if (isLeftSwipe) {
-            handleNextMonth();
-        } else if (isRightSwipe) {
-            handlePrevMonth();
-        }
+        if (distance > minSwipeDistance) handleNextMonth();
+        else if (distance < -minSwipeDistance) handlePrevMonth();
     };
-
 
     const handleDateClick = (day) => {
         setSelectedDate(day.fullDate);
-        if (!day.currentMonth) {
-            // Optional: switching month on clicking grey dates
-            setCurrentDate(new Date(day.fullDate.getFullYear(), day.fullDate.getMonth(), 1));
-        }
+        if (!day.currentMonth) setCurrentDate(new Date(day.fullDate.getFullYear(), day.fullDate.getMonth(), 1));
     };
 
-    const togglePicker = () => {
-        // Only open on mobile/tablet if needed, or check width? 
-        // User asked for arrows on desktop/tab, popup on mobile.
-        // We can check window width or just control via CSS (pointer-events).
-        // For logic simplicity, we'll allow it to open but CSS will hide/show triggers.
-        if (window.innerWidth <= 768) {
-            setIsPickerOpen(true);
-        }
-    };
-
-    const selectMonth = (monthIndex) => {
-        setCurrentDate(new Date(currentDate.getFullYear(), monthIndex, 1));
-        setIsPickerOpen(false);
-    };
-
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const days = generateCalendarDays();
-    const currentMonthStr = currentDate.toLocaleString('default', { month: 'short' });
-    const currentYearStr = currentDate.getFullYear();
-    const isToday = (d1, d2) => d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
-
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
-                setActiveMenu(null);
-            }
-        };
-        if (activeMenu) {
-            document.addEventListener("mousedown", handleClickOutside);
-        }
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [activeMenu]);
-
-    const fetchReasons = async () => {
-        try {
-            const response = await bookingApi.getReportCustomerReasonsList();
-            if (response.data && response.data.responseData) {
-                setReasonsList(response.data.responseData);
-            } else if (response.data && response.data.data) {
-                setReasonsList(response.data.data);
-            }
-        } catch (error) {
-            console.error("Error fetching reasons:", error);
-        }
-    };
-
-    const handleOpenCancelModal = async (e, booking) => {
+    const handleOpenCancelModal = async (e, bookingId) => {
         e.stopPropagation();
         setActiveMenu(null);
-
         const confirmed = await showConfirm('Are you sure you want to cancel this booking?');
-        if (confirmed) {
-            navigate('/dashboard/cancellation-policy', { state: { bookingId: booking.id } });
-        }
+        if (confirmed) navigate('/dashboard/cancellation-policy', { state: { bookingId } });
     };
 
-    const handleCancelSubmit = async () => {
-        if (!cancelReason) {
-            showMessage('Please select a reason', 'error');
-            return;
-        }
-
-        try {
-            setSubmittingCancel(true);
-            const response = await bookingApi.cancelBooking(selectedBookingForCancel.id, cancelReason, cancelComment);
-            const data = response.data || {};
-
-            if (data.responseCode === 200 || data.status === 200 || data.status === 1) {
-                showMessage(data.responseMessage || 'Booking cancelled successfully', 'success');
-                setShowCancelModal(false);
-                // Refresh list
-                const formattedDate = formatDate(selectedDate);
-                const listResponse = await bookingApi.getMyBookings(formattedDate);
-                setBookings(listResponse.data?.responseData || listResponse.data?.data || []);
-            } else {
-                showMessage(data.responseMessage || 'Failed to cancel booking', 'error');
-            }
-        } catch (error) {
-            console.error('Error cancelling booking:', error);
-            showMessage('An error occurred while cancelling the booking.', 'error');
-        } finally {
-            setSubmittingCancel(false);
-        }
-    };
-
-    const handleMarkAsCompleted = async (e, booking) => {
+    const handleMarkAsCompleted = async (e, bookingId) => {
         e.stopPropagation();
         setActiveMenu(null);
-
         const confirmed = await showConfirm('Are you sure you want to mark this booking as completed?');
         if (!confirmed) return;
-
         try {
-            const response = await bookingApi.completeBooking(booking.id);
+            const response = await bookingApi.completeBooking(bookingId);
             const data = response.data || {};
-            const isSuccess = (data.responseCode === 200 || data.responseCode === '200' ||
-                data.status === 200 || data.status === '200' || data.status === 1 || data.status === '1') ||
-                (!data.responseCode && !data.status && response.status === 200);
-
+            const isSuccess = data.responseCode === 200 || data.status === 200 || data.status === 1;
             if (isSuccess) {
-                showMessage(data.responseMessage || data.message || 'Booking marked as completed successfully!', 'success');
-                // Refresh list
-                const formattedDate = formatDate(selectedDate);
-                const listResponse = await bookingApi.getMyBookings(formattedDate);
-                setBookings(listResponse.data?.responseData || listResponse.data?.data || []);
+                showMessage(data.responseMessage || 'Booking marked as completed!', 'success');
+                fetchBookings();
             } else {
-                showMessage(data.responseMessage || data.message || 'Failed to complete booking', 'error');
+                showMessage(data.responseMessage || 'Failed to complete booking', 'error');
             }
         } catch (error) {
             console.error('Error completing booking:', error);
-            showMessage('An error occurred while completing the booking.', 'error');
+            showMessage('An error occurred.', 'error');
         }
     };
 
@@ -320,175 +206,123 @@ export default function MyBookings() {
     const formatBooking = (booking) => {
         let dateObj = new Date();
         const bookingDateStr = booking.dBookingDate || booking.date;
-        if (bookingDateStr) {
-            dateObj = new Date(bookingDateStr);
-        }
-
-        const statusMap = {
-            1: 'Pending',
-            2: 'Confirmed',
-            3: 'Declined',
-            4: 'Completed',
-            5: 'Cancelled by Entertainer'
-        };
-
+        if (bookingDateStr) dateObj = new Date(bookingDateStr);
+        const statusMap = { 1: 'Pending', 2: 'Confirmed', 3: 'Declined', 4: 'Completed', 5: 'Cancelled by Entertainer' };
         const timeStr = booking.time || booking.vBookingTime || (booking.tFromTime && booking.tToTime ? `${booking.tFromTime} - ${booking.tToTime}` : null) || `${booking.vStartTime || '00:00'} - ${booking.vEndTime || '00:00'}`;
-
-        const imageSrc = getImageUrl(booking.charImage || booking.txProfilePic || booking.txCharacterPic || booking.vCharacterImage || booking.vImage);
-
         return {
+            ...booking,
             id: booking.id || booking.iBookingId || Math.random(),
-            day: dateObj.getDate().toString().padStart(2, '0'),
-            month: dateObj.toLocaleString('default', { month: 'short' }),
-            userName: booking.vUserName || booking.client || booking.userName || `${booking.vFirstName || ''} ${booking.vLastName || ''}`.trim() || 'Unknown User',
-            charImage: imageSrc,
-            charName: booking.vCharacterName || booking.charName || booking.character || 'Unknown Character',
+            day: (booking.day || dateObj.getDate().toString()).padStart(2, '0'),
+            month: booking.month || dateObj.toLocaleString('default', { month: 'short' }),
+            userName: booking.vUserName || booking.client || booking.userName || 'Unknown User',
+            charImage: getImageUrl(booking.charImage || booking.vImage || booking.txProfilePic),
+            charName: booking.vCharacterName || booking.charName || 'Unknown Character',
             time: timeStr,
-            location: booking.location || booking.vStreetAddress || booking.vAddress || booking.vLocation || 'Unknown Location',
-            status: booking.status || (booking.tiStatus ? statusMap[booking.tiStatus] : null) || booking.eStatus || booking.vStatus || 'Pending'
+            location: booking.location || booking.vStreetAddress || booking.vAddress || 'Unknown Location',
+            status: booking.status || (booking.tiStatus ? statusMap[booking.tiStatus] : null) || 'Pending'
         };
     };
 
+    const days = generateCalendarDays();
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentMonthLabel = `${months[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) setActiveMenu(null);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const statusColors = { 'Pending': 'pending', 'Confirmed': 'confirmed', 'Completed': 'completed' };
+
     return (
-        <div className="home-container">
-            <div className="home-header">
-                <h2>My Bookings</h2>
-                <div className="notification-icon" onClick={() => navigate('/dashboard/notifications')}>
-                    🔔<span className="dot"></span>
+        <div className="my-bookings-container">
+            <header className="bookings-header">
+                <h1>My Bookings</h1>
+                <button className="notify-btn" onClick={() => navigate('/dashboard/notifications')}>
+                    <BellIcon />
+                    <span className="badge"></span>
+                </button>
+            </header>
+
+            <div className="calendar-card" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEndSwipe}>
+                <div className="calendar-nav">
+                    <button onClick={handlePrevMonth}><ChevronLeft /></button>
+                    <h2 onClick={() => setIsPickerOpen(true)}>{currentMonthLabel}</h2>
+                    <button onClick={handleNextMonth}><ChevronRight /></button>
                 </div>
-            </div>
-
-
-            <div className="calendar-container">
-                <div className="calendar-header">
-                    <button className="nav-arrow desktop-only" onClick={handlePrevMonth}>&lt;</button>
-                    <h1 className="month-year" onClick={togglePicker}>
-                        {currentMonthStr} {currentYearStr}
-                    </h1>
-                    <button className="nav-arrow desktop-only" onClick={handleNextMonth}>&gt;</button>
+                
+                <div className="calendar-grid-header">
+                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <span key={d}>{d}</span>)}
                 </div>
-
-                <div
-                    className={`calendar-body ${slideDirection}`}
-                    onTouchStart={onTouchStart}
-                    onTouchMove={onTouchMove}
-                    onTouchEnd={onTouchEnd}
-                >
-                    <div className="weekdays">
-                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-                    </div>
-
-                    <div className="days-grid">
-                        {days.map((day, index) => {
-                            const isSelected = day.fullDate &&
-                                day.fullDate.getDate() === selectedDate.getDate() &&
-                                day.fullDate.getMonth() === selectedDate.getMonth() &&
-                                day.fullDate.getFullYear() === selectedDate.getFullYear();
-
-                            const isTodayDate = day.fullDate && isToday(day.fullDate, new Date());
-
-                            // Check if this date has a booking
-                            const dateStr = day.fullDate ? formatDate(day.fullDate) : null;
-                            const hasBooking = dateStr && bookingDates.includes(dateStr);
-
-                            return (
-                                <div
-                                    key={index}
-                                    className={`day-cell 
-                                        ${!day.currentMonth ? 'other-month' : ''} 
-                                        ${isSelected ? 'selected' : ''} 
-                                        ${isTodayDate && !isSelected ? 'is-today' : ''}`
-                                    }
-                                    onClick={() => handleDateClick(day)}
-                                >
-                                    <div className="cell-content">
-                                        {day.date}
-                                        {hasBooking && <span className="booking-dot"></span>}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-                <div className="dots-container">
-                    {Array.from({ length: 4 }).map((_, idx) => {
-                        const isActive = (currentDate.getMonth() % 4) === idx;
+                <div className="calendar-grid">
+                    {days.map((day, idx) => {
+                        const isSelected = day.fullDate && day.fullDate.toDateString() === selectedDate.toDateString();
+                        const dateStr = day.fullDate ? formatDate(day.fullDate) : null;
+                        const hasBooking = dateStr && bookingDates.includes(dateStr);
                         return (
-                            <span
-                                key={idx}
-                                className={`carousel-dot ${isActive ? 'active' : ''}`}
-                            ></span>
+                            <div 
+                                key={idx} 
+                                className={`day-cell ${!day.currentMonth ? 'empty' : ''} ${isSelected ? 'selected' : ''}`}
+                                onClick={() => day.currentMonth && handleDateClick(day)}
+                            >
+                                {day.date}
+                                {hasBooking && !isSelected && <div className="has-booking-dot"></div>}
+                            </div>
                         );
                     })}
                 </div>
             </div>
 
-            <div className="bookings-section">
+            <main className="list-container">
                 {loading ? (
-                    <div className="loading-msg">Loading bookings...</div>
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
                 ) : bookings.length > 0 ? (
-                    <div className="bookings-list">
+                    <div className="bookings-grid">
                         {bookings.map((booking, idx) => {
                             const formatted = formatBooking(booking);
+                            const isMenuOpen = activeMenu === formatted.id;
+                            const statusCls = statusColors[formatted.status] || '';
+                            
                             return (
-                                <div
-                                    key={formatted.id || idx}
-                                    className="booking-card"
-                                    onClick={() => navigate(`/dashboard/profile/history/${formatted.id}`)}
-                                    style={{ cursor: 'pointer' }}
-                                >
+                                <div className="booking-card" key={formatted.id || idx} onClick={() => navigate(`/dashboard/profile/history/${formatted.id}`)}>
                                     <div className="date-badge">
-                                        <span className="date-day">{formatted.day}</span>
-                                        <span className="date-month">{formatted.month}</span>
+                                        <span className="day">{formatted.day}</span>
+                                        <span className="month">{formatted.month}</span>
                                     </div>
-
                                     <div className="card-body">
-                                        <div className="user-info-header">
-                                            <div className="avatar-circle">
-                                                👤
-                                            </div>
-                                            <span className="user-full-name">{formatted.userName}</span>
+                                        <div className="header-info">
+                                            <div className="avatar"><PersonIcon /></div>
+                                            <span className="name">{formatted.userName}</span>
                                         </div>
-
-                                        <hr className="divider" />
-
-                                        <div className="main-content">
-                                            <div className="img-wrapper">
-                                                <img src={formatted.charImage} alt="" className="booking-img" />
-                                            </div>
-
-                                            <div className="text-details">
-                                                <h3 className="character-name">{formatted.charName}</h3>
-                                                <div className="detail-row">
-                                                    <span className="icon">🕒</span>
-                                                    <span className="one-line">{formatted.time}</span>
-                                                </div>
-
+                                        <div className="divider" style={{ margin: '8px 0 12px' }} />
+                                        <div className="content-box">
+                                            <img src={formatted.charImage} alt="" />
+                                            <div className="details">
+                                                <h4>{formatted.charName}</h4>
+                                                <div className="info"><ClockIcon /><span>{formatted.time}</span></div>
+                                                <div className="info"><LocationIcon /><span>{formatted.location}</span></div>
                                             </div>
                                         </div>
-
-                                        <hr className="divider" />
-
                                         <div className="card-footer">
-                                            <div className="status-box">
-                                                {/* Status removed as per user request */}
+                                            <div className="status-sect">
+                                                <span>Status:</span>
+                                                <div className={`badge ${statusCls}`}>{formatted.status}</div>
                                             </div>
-
-                                            <div className="action-menu" ref={activeMenu === formatted.id ? menuRef : null}>
-                                                <button
-                                                    className="dots-btn"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setActiveMenu(activeMenu === formatted.id ? null : formatted.id);
-                                                    }}
-                                                >
-                                                    ⋮
+                                            <div style={{ position: 'relative' }} ref={isMenuOpen ? menuRef : null}>
+                                                <button className="more-btn" onClick={(e) => { e.stopPropagation(); setActiveMenu(isMenuOpen ? null : formatted.id); }}>
+                                                    <MoreIcon />
                                                 </button>
-                                                {activeMenu === formatted.id && (
-                                                    <div className="dropdown-menu" onClick={(e) => e.stopPropagation()}>
-                                                        <button className="dropdown-item" onClick={(e) => handleOpenCancelModal(e, formatted)}>
-                                                            Cancel Booking
-                                                        </button>
+                                                {isMenuOpen && (
+                                                    <div className="custom-menu">
+                                                        <button className="menu-item" onClick={(e) => handleOpenCancelModal(e, formatted.id)}>Cancel Booking</button>
+                                                        {['Confirmed', 'Pending'].includes(formatted.status) && (
+                                                            <button className="menu-item" onClick={(e) => handleMarkAsCompleted(e, formatted.id)}>Mark as Completed</button>
+                                                        )}
+                                                        <button className="menu-item" onClick={(e) => handleReportRedirect(e, formatted.id)}>Report It</button>
                                                     </div>
                                                 )}
                                             </div>
@@ -499,78 +333,31 @@ export default function MyBookings() {
                         })}
                     </div>
                 ) : (
-                    <div className="no-bookings">
-                        <p>No Bookings For The Selected Date</p>
-                    </div>
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No Bookings For The Selected Date</div>
                 )}
-            </div>
+            </main>
 
-            {/* Mobile Picker Modal */}
+            {/* Custom Month Picker Overlay */}
             {isPickerOpen && (
-                <div className="picker-overlay" onClick={() => setIsPickerOpen(false)}>
-                    <div className="picker-modal" onClick={(e) => e.stopPropagation()}>
-                        <h3>Select Month</h3>
-                        <div className="months-grid">
+                <div className="modal-overlay" onClick={() => setIsPickerOpen(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <h3 style={{ marginBottom: '1rem' }}>Select Month</h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                             {months.map((m, idx) => (
-                                <div key={m} className="month-item" onClick={() => selectMonth(idx)}>
+                                <button 
+                                    key={m} 
+                                    className={`btn ${currentDate.getMonth() === idx ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => {
+                                        setCurrentDate(new Date(currentDate.getFullYear(), idx, 1));
+                                        setIsPickerOpen(false);
+                                    }}
+                                >
                                     {m}
-                                </div>
+                                </button>
                             ))}
                         </div>
-                        <button className="close-btn" onClick={() => setIsPickerOpen(false)}>Close</button>
-                    </div>
-                </div>
-            )}
-
-            {/* Cancel Booking Modal */}
-            {showCancelModal && (
-                <div className="picker-overlay" onClick={() => setShowCancelModal(false)}>
-                    <div className="picker-modal cancel-modal" onClick={(e) => e.stopPropagation()}>
-                        <h3>Cancel Booking</h3>
-                        <div className="cancel-form">
-                            <div className="form-group" style={{ textAlign: 'left', marginBottom: '15px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', marginBottom: '5px', fontWeight: 'bold' }}>Reason</label>
-                                <select
-                                    className="form-select"
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
-                                    value={cancelReason}
-                                    onChange={(e) => setCancelReason(e.target.value)}
-                                >
-                                    <option value="">Select Reason</option>
-                                    {reasonsList.map((reason, idx) => (
-                                        <option key={idx} value={reason.iReasonId || reason.id}>
-                                            {reason.vReason || reason.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group" style={{ textAlign: 'left', marginBottom: '15px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', marginBottom: '5px', fontWeight: 'bold' }}>Comments</label>
-                                <textarea
-                                    className="form-textarea"
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', minHeight: '80px' }}
-                                    value={cancelComment}
-                                    onChange={(e) => setCancelComment(e.target.value)}
-                                    placeholder="Tell us why you're cancelling..."
-                                />
-                            </div>
-                            <div className="modal-actions" style={{ display: 'flex', gap: '10px' }}>
-                                <button
-                                    className="close-btn"
-                                    style={{ flex: 1, backgroundColor: '#eee', color: '#333' }}
-                                    onClick={() => setShowCancelModal(false)}
-                                >
-                                    Close
-                                </button>
-                                <button
-                                    className="close-btn"
-                                    style={{ flex: 1, backgroundColor: '#e74c3c', color: 'white' }}
-                                    disabled={submittingCancel}
-                                    onClick={handleCancelSubmit}
-                                >
-                                    {submittingCancel ? 'Cancelling...' : 'Cancel Booking'}
-                                </button>
-                            </div>
+                        <div className="flex-end">
+                            <button className="btn btn-secondary" onClick={() => setIsPickerOpen(false)}>Close</button>
                         </div>
                     </div>
                 </div>

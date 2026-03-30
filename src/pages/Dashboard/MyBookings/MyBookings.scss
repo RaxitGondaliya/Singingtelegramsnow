@@ -1,532 +1,299 @@
-@use "../../../styles/abstracts/variables" as *;
-@use "../../../styles/abstracts/mixins" as *;
+@use '../../../styles/abstracts/variables' as *;
 
-.home-container {
-    width: 100%;
-    flex: 1;
+.my-bookings-container {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding-bottom: 5rem;
+}
+
+.bookings-header {
     display: flex;
-    flex-direction: column;
-    padding: 0;
-    box-sizing: border-box;
-    background-color: #f5f5f5;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 2.5rem;
+    background-color: $secondary-color; // Or $primary-color? Based on App state. 
+    color: white;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
 
-    .home-header {
-        @include flex-between;
-        padding: 20px 20px 0 20px;
-        margin-bottom: 5px;
-        background-color: transparent;
-
-        h2 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .notification-icon {
-            font-size: 20px;
-            cursor: pointer;
-            position: relative;
-
-            .dot {
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 8px;
-                height: 8px;
-                background-color: red;
-                border-radius: 50%;
-                border: 1px solid $white;
-            }
-        }
+    h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
     }
 
-    .calendar-container {
-        background: transparent;
-        padding: 0 20px 20px 20px;
-        margin-bottom: 0;
-        border-radius: 0;
-
-        .calendar-header {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            gap: 20px;
-            margin: 0 0 10px 0;
-
-            .month-year {
-                text-decoration: none;
-
-                @media (max-width: 768px) {
-                    cursor: pointer;
-                }
-
-                @media (min-width: 769px) {
-                    cursor: default;
-                }
-            }
-
-            .nav-arrow {
-                background: none;
-                border: none;
-                font-size: 24px;
-                font-weight: bold;
-                color: #333;
-                cursor: pointer;
-                padding: 5px 10px;
-
-                &:hover {
-                    color: $primary-color;
-                }
-
-                // &.desktop-only {
-                //     @media (max-width: 768px) {
-                //         display: none;
-                //     }
-                // }
-            }
-        }
-
-        .calendar-body {
-            background-color: $white;
-            padding: 20px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-
-            &.slide-left .days-grid {
-                animation: slideInLeft 0.3s ease forwards;
-            }
-
-            &.slide-right .days-grid {
-                animation: slideInRight 0.3s ease forwards;
-            }
-
-            .weekdays {
-                display: grid;
-                grid-template-columns: repeat(7, 1fr);
-                text-align: center;
-                font-weight: 500;
-                color: #666;
-                margin-bottom: 15px;
-                font-size: 14px;
-            }
-
-            .days-grid {
-                display: grid;
-                grid-template-columns: repeat(7, 1fr);
-                row-gap: 20px;
-                text-align: center;
-
-                .day-cell {
-                    width: 34px;
-                    height: 34px;
-                    @include flex-center;
-                    font-size: 14px;
-                    color: #333;
-                    border-radius: 50%;
-                    margin: 0 auto;
-                    cursor: pointer;
-                    position: relative;
-                    transition: all 0.2s ease;
-
-                    .cell-content {
-                        position: relative;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        width: 100%;
-                        height: 100%;
-                    }
-
-                    &.other-month {
-                        color: #ccc;
-                    }
-
-                    // Today's date highlight (Soft orange circle)
-                    &.is-today:not(.selected) {
-                        background-color: rgba(255, 152, 0, 0.15);
-                        color: #ff9800;
-                        font-weight: 600;
-                    }
-
-                    // Selected date highlight (Solid orange circle)
-                    &.selected {
-                        background-color: #ff9800 !important;
-                        color: $white !important;
-                        font-weight: 600;
-                    }
-
-                    // Small dot below the number for dates with bookings
-                    .booking-dot {
-                        position: absolute;
-                        bottom: 3px;
-                        left: 50%;
-                        transform: translateX(-50%);
-                        width: 6px;
-                        height: 6px;
-                        background-color: #ff9800;
-                        border-radius: 50%;
-                    }
-
-                    &:hover:not(.other-month):not(.selected) {
-                        background-color: #f5f5f5;
-                    }
-                }
-            }
-        }
-
-        @media (max-width: 768px) {
-            padding: 0;
-            margin: 0;
-
-            .calendar-header {
-                padding: 0 20px;
-            }
-
-            .calendar-body {
-                margin: 0;
-                border-radius: 0;
-            }
-        }
-    }
-
-    .bookings-section {
-        flex: 1;
-        padding: 20px;
-        background-color: #f5f5f5;
-        overflow-y: auto;
-
-        .loading-msg {
-            @include flex-center;
-            padding: 20px;
-            color: #666;
-        }
-
-        .bookings-list {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            width: 100%;
-
-            .booking-card {
-                background: $white;
-                border-radius: 12px;
-                position: relative;
-                border: 1px solid #eee;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-                display: flex;
-                flex-direction: column;
-                width: 100%;
-                min-width: 0;
-
-                .date-badge {
-                    position: absolute;
-                    top: -12px;
-                    left: 15px;
-                    background: linear-gradient(135deg, $accent-color, lighten($accent-color, 10%));
-                    color: $white;
-                    padding: 6px 10px;
-                    border-radius: 8px;
-                    text-align: center;
-                    min-width: 45px;
-                    z-index: 2;
-
-                    .date-day {
-                        font-size: 18px;
-                        font-weight: 800;
-                        display: block;
-                    }
-
-                    .date-month {
-                        font-size: 11px;
-                        font-weight: 600;
-                    }
-                }
-
-                .card-body {
-                    display: flex;
-                    flex-direction: column;
-                    height: 100%;
-
-                    .user-info-header {
-                        display: flex;
-                        align-items: center;
-                        padding: 12px 15px 8px 75px;
-
-                        .avatar-circle {
-                            width: 32px;
-                            height: 32px;
-                            border: 1px solid #eee;
-                            border-radius: 50%;
-                            @include flex-center;
-                            margin-right: 10px;
-                            color: #999;
-                        }
-
-                        .user-full-name {
-                            font-size: 14px;
-                            font-weight: 500;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                        }
-                    }
-
-                    .divider {
-                        border: 0;
-                        border-top: 1px solid #f0f0f0;
-                        margin: 0;
-                    }
-
-                    .main-content {
-                        display: flex;
-                        padding: 12px 15px;
-                        gap: 12px;
-                        flex: 1;
-                        width: 100%;
-                        min-width: 0;
-
-                        .img-wrapper {
-                            width: 65px;
-                            height: 65px;
-                            flex-shrink: 0;
-
-                            .booking-img {
-                                width: 100%;
-                                height: 100%;
-                                border-radius: 8px;
-                                object-fit: cover;
-                            }
-                        }
-
-                        .text-details {
-                            flex: 1;
-                            min-width: 0;
-                            overflow: hidden;
-
-                            .character-name {
-                                font-size: 16px;
-                                font-weight: 600;
-                                color: $accent-color;
-                                margin: 0 0 4px;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                            }
-
-                            .detail-row {
-                                display: flex;
-                                align-items: center;
-                                gap: 6px;
-                                margin-bottom: 3px;
-
-                                .icon {
-                                    font-size: 14px;
-                                    color: #aaa;
-                                }
-
-                                .one-line {
-                                    font-size: 13px;
-                                    color: #666;
-                                    white-space: nowrap;
-                                    overflow: hidden;
-                                    text-overflow: ellipsis;
-                                }
-                            }
-                        }
-                    }
-
-                    .card-footer {
-                        margin-top: auto;
-                        @include flex-between;
-                        padding: 6px 14px;
-                        background: #fafafa;
-                        border-bottom-left-radius: 12px;
-                        border-bottom-right-radius: 12px;
-                        height: 40px;
-
-                        .status-box {
-                            display: flex;
-                            align-items: center;
-                            gap: 6px;
-
-                            .label {
-                                font-size: 12px;
-                                font-weight: 700;
-                            }
-
-                            .value {
-                                font-size: 12px;
-                                font-weight: 600;
-
-                                &.completed {
-                                    color: #2ecc71;
-                                }
-
-                                &.confirmed {
-                                    color: #3498db;
-                                }
-
-                                &.pending {
-                                    color: #f39c12;
-                                }
-
-                                &.declined,
-                                &.decline,
-                                &.cancelled {
-                                    color: #e74c3c;
-                                }
-                            }
-                        }
-
-                        .action-menu {
-                            position: relative;
-                            display: flex;
-                            align-items: center;
-
-                            .dots-btn {
-                                background: none;
-                                border: none;
-                                font-size: 18px;
-                                cursor: pointer;
-                                color: #999;
-                                padding: 4px 6px;
-                                line-height: 1;
-                                height: 32px;
-                                width: 32px;
-                                @include flex-center;
-                                border-radius: 50%;
-                                transition: background 0.2s;
-
-                                &:hover {
-                                    background: #f0f0f0;
-                                }
-                            }
-
-                            .dropdown-menu {
-                                position: absolute;
-                                right: 0;
-                                bottom: calc(100% + 5px);
-                                width: 180px;
-                                background: $white;
-                                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-                                border: 1px solid #eee;
-                                display: flex;
-                                flex-direction: column;
-                                padding: 8px 0;
-                                z-index: 100;
-                                border-radius: 8px;
-
-                                .dropdown-item {
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: flex-start;
-                                    width: 100%;
-                                    padding: 10px 16px;
-                                    font-size: 14px;
-                                    border: none;
-                                    background: transparent;
-                                    cursor: pointer;
-                                    color: #333;
-                                    font-weight: 500;
-                                    margin: 0;
-                                    line-height: normal;
-                                    text-align: left;
-                                    transition: background 0.2s ease;
-
-                                    &:hover {
-                                        background: #f8f8f8;
-                                        color: $accent-color;
-                                    }
-
-                                    &:not(:last-child) {
-                                        border-bottom: 1px solid #f9f9f9;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        .no-bookings {
-            @include flex-center;
-            padding: 40px 0;
-            color: #888;
+    .notify-btn {
+        position: relative;
+        color: white;
+        
+        .badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 8px;
+            height: 8px;
+            background-color: #ff3b30;
+            border-radius: 50%;
         }
     }
 }
 
-.picker-overlay {
+.calendar-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+    .calendar-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+
+        h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 8px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.03);
+            &:hover { background-color: rgba(0,0,0,0.08); }
+        }
+    }
+
+    .calendar-grid-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        margin-bottom: 8px;
+        
+        span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #999;
+        }
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        row-gap: 8px;
+        
+        .day-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 40px;
+            position: relative;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 0.875rem;
+
+            &.empty { cursor: default; opacity: 0.3; }
+            
+            &.selected {
+                background-color: $secondary-color;
+                color: white;
+                font-weight: 700;
+            }
+
+            &:hover:not(.empty):not(.selected) {
+                background-color: #f0f0f0;
+            }
+
+            .has-booking-dot {
+                position: absolute;
+                bottom: 4px;
+                width: 4px;
+                height: 4px;
+                background-color: $secondary-color;
+                border-radius: 50%;
+            }
+        }
+    }
+}
+
+.list-container {
+    padding: 0 1.5rem;
+}
+
+.bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1.5rem;
+
+    @media (min-width: 600px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 900px) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+// Reuse aspects of the card from BookingHistory if needed, or keep local
+.booking-card {
+    background: white;
+    border-radius: 12px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    cursor: pointer;
+
+    .date-badge {
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        background-color: #3b5998; // Matches $secondary-color
+        color: white;
+        border-radius: 8px;
+        padding: 8px;
+        min-width: 50px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        z-index: 1;
+
+        .day { font-size: 1.125rem; font-weight: 700; display: block; line-height: 1; }
+        .month { font-size: 0.625rem; text-transform: uppercase; display: block; }
+    }
+
+    .card-body {
+        padding: 24px 16px 16px 36px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .header-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            background-color: #e8f0fe;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            color: #3b5998;
+        }
+
+        .name { font-size: 0.8125rem; font-weight: 600; }
+    }
+
+    .content-box {
+        display: flex;
+        gap: 12px;
+        flex: 1;
+
+        img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; }
+
+        .details {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+            .info {
+                display: flex;
+                align-items: center;
+                color: #666;
+                font-size: 0.75rem;
+                margin-top: 2px;
+                svg { margin-right: 4px; opacity: 0.6; }
+                span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            }
+        }
+    }
+
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid #eee;
+
+        .status-sect {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            span { font-size: 0.75rem; color: #999; }
+            .badge {
+                padding: 2px 10px;
+                border-radius: 99px;
+                font-size: 0.6875rem;
+                font-weight: 700;
+                background: #eee;
+                
+                &.pending { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+                &.confirmed { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+                &.completed { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+            }
+        }
+    }
+}
+
+// Modal Styles
+.modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 1000;
-    @include flex-center;
+    padding: 1rem;
+}
 
-    .picker-modal {
-        background-color: $white;
-        padding: 20px;
-        border-radius: 12px;
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.875rem; }
+    select, textarea, input {
         width: 100%;
-        max-width: 320px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        text-align: center;
-
-        .months-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-
-            .month-item {
-                padding: 10px;
-                background-color: #f5f5f5;
-                border-radius: 8px;
-                cursor: pointer;
-
-                &:hover {
-                    background-color: #e0e0e0;
-                }
-            }
-        }
-
-        .close-btn {
-            background-color: #333;
-            color: $white;
-            padding: 8px 16px;
-            cursor: pointer;
-        }
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-family: inherit;
     }
 }
 
-@keyframes slideInLeft {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+.flex-end {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 1rem;
 }
 
-@keyframes slideInRight {
-    from {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    &.btn-primary { background: $primary-color; color: white; }
+    &.btn-secondary { background: #eee; color: #333; }
+    &.btn-error { background: #ff3b30; color: white; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
 }

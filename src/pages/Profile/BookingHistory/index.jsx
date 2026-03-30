@@ -6,48 +6,71 @@ import { getImageUrl } from '../../../utils/imageUtils';
 import { useMessage } from '../../../context/MessageContext';
 import './BookingHistory.scss';
 
-const BookingCard = ({ booking, activeMenu, setActiveMenu, onRefresh }) => {
-    const isMenuOpen = activeMenu === booking.id;
-    const menuRef = useRef(null);
+// SVG Icons
+const PersonIcon = () => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+);
+
+const ClockIcon = () => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>
+);
+
+const MapPinIcon = () => (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+);
+
+const MoreIcon = () => (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="1"></circle>
+        <circle cx="12" cy="5" r="1"></circle>
+        <circle cx="12" cy="19" r="1"></circle>
+    </svg>
+);
+
+const BookingCard = ({ booking, onRefresh }) => {
     const navigate = useNavigate();
     const { showMessage, showConfirm } = useMessage();
+    const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef(null);
 
-    // 1. New Handler: Navigates to the Details page
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setShowMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     const handleCardClick = () => {
-        // This will open the details page when clicking anywhere on the card
         navigate(`/dashboard/profile/history/${booking.id}`);
     };
 
     const toggleMenu = (e) => {
-        e.preventDefault();
-        e.stopPropagation(); // 2. IMPORTANT: Prevents the card click from firing when opening dots
-        setActiveMenu(isMenuOpen ? null : booking.id);
+        e.stopPropagation();
+        setShowMenu(!showMenu);
     };
-
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
-                setActiveMenu(null);
-            }
-        };
-        if (isMenuOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
-        }
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [isMenuOpen, setActiveMenu]);
 
     const handleReportRedirect = (e) => {
         e.stopPropagation();
-        setActiveMenu(null);
+        setShowMenu(false);
         localStorage.setItem('reportBookingId', booking.id);
         navigate('/dashboard/profile/report', { state: { iBookingId: booking.id } });
     };
 
     const handleMarkAsCompleted = async (e) => {
         e.stopPropagation();
-        setActiveMenu(null);
+        setShowMenu(false);
 
         const confirmed = await showConfirm('Are you sure you want to mark this booking as completed?');
         if (!confirmed) return;
@@ -56,8 +79,6 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu, onRefresh }) => {
             const response = await bookingApi.completeBooking(booking.id);
             const data = response.data || {};
 
-            // Prioritize responseCode or status from the data body
-            // Some APIs return 200 HTTP status but an error code in the body
             const isSuccess = (data.responseCode === 200 || data.responseCode === '200' ||
                 data.status === 200 || data.status === '200' || data.status === 1 || data.status === '1') ||
                 (!data.responseCode && !data.status && response.status === 200);
@@ -70,69 +91,75 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu, onRefresh }) => {
             }
         } catch (error) {
             console.error('Error completing booking:', error);
-            const errorMsg = error.response?.data?.responseMessage ||
-                error.response?.data?.message ||
-                'An error occurred while completing the booking.';
-            showMessage(errorMsg, 'error');
+            showMessage('An error occurred while completing the booking.', 'error');
         }
     };
 
+    const getStatusClass = (status) => {
+        const s = status?.toLowerCase() || '';
+        if (s.includes('pending')) return 'pending';
+        if (s.includes('confirm')) return 'confirmed';
+        if (s.includes('complete')) return 'completed';
+        if (s.includes('cancel') || s.includes('decline')) return 'error';
+        return '';
+    };
+
     return (
-        <div className="booking-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+        <div className="booking-card" onClick={handleCardClick}>
             <div className="date-badge">
-                <span className="date-day">{booking.day}</span>
-                <span className="date-month">{booking.month}</span>
+                <span className="day">{booking.day}</span>
+                <span className="month">{booking.month}</span>
             </div>
 
-            <div className="card-body">
-                <div className="user-info-header">
-                    <div className="avatar-circle">
-                        <i className="fa-regular fa-user"></i>
+            <div className="card-content">
+                <div className="card-header">
+                    <div className="avatar">
+                        <PersonIcon />
                     </div>
-                    <span className="user-full-name">{booking.userName}</span>
+                    <span className="user-name">{booking.userName}</span>
                 </div>
 
-                <hr className="divider" />
+                <div className="divider" />
 
-                <div className="main-content">
-                    <div className="img-wrapper">
-                        <img src={booking.charImage} alt="" className="booking-img" />
-                    </div>
+                <div className="char-info-box">
+                    <img className="char-img" src={booking.charImage} alt="" />
+                    <div className="char-details">
+                        <h6>{booking.charName}</h6>
 
-                    <div className="text-details">
-                        <h3 className="character-name">{booking.charName}</h3>
-                        <div className="detail-row">
-                            <span className="icon">🕒</span>
-                            <span className="one-line">{booking.time}</span>
+                        <div className="info-row">
+                            <ClockIcon />
+                            <span>{booking.time}</span>
                         </div>
-                        <div className="detail-row">
-                            <span className="icon">📍</span>
-                            <span className="one-line">{booking.location}</span>
+
+                        <div className="info-row">
+                            <MapPinIcon />
+                            <span>{booking.location}</span>
                         </div>
                     </div>
                 </div>
 
-                <hr className="divider" />
+                <div className="divider" />
 
                 <div className="card-footer">
                     <div className="status-box">
-                        <span className="label">Status:</span>
-                        <span className={`value ${booking.status.toLowerCase()}`}>
+                        <span>Status:</span>
+                        <div className={`chip ${getStatusClass(booking.status)}`}>
                             {booking.status}
-                        </span>
+                        </div>
                     </div>
 
-                    {/* 5. Added stopPropagation to the menu container */}
-                    <div className="action-menu" ref={menuRef} onClick={(e) => e.stopPropagation()}>
-                        <button className="dots-btn" onClick={toggleMenu}>⋮</button>
-                        {isMenuOpen && (
-                            <div className="dropdown-menu">
+                    <div style={{ position: 'relative' }} ref={menuRef}>
+                        <button className="more-btn" onClick={toggleMenu}>
+                            <MoreIcon />
+                        </button>
+                        {showMenu && (
+                            <div className="custom-menu">
                                 {(booking.status === 'Confirm' || booking.status === 'Confirmed') && (
-                                    <button className="dropdown-item" onClick={handleMarkAsCompleted}>
+                                    <button className="menu-item" onClick={handleMarkAsCompleted}>
                                         Mark as Completed
                                     </button>
                                 )}
-                                <button className="dropdown-item" onClick={handleReportRedirect}>
+                                <button className="menu-item" onClick={handleReportRedirect}>
                                     Report It
                                 </button>
                             </div>
@@ -145,7 +172,6 @@ const BookingCard = ({ booking, activeMenu, setActiveMenu, onRefresh }) => {
 };
 
 export default function BookingHistory() {
-    const [activeMenu, setActiveMenu] = useState(null);
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -194,56 +220,54 @@ export default function BookingHistory() {
 
         const timeStr = req.time || req.vBookingTime || (req.tFromTime && req.tToTime ? `${req.tFromTime} - ${req.tToTime}` : null) || `${req.vStartTime || '00:00'} - ${req.vEndTime || '00:00'}`;
 
-        // Construct full image URL from filename
-        const imageSrc = getImageUrl(req.charImage || req.txProfilePic || req.txCharacterPic || req.vCharacterImage || req.vImage);
-
         return {
+            ...req,
             id: req.id || req.iBookingId || Math.random(),
-            day: req.day || dateObj.getDate().toString().padStart(2, '0'),
+            day: (req.day || dateObj.getDate().toString()).padStart(2, '0'),
             month: req.month || dateObj.toLocaleString('default', { month: 'short' }),
             userName: req.userName || req.vUserName || `${req.vFirstName || ''} ${req.vLastName || ''}`.trim() || 'Unknown User',
-            charImage: imageSrc,
+            charImage: getImageUrl(req.charImage || req.txProfilePic || req.txCharacterPic || req.vCharacterImage || req.vImage),
             charName: req.charName || req.vCharacterName || 'Unknown Character',
             time: timeStr,
             location: req.location || req.vStreetAddress || req.vAddress || req.vLocation || 'Unknown Location',
-            status: req.status || (req.tiStatus ? statusMap[req.tiStatus] : null) || req.eStatus || req.vStatus || 'Completed',
-            ...req
+            status: req.status || (req.tiStatus ? statusMap[req.tiStatus] : null) || req.eStatus || req.vStatus || 'Completed'
         };
     };
 
     if (loading) {
         return (
-            <div className="booking-history-page">
+            <div className="booking-history-container">
                 <Header title="Booking History" />
-                <div className="booking-container" style={{ padding: '20px', textAlign: 'center' }}>
-                    Loading...
+                <div className="loading-container">
+                    <div style={{ width: '40px', height: '40px', border: '3px solid #eee', borderTopColor: '#e14b3b', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="booking-history-page">
+        <div className="booking-history-container">
             <Header title="Booking History" />
-            <div className="booking-container">
-                <div className="booking-list">
-                    {bookings.length === 0 ? (
-                        <div style={{ textAlign: 'center', width: '100%', padding: '20px' }}>No booking history found.</div>
-                    ) : (
-                        bookings.map((item, index) => {
+            <div className="bookings-grid-wrapper" style={{ marginTop: '2rem' }}>
+                {bookings.length === 0 ? (
+                    <div className="no-history">
+                        <p>No booking history found.</p>
+                    </div>
+                ) : (
+                    <div className="bookings-grid">
+                        {bookings.map((item, index) => {
                             const formattedBooking = formatBooking(item);
                             return (
                                 <BookingCard
                                     key={formattedBooking.id || index}
                                     booking={formattedBooking}
-                                    activeMenu={activeMenu}
-                                    setActiveMenu={setActiveMenu}
                                     onRefresh={fetchHistory}
                                 />
                             );
-                        })
-                    )}
-                </div>
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );

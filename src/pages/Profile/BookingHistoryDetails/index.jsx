@@ -5,6 +5,35 @@ import { bookingApi } from '../../../api/bookingApi';
 import { getImageUrl } from '../../../utils/imageUtils';
 import './BookingHistoryDetails.scss';
 
+// SVG Icons
+const PersonIcon = () => (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+);
+
+const LocationIcon = () => (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+);
+
+const PhoneIcon = () => (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.28-2.28a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+    </svg>
+);
+
+const CloseIcon = () => (
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+);
+
+
 const BookingHistoryDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -14,35 +43,24 @@ const BookingHistoryDetails = () => {
 
     useEffect(() => {
         if (!id) return;
-
         const fetchDetails = async () => {
             try {
                 setLoading(true);
-                const response = await bookingApi.getBookingDetails(id);
-
-                if (response.data && response.data.responseData) {
-                    setBookingDetails(response.data.responseData);
-                } else if (response.data && response.data.data) {
-                    setBookingDetails(response.data.data);
-                } else {
-                    setBookingDetails(response.data);
-                }
-            } catch (error) {
-                console.error('Error fetching booking details:', error);
-            } finally {
-                setLoading(false);
-            }
+                const res = await bookingApi.getBookingDetails(id);
+                setBookingDetails(res.data?.responseData || res.data?.data || res.data);
+            } catch (err) { console.error('Error fetching details:', err); }
+            finally { setLoading(false); }
         };
-
         fetchDetails();
     }, [id]);
 
     if (loading) {
         return (
-            <div className="details-page">
+            <div className="booking-details-container">
                 <Header title="Booking Details" />
-                <div className="details-container" style={{ padding: '20px', textAlign: 'center' }}>
-                    Loading details...
+                <div className="loading-wrap">
+                    <div style={{ width: '40px', height: '40px', border: '3px solid #eee', borderTopColor: '#e14b3b', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 </div>
             </div>
         );
@@ -50,24 +68,17 @@ const BookingHistoryDetails = () => {
 
     if (!bookingDetails) {
         return (
-            <div className="details-page">
+            <div className="booking-details-container">
                 <Header title="Booking Details" />
-                <div className="details-container" style={{ padding: '20px', textAlign: 'center' }}>
-                    No details found for this booking.
-                </div>
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#666' }}>No details found for this booking.</div>
             </div>
         );
     }
 
-    // Safely extract deeply nested data or top-level data depending on API structure
-    // Since we don't know the exact response format yet, we'll setup robust fallbacks
     const data = bookingDetails;
-
-    // Formatting helpers
-    const getAvatar = () => getImageUrl(data.txProfilePic || data.vProfilePic || data.txCharacterPic || data.vImage, '');
+    const getAvatar = () => getImageUrl(data.txProfilePic || data.vProfilePic || data.txCharacterPic || data.vImage);
     const getUserName = () => data.vUserName || `${data.vFirstName || ''} ${data.vLastName || ''}`.trim() || 'Unknown User';
-
-    // Sometimes backend returns nested objects, sometimes flat
+    
     const locationObj = data.location || {};
     const recipientObj = data.recipient || {};
     const detailsObj = data.details || {};
@@ -76,189 +87,127 @@ const BookingHistoryDetails = () => {
     let phoneStr = data.vMobileNumber || data.vPhoneNumber || data.vMobile || data.vPhone || locationObj.vPhoneNumber || '';
     if (data.vISDCode && phoneStr && !phoneStr.startsWith('+')) phoneStr = `${data.vISDCode} ${phoneStr}`;
 
-    const statusMap = {
-        1: 'Pending',
-        2: 'Confirmed',
-        3: 'Declined',
-        4: 'Completed',
-        5: 'Cancelled by Entertainer'
-    };
+    const statusMap = { 1: 'Pending', 2: 'Confirmed', 3: 'Declined', 4: 'Completed', 5: 'Cancelled by Entertainer' };
     const paymentStatus = data.vPaymentStatus || data.paymentStatus || (data.tiStatus ? statusMap[data.tiStatus] : 'Completed');
-
-    // Determine the color class based on tiStatus
-    const statusColorMap = {
-        2: 'status-confirmed',   // blue
-        3: 'status-declined',    // red
-        4: 'status-completed',   // green
+    
+    // Status Classes
+    const getStatusCls = (st) => {
+        const val = Number(st);
+        if (val === 2) return 'info';
+        if (val === 3 || val === 5) return 'error';
+        if (val === 1) return '';
+        return 'success';
     };
-    const statusColorClass = statusColorMap[data.tiStatus] || 'paid';
 
-    // Time/Date formatting
     let dateTimeStr = `${data.dBookingDate || ''} ${data.tFromTime || ''} - ${data.tToTime || ''}`;
-    if (!data.dBookingDate && data.vBookingDate) {
-        dateTimeStr = `${data.vBookingDate} ${data.vBookingTime || ''}`;
-    }
+    if (!data.dBookingDate && data.vBookingDate) dateTimeStr = `${data.vBookingDate} ${data.vBookingTime || ''}`;
 
-    // Image fallback
-    const charImg = getImageUrl(data.vImage || data.txCharacterPic || data.vCharacterImage, 'https://placehold.co/60x60');
+    const charImg = getImageUrl(data.vImage || data.txCharacterPic || data.vCharacterImage);
+
+    const safeNum = (v1, v2, v3, v4, fallback = 0) => {
+        const val = v1 ?? v2 ?? v3 ?? v4 ?? fallback;
+        const num = parseFloat(val);
+        return isNaN(num) ? fallback.toFixed(2) : num.toFixed(2);
+    };
 
     return (
-        <div className="details-page">
-            <Header title="Booking Details" />
+        <div className="booking-details-container">
+            <Header title="Booking Details" onBack={() => navigate(-1)} />
 
-            <div className="details-container">
-                <div className="details-card">
-                    {/* User Header */}
-                    <div className="user-section">
-                        <div className="user-avatar">
-                            {getAvatar() ? (
-                                <img src={getAvatar()} alt="User" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                            ) : (
-                                <i className="fa-regular fa-user"></i>
-                            )}
+            <div className="details-card-wrapper">
+                <div className="card">
+                    {/* User Info Header */}
+                    <div className="user-header">
+                        <div className="avatar">
+                            {getAvatar() ? <img src={getAvatar()} alt="" /> : <PersonIcon />}
                         </div>
-                        <div className="user-meta">
-                            <h3 className="user-name">{getUserName()}</h3>
-                            <p className="user-phone">📞 {phoneStr || 'N/A'}</p>
-                            <p className="payment-status">Payment Status: <span className={statusColorClass}>{paymentStatus}</span></p>
+                        <div className="info">
+                            <h2>{getUserName()}</h2>
+                            <div className="phone"><PhoneIcon /> {phoneStr || 'N/A'}</div>
+                            <div className={`status ${getStatusCls(data.tiStatus)}`}>
+                                Payment Status: <span>{paymentStatus}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <hr className="detail-divider" />
+                    <div className="divider" />
 
-                    {/* Character Section */}
-                    <div className="char-section">
-                        <img src={charImg} alt="Character" className="char-thumb" />
-                        <div className="char-info">
-                            <span className="label">Character Name</span>
-                            <h4 className="value-orange">{data.vCharacterName || data.charName || 'Unknown'}</h4>
+                    {/* Character Banner */}
+                    <div className="char-banner">
+                        <img src={charImg} alt="" />
+                        <div className="details">
+                            <label>Character Name</label>
+                            <h4>{data.vCharacterName || data.charName || 'Unknown'}</h4>
                         </div>
                     </div>
 
-                    {/* TWO COLUMN GRID FOR DESKTOP */}
                     <div className="details-grid">
-                        {/* Left Column */}
-                        <div className="grid-column">
-                            <div className="info-item">
-                                <span className="label">Delivery Date</span>
-                                <span className="value-orange">{dateTimeStr || 'N/A'}</span>
+                        <div className="column">
+                            <DetailItem label="Delivery Date" value={dateTimeStr || 'N/A'} isPrimary />
+                            <DetailItem label="Occasion" value={data.vOccasion || detailsObj.vOccasion || 'N/A'} />
+                            
+                            <div className="detail-item">
+                                <label>Recipient Details</label>
+                                <div className="value"><PersonIcon /> {data.vRcepientName || recipientObj.vRecipientName || 'N/A'}</div>
                             </div>
 
-                            <div className="info-item">
-                                <span className="label">Occasion</span>
-                                <span className="value">{data.vOccasion || detailsObj.vOccasion || 'N/A'}</span>
+                            <DetailItem label="Location Name" value={data.vLocationName || locationObj.vLocationName || 'N/A'} />
+
+                            <div className="detail-item">
+                                <label>Location Address</label>
+                                <div className="value"><LocationIcon /> {data.vLocationAddress || locationObj.vStreetAddress || 'N/A'}</div>
                             </div>
 
-                            <div className="info-item">
-                                <span className="label">Recipient Details</span>
-                                <div className="icon-row">
-                                    <span className="icon">👤</span>
-                                    <span className="value">{data.vRcepientName || recipientObj.vRecipientName || data.vRecipientName || 'N/A'}</span>
-                                </div>
-                            </div>
-
-                            <div className="info-item">
-                                <span className="label">Location Name</span>
-                                <span className="value">{data.vLocationName || locationObj.vLocationName || 'N/A'}</span>
-                            </div>
-
-                            <div className="info-item">
-                                <span className="label">Location Address</span>
-                                <div className="address-box">
-                                    <span className="icon-orange">📍</span>
-                                    <span className="value">{data.vLocationAddress || data.vStreetAddress || locationObj.vStreetAddress || 'N/A'}</span>
-                                </div>
-                            </div>
-
-                            <div className="info-item">
-                                <span className="label">Contact Person Details @Delivery Location</span>
-                                <div className="icon-row">
-                                    <span className="icon-orange">👤</span>
-                                    <span className="value">{data.vContactPersonDeliveryLocation || data.vContactPersonName || locationObj.vContactPersonName || 'N/A'}</span>
-                                    <span className="icon-orange" style={{ marginLeft: '15px' }}>📞</span>
-                                    <span className="value-orange">{data.vPhoneNumberDeliveryLocation || data.vContactPersonNumber || locationObj.vContactPersonNumber || 'N/A'}</span>
+                            <div className="detail-item">
+                                <label>Contact Person Details @Delivery Location</label>
+                                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                                    <div className="value"><PersonIcon /> {data.vContactPersonDeliveryLocation || locationObj.vContactPersonName || 'N/A'}</div>
+                                    <div className="value primary"><PhoneIcon /> {data.vPhoneNumberDeliveryLocation || locationObj.vContactPersonNumber || 'N/A'}</div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right Column */}
-                        <div className="grid-column">
-                            <div className="info-item">
-                                <span className="label">Special Instruction for the location</span>
-                                <span className="value">{data.vSpecialInstructions || data.txSpecialInstruction || locationObj.txSpecialInstruction || 'N/A'}</span>
-                            </div>
-
-                            <div className="info-item">
-                                <span className="label">Recipient Personal Info</span>
-                                <span className="value">{data.vRecipientPersonalInfo || recipientObj.txPersonalInfo || data.txRecipientPersonalInfo || 'N/A'}</span>
-                            </div>
-
-                            <div className="info-item">
-                                <span className="label">Card Message</span>
-                                <span className="value">{data.vCardMessage || detailsObj.txCardMessage || data.txCardMessage || 'N/A'}</span>
-                            </div>
-
-                            <div className="info-item">
-                                <span className="label">From</span>
-                                <span className="value">{data.vCardFrom || detailsObj.vFrom || data.vFrom || 'N/A'}</span>
-                            </div>
-
-                            <div className="info-item">
-                                <span className="label">Additional Notes</span>
-                                <span className="value">{data.vAdditionalNotes || detailsObj.txAdditionalNotes || data.txAdditionalNotes || 'N/A'}</span>
-                            </div>
-
-                            <div className="info-item">
-                                <span className="label">Add-Ons Charges</span>
-                                <span className="value">{data.dAddOnCharges || paymentObj?.fAddOnAmount ? `$${data.dAddOnCharges || paymentObj.fAddOnAmount}` : '-'}</span>
-                            </div>
+                        <div className="column">
+                            <DetailItem label="Special Instruction for the location" value={data.vSpecialInstructions || data.txSpecialInstruction || 'N/A'} />
+                            <DetailItem label="Recipient Personal Info" value={data.vRecipientPersonalInfo || recipientObj.txPersonalInfo || 'N/A'} />
+                            <DetailItem label="Card Message" value={data.vCardMessage || detailsObj.txCardMessage || 'N/A'} />
+                            <DetailItem label="From" value={data.vCardFrom || detailsObj.vFrom || 'N/A'} />
+                            <DetailItem label="Additional Notes" value={data.vAdditionalNotes || detailsObj.txAdditionalNotes || 'N/A'} />
+                            <DetailItem label="Add-Ons Charges" value={data.dAddOnCharges || paymentObj?.fAddOnAmount ? `$${data.dAddOnCharges || paymentObj.fAddOnAmount}` : '-'} />
                         </div>
                     </div>
 
-                    {/* Action Button */}
-                    <div className="details-footer">
-                        {data.tiStatus !== 3 && data.tiStatus !== '3' && (
-                            <div className="footer-button-wrapper">
-                                <button className="btn-payout" onClick={() => setIsPayoutOpen(true)}>
-                                    Payout Details
-                                </button>
-                            </div>
+                    <div className="actions">
+                        {![3, 5, '3', '5'].includes(data.tiStatus) && (
+                            <button className="payout-btn" onClick={() => setIsPayoutOpen(true)}>Payout Details</button>
                         )}
-                        <p className="cancel-policy" onClick={() => navigate('/dashboard/cancellation-policy')} style={{ cursor: 'pointer' }}>Booking Cancellation Policy</p>
+                        <a className="policy-link" onClick={() => navigate('/dashboard/cancellation-policy')}>Booking Cancellation Policy</a>
                     </div>
                 </div>
             </div>
 
-            {/* Payout Details Overlay */}
+            {/* Payout Details Drawer */}
             {isPayoutOpen && (
-                <div className="payout-overlay" onClick={() => setIsPayoutOpen(false)}>
-                    <div className="payout-sheet" onClick={(e) => e.stopPropagation()}>
-                        <div className="sheet-header">
+                <div className="drawer-overlay" onClick={() => setIsPayoutOpen(false)}>
+                    <div className="drawer-content" onClick={e => e.stopPropagation()}>
+                        <div className="handle" />
+                        <div className="drawer-header">
                             <h3>Payout Details</h3>
-                            <button className="close-btn" onClick={() => setIsPayoutOpen(false)}>&times;</button>
+                            <button className="close-btn" onClick={() => setIsPayoutOpen(false)}><CloseIcon /></button>
                         </div>
-                        <div className="sheet-content">
-                            <div className="payout-row">
-                                <span>Singing Telegram Base</span>
-                                <strong>${paymentObj.fPayableAmount.toFixed(2) || '0.00'}</strong>
-                            </div>
-                            <div className="payout-row">
-                                <span>Tip Amount</span>
-                                <strong>${paymentObj.fTipAmount.toFixed(2) || paymentObj.dTipAmount.toFixed(2) || data.dDriverTip.toFixed(2) || data.fTipPercentage.toFixed(2) || '0.00'}</strong>
-                            </div>
-                            <div className="payout-row">
-                                <span>Travel Fee</span>
-                                <strong>${paymentObj.fTravelFee.toFixed(2) || paymentObj.dTravelFee.toFixed(2) || data.dTravelFee.toFixed(2) || '0.00'}</strong>
-                            </div>
-                            <div className="payout-row">
-                                <span>Add-Ons Reimbursement</span>
-                                <strong>${paymentObj.fAddOnAmount?.toFixed(2) || paymentObj.dAddOnReimbursement.toFixed(2) || data.dAddOnCharges.toFixed(2) || '0.00'}</strong>
-                            </div>
-                            <hr className="payout-divider" />
-                            <div className="payout-row total">
-                                <span>Total Payout</span>
-                                <strong>${paymentObj.fTotalAmount?.toFixed(2) || paymentObj.dTotalPayout?.toFixed(2) || data.dDriverTotalAmount?.toFixed(2) || data.fPrice?.toFixed(2) || '0.00'}</strong>
-                            </div>
+                        
+                        <div className="payout-list">
+                            <PayoutRow label="Singing Telegram Base" amount={safeNum(paymentObj.fPayableAmount, paymentObj.dPayableAmount, data.dTotalAmount)} />
+                            <PayoutRow label="Tip Amount" amount={safeNum(paymentObj.fTipAmount, paymentObj.dTipAmount, data.dDriverTip)} />
+                            <PayoutRow label="Travel Fee" amount={safeNum(paymentObj.fTravelFee, paymentObj.dTravelFee, data.dTravelFee)} />
+                            <PayoutRow label="Add-Ons Reimbursement" amount={safeNum(paymentObj.fAddOnAmount, paymentObj.dAddOnReimbursement, data.dAddOnCharges)} />
+                        </div>
+
+                        <div className="divider dashed" style={{ margin: '1.5rem 0' }} />
+                        
+                        <div className="total-payout">
+                            <span className="label">Total Payout</span>
+                            <span className="amount">${safeNum(paymentObj.fTotalAmount, paymentObj.dTotalPayout, data.dDriverTotalAmount, data.fPrice)}</span>
                         </div>
                     </div>
                 </div>
@@ -266,5 +215,19 @@ const BookingHistoryDetails = () => {
         </div>
     );
 };
+
+const DetailItem = ({ label, value, isPrimary }) => (
+    <div className="detail-item">
+        <label>{label}</label>
+        <div className={`value ${isPrimary ? 'primary' : ''}`}>{value}</div>
+    </div>
+);
+
+const PayoutRow = ({ label, amount }) => (
+    <div className="payout-row">
+        <span className="label">{label}</span>
+        <span className="amount">${amount}</span>
+    </div>
+);
 
 export default BookingHistoryDetails;

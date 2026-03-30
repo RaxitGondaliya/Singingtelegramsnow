@@ -1,205 +1,181 @@
-@use "../../../styles/abstracts/variables" as *;
-@use "../../../styles/abstracts/mixins" as *;
+@use '../../../styles/abstracts/variables' as *;
 
 .my-account-container {
-    background-color: $white;
     min-height: 100vh;
+    background-color: #f8f9fa;
+    padding-bottom: 5rem;
+}
 
-    .tabs-container {
+.tabs-wrapper {
+    background: white;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+
+    .tab {
+        flex: 1;
+        padding: 1.25rem;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+
+        &.active {
+            color: $primary-color;
+            border-bottom-color: $primary-color;
+        }
+    }
+}
+
+.account-form-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+
+    @media (min-width: 768px) {
+        padding: 2.5rem;
+    }
+}
+
+.avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2.5rem;
+
+    .avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #f0f0f0;
         display: flex;
-        border-bottom: 1px solid #eee;
-        position: sticky;
-        top: 56px;
-        background-color: $white;
-        z-index: 999;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        color: #ccc;
+        
+        img { width: 100%; height: 100%; object-fit: cover; }
+    }
 
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 15px 0;
-            font-size: 16px;
-            font-weight: 500;
-            color: #666;
-            cursor: pointer;
-            position: relative;
+    button {
+        padding: 6px 16px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: transparent;
+        &:hover { background: #f9f9f9; }
+    }
+}
 
-            &.active {
-                color: $accent-color;
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
 
-                &::after {
-                    content: '';
-                    position: absolute;
-                    bottom: -1px;
-                    left: 0;
-                    right: 0;
-                    height: 3px;
-                    background-color: $accent-color;
-                }
-            }
+    @media (min-width: 600px) {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    
+    label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 8px;
+    }
+
+    input, select, textarea {
+        padding: 12px 14px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 0.9375rem;
+        font-family: inherit;
+        
+        &:focus {
+            outline: none;
+            border-color: $primary-color;
+            box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
         }
     }
 
-    .my-account-content {
-        padding: 10px 20px 20px 20px;
-        max-width: 600px;
-        margin: 0 auto;
-
-        .photo-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-
-            .avatar-circle {
-                width: 110px;
-                height: 110px;
-                flex-shrink: 0;
-                border: 1px solid #ddd;
-                border-radius: 50%;
-                @include flex-center;
-                background-color: #f9f9f9;
-
-                .avatar-icon {
-                    font-size: 55px;
-                    opacity: 0.4;
-                    color: #333;
-                }
-            }
-
-            .change-photo-btn {
-                background: none;
-                border: none;
-                color: $accent-color;
-                font-size: 16px;
-                font-weight: 500;
-                cursor: pointer;
-            }
-        }
-
-        .account-form {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-
-            .form-row {
-                display: flex;
-                gap: 20px;
-
-                @media (max-width: 600px) {
-                    flex-direction: column;
-                    gap: 8px;
-                }
-            }
-
-            .form-group {
-                display: flex;
-                flex-direction: column;
-                gap: 0;
-                flex: 1;
-
-                label {
-                    font-size: 14px;
-                    color: #333;
-                    font-weight: 500;
-                }
-
-                input,
-                select {
-                    border: none;
-                    border-bottom: 1px solid #757575;
-                    padding: 6px 0;
-                    font-size: 18px;
-                    color: $black;
-                    outline: none;
-                    background: transparent;
-                }
-
-                .input-with-icon {
-                    position: relative;
-                    display: flex;
-                    align-items: center;
-
-                    input {
-                        width: 100%;
-                        padding-right: 30px;
-                    }
-
-                    .location-icon {
-                        position: absolute;
-                        right: 0;
-                        font-size: 18px;
-                    }
-                }
-
-                &.phone-group {
-                    gap: 0 !important;
-
-                    .phone-input-container {
-                        display: flex;
-                        align-items: center;
-                        border-bottom: none;
-                        padding: 0;
-                        width: 100%;
-
-                        .country-code {
-                            font-size: 16px;
-                            font-weight: 500;
-                            min-width: 30px;
-                        }
-
-                        .phone-display {
-                            flex: 1;
-                            padding: 0 5px;
-                            font-size: 18px;
-                            font-weight: 600;
-                            color: $black;
-                        }
-
-                        .change-link {
-                            background: none;
-                            border: none;
-                            color: $accent-color;
-                            font-size: 16px;
-                            font-weight: 500;
-                            cursor: pointer;
-                            white-space: nowrap;
-                            padding: 0;
-                            margin-left: auto;
-                            text-align: right;
-                        }
-                    }
-                }
-            }
-
-            .update-btn {
-                background-color: $accent-color;
-                color: $white;
-                border: none;
-                border-radius: 0;
-                padding: 15px;
-                font-size: 16px;
-                font-weight: 600;
-                margin-top: 20px;
-                cursor: pointer;
-                box-shadow: 0 4px 6px rgba(255, 152, 0, 0.2);
-            }
-        }
-
-        .bank-details-placeholder {
-            text-align: center;
-            padding: 40px;
-            color: #666;
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        
+        input { width: 100%; padding-right: 40px; }
+        
+        .icon {
+            position: absolute;
+            right: 12px;
+            color: #ccc;
         }
     }
+}
 
-    @media (min-width: 769px) {
-        min-height: auto;
+.mobile-box {
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
 
-        .my-account-content {
-            padding: 40px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            border-radius: 12px;
-            margin-top: 20px;
-        }
+    .info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        span { font-weight: 600; }
+        .code { color: #999; }
     }
+
+    .change-link {
+        color: $primary-color;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+}
+
+.btn-large {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    background: $primary-color;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-top: 1rem;
+    cursor: pointer;
+    
+    &:hover { background: darken($primary-color, 5%); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.loading-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 3rem;
 }

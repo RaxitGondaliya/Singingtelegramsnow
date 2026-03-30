@@ -6,15 +6,36 @@ import { getImageUrl } from '../../../utils/imageUtils';
 import { useMessage } from '../../../context/MessageContext';
 import './EditCharacterProfile.scss';
 
+// SVG Icons
+const TrashIcon = () => (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    </svg>
+);
+
+const PhotoIcon = () => (
+    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+    </svg>
+);
+
+const ChevronDown = () => (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+);
+
 export default function EditCharacterProfile() {
     const navigate = useNavigate();
     const location = useLocation();
     const { showMessage } = useMessage();
     const fileInputRef = useRef(null);
+    const dropdownRef = useRef(null);
 
     const isEditMode = location.pathname.includes('edit-character');
-
-    // Profile data passed from ManageProfiles via navigate state
     const profileData = location.state?.profileData || {};
 
     const [formData, setFormData] = useState({
@@ -23,15 +44,13 @@ export default function EditCharacterProfile() {
         iCharacterKeywordId: (() => {
             const rawId = profileData.iCharacterKeywordId || profileData.iKeywordId;
             if (Array.isArray(rawId)) return rawId.join(',');
-            if (rawId !== undefined && rawId !== null) return String(rawId);
-            return '';
+            return rawId ? String(rawId) : '';
         })(),
         character: profileData.vCharacterName || profileData.name || '',
         characterStyle: (() => {
             const rawStyle = profileData.vCharacterStyle || profileData.characterStyle;
             if (Array.isArray(rawStyle)) return rawStyle;
             if (typeof rawStyle === 'string') return rawStyle.split(',').map(s => s.trim()).filter(Boolean);
-            if (typeof rawStyle === 'number') return [String(rawStyle)];
             return [];
         })(),
         description: profileData.txDescription || profileData.description || '',
@@ -46,90 +65,52 @@ export default function EditCharacterProfile() {
     const [submitting, setSubmitting] = useState(false);
     const [styles, setStyles] = useState([]);
     const [myCharacters, setMyCharacters] = useState([]);
-    const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
-    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsStyleDropdownOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     useEffect(() => {
         const fetchDropdownData = async () => {
             try {
-                // Fetch Styles
-                let fetchedStyles = [];
-                const stylesRes = await characterApi.getCharacterStyles();
-                if (stylesRes.data?.responseData) {
-                    fetchedStyles = stylesRes.data.responseData;
-                } else if (stylesRes.data?.data) {
-                    fetchedStyles = stylesRes.data.data;
-                } else if (Array.isArray(stylesRes.data)) {
-                    fetchedStyles = stylesRes.data;
-                }
-                setStyles(fetchedStyles);
+                const [stylesRes, charsRes] = await Promise.all([
+                    characterApi.getCharacterStyles(),
+                    characterApi.getMyCharactersList()
+                ]);
 
-                // Fetch Characters
-                let fetchedChars = [];
-                const charsRes = await characterApi.getMyCharactersList();
-                if (charsRes.data?.responseData) {
-                    fetchedChars = Array.isArray(charsRes.data.responseData) ? charsRes.data.responseData : [charsRes.data.responseData];
-                } else if (charsRes.data?.data) {
-                    fetchedChars = Array.isArray(charsRes.data.data) ? charsRes.data.data : [charsRes.data.data];
-                } else if (Array.isArray(charsRes.data)) {
-                    fetchedChars = charsRes.data;
-                }
-                setMyCharacters(fetchedChars);
+                const fetchedStyles = stylesRes.data?.responseData || stylesRes.data?.data || stylesRes.data || [];
+                const fetchedChars = charsRes.data?.responseData || charsRes.data?.data || charsRes.data || [];
+                
+                setStyles(Array.isArray(fetchedStyles) ? fetchedStyles : [fetchedStyles]);
+                setMyCharacters(Array.isArray(fetchedChars) ? fetchedChars : [fetchedChars]);
 
-                // Auto-fill hidden IDs if they were missing but we passed strings
+                // Auto-fill logic (simplified version of the original)
                 setFormData(prev => {
                     const newState = { ...prev };
-
                     const currentStyles = Array.isArray(prev.characterStyle) ? prev.characterStyle : [];
-                    const currentIds = prev.iCharacterKeywordId ? String(prev.iCharacterKeywordId).split(',').map(id => id.trim()).filter(Boolean) : [];
+                    const currentIds = prev.iCharacterKeywordId ? String(prev.iCharacterKeywordId).split(',').map(s => s.trim()).filter(Boolean) : [];
 
-                    // Fill IDs from Strings
                     if (currentIds.length === 0 && currentStyles.length > 0) {
-                        const matchIds = currentStyles.map(styleStr => {
-                            const sMatch = fetchedStyles.find(s => (s.vKeyword || s.name) === styleStr);
-                            return sMatch ? String(sMatch.iKeywordId || sMatch.iCharacterKeywordId || '') : '';
+                        const matchIds = currentStyles.map(sName => {
+                            const match = fetchedStyles.find(fs => (fs.vKeyword || fs.name) === sName);
+                            return match ? String(match.iKeywordId || match.iCharacterKeywordId) : null;
                         }).filter(Boolean);
                         if (matchIds.length > 0) newState.iCharacterKeywordId = matchIds.join(',');
                     }
 
-                    // Fill Strings from IDs
-                    if (currentStyles.length === 0 && currentIds.length > 0) {
-                        const matchNames = currentIds.map(idStr => {
-                            const sMatch = fetchedStyles.find(s => String(s.iKeywordId || s.iCharacterKeywordId || '') === idStr);
-                            return sMatch ? (sMatch.vKeyword || s.name) : '';
-                        }).filter(Boolean);
-                        if (matchNames.length > 0) newState.characterStyle = matchNames;
-                    }
-
-                    // Same logic for Character Name/ID
                     if (!newState.iCharacterId && prev.character) {
-                        const cMatch = fetchedChars.find(c => (c.vCharacterName || c.name) === prev.character);
-                        if (cMatch) newState.iCharacterId = cMatch.iCharacterId || cMatch.id || '';
-                    } else if (!prev.character && prev.iCharacterId) {
-                        const cMatch = fetchedChars.find(c => String(c.iCharacterId || c.id || '') === String(prev.iCharacterId));
-                        if (cMatch) newState.character = cMatch.vCharacterName || cMatch.name || '';
+                        const match = fetchedChars.find(c => (c.vCharacterName || c.name) === prev.character);
+                        if (match) newState.iCharacterId = match.iCharacterId || match.id || '';
                     }
 
                     return newState;
                 });
-
-            } catch (error) {
-                console.error('Error fetching dropdown data:', error);
-            }
+            } catch (err) { console.error('Error fetching data:', err); }
         };
-
         fetchDropdownData();
+
+        const handleClickOutside = (e) => { 
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsDropdownOpen(false); 
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const handleInputChange = (e) => {
@@ -137,10 +118,8 @@ export default function EditCharacterProfile() {
         setFormData(prev => {
             const newState = { ...prev, [name]: value };
             if (name === 'character') {
-                const selectedChar = myCharacters.find(c => (c.vCharacterName || c.name) === value);
-                if (selectedChar) {
-                    newState.iCharacterId = selectedChar.iCharacterId || selectedChar.id || '';
-                }
+                const match = myCharacters.find(c => (c.vCharacterName || c.name) === value);
+                if (match) newState.iCharacterId = match.iCharacterId || match.id || '';
             }
             return newState;
         });
@@ -151,136 +130,80 @@ export default function EditCharacterProfile() {
         const styleId = String(styleObj.iKeywordId || styleObj.iCharacterKeywordId || '');
 
         setFormData(prev => {
-            const currentStyles = Array.isArray(prev.characterStyle) ? prev.characterStyle : [];
-            const currentIds = prev.iCharacterKeywordId ? String(prev.iCharacterKeywordId).split(',').map(s => s.trim()).filter(Boolean) : [];
+            const currentStyles = [...prev.characterStyle];
+            const currentIds = prev.iCharacterKeywordId ? prev.iCharacterKeywordId.split(',').filter(Boolean) : [];
 
-            let newStyles;
-            let newIds;
-
-            const isAlreadyChecked = currentStyles.includes(styleName) || (styleId && currentIds.includes(styleId));
-
-            if (isAlreadyChecked) {
-                newStyles = currentStyles.filter(s => s !== styleName);
-                if (styleId) newIds = currentIds.filter(id => id !== styleId);
-                else newIds = currentIds;
-            } else {
-                newStyles = [...currentStyles, styleName];
-                if (styleId && !currentIds.includes(styleId)) {
-                    newIds = [...currentIds, styleId];
-                } else {
-                    newIds = currentIds;
+            const idx = currentStyles.indexOf(styleName);
+            if (idx > -1) {
+                currentStyles.splice(idx, 1);
+                if (styleId) {
+                    const idIdx = currentIds.indexOf(styleId);
+                    if (idIdx > -1) currentIds.splice(idIdx, 1);
                 }
+            } else {
+                currentStyles.push(styleName);
+                if (styleId && !currentIds.includes(styleId)) currentIds.push(styleId);
             }
 
-            return {
-                ...prev,
-                characterStyle: newStyles.filter(Boolean),
-                iCharacterKeywordId: newIds.filter(Boolean).join(',')
-            };
+            return { ...prev, characterStyle: currentStyles, iCharacterKeywordId: currentIds.join(',') };
         });
     };
 
     const handleFileSelect = (e) => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
-
-        const newPreviewUrls = files.map(file => URL.createObjectURL(file));
-
+        const urls = files.map(file => URL.createObjectURL(file));
         setFormData(prev => {
-            const isReplacingOld = prev.media.length === 0;
+            const isReplacing = prev.media.length === 0;
             return {
                 ...prev,
-                media: isReplacingOld ? files : [...prev.media, ...files],
-                previewUrls: isReplacingOld ? newPreviewUrls : [...prev.previewUrls, ...newPreviewUrls]
+                media: isReplacing ? files : [...prev.media, ...files],
+                previewUrls: isReplacing ? urls : [...prev.previewUrls, ...urls]
             };
         });
-
-        // When new files are added, scroll to the newly added images (which is current previewUrls length)
-        setTimeout(() => {
-            setCurrentSlideIndex(formData.previewUrls.length);
-        }, 100);
     };
 
     const handleRemoveMedia = (index) => {
         setFormData(prev => {
             const newMedia = [...prev.media];
             const newPreviews = [...prev.previewUrls];
-
-            // Revoke object URL if it's a blob URL
-            if (newPreviews[index]?.startsWith('blob:')) {
-                URL.revokeObjectURL(newPreviews[index]);
-            }
-
+            if (newPreviews[index]?.startsWith('blob:')) URL.revokeObjectURL(newPreviews[index]);
             newMedia.splice(index, 1);
             newPreviews.splice(index, 1);
-
             return { ...prev, media: newMedia, previewUrls: newPreviews };
         });
-
-        // Adjust current slide index if we delete the current or a previous slide
-        setCurrentSlideIndex(prevIndex => {
-            if (prevIndex > index) return prevIndex - 1;
-            if (prevIndex === index && index === formData.previewUrls.length - 1) return Math.max(0, index - 1);
-            return prevIndex;
-        });
     };
 
-    const handleScroll = (e) => {
-        const container = e.target;
-        const scrollPosition = container.scrollLeft;
-        const itemWidth = container.clientWidth;
-
-        // Calculate the current index based on scroll position (adding half width for round-to-nearest behavior)
-        const newIndex = Math.round(scrollPosition / itemWidth);
-
-        if (newIndex !== currentSlideIndex) {
-            setCurrentSlideIndex(newIndex);
-        }
-    };
-
-    const handleUpdate = async () => {
+    const handleUpdate = async (e) => {
+        if (e) e.preventDefault();
         try {
             setSubmitting(true);
-
-            // This array must contain ALL images (old and new) to avoid count() error
             const txMedia = [];
 
-            // 1. IMPORTANT: Loop through existing previewUrls
-            // If the URL is from the server (doesn't start with 'blob:'), 
-            // we must add it to txMedia so the backend sees it.
-            if (formData.previewUrls && formData.previewUrls.length > 0) {
-                formData.previewUrls.forEach((url) => {
-                    if (!url.startsWith('blob:')) {
-                        const cleanUrl = url.split('?')[0];
-                        const extractedFilename = cleanUrl.substring(cleanUrl.lastIndexOf('/') + 1);
+            // Add existing images
+            formData.previewUrls.forEach(url => {
+                if (!url.startsWith('blob:')) {
+                    const filename = url.split('/').pop().split('?')[0];
+                    const isVid = filename.match(/\.(mp4|mov|wmv|avi|mkv|flv)$/i);
+                    txMedia.push({
+                        vMedia: url.includes('freepik.com') ? url : filename,
+                        vMediaName: filename,
+                        vMediaType: isVid ? 'Video' : 'Image',
+                        vFileType: filename.split('.').pop() || 'jpeg',
+                        vThumb: url.includes('freepik.com') ? url : filename
+                    });
+                }
+            });
 
-                        // Use full URL for external fallback image, otherwise standard filename
-                        const filename = url.includes('freepik.com') ? url : extractedFilename;
-                        const isVideo = extractedFilename.match(/\.(mp4|mov|wmv|avi|mkv|flv)$/i);
-                        const ext = extractedFilename.split('.').pop() || 'jpeg';
-
-                        txMedia.push({
-                            vMedia: filename, // Send filename for existing images (or full url for fallback)
-                            vMediaName: extractedFilename,
-                            vMediaType: isVideo ? 'Video' : 'Image',
-                            vFileType: ext,
-                            vThumb: filename
-                        });
-                    }
-                });
-            }
-
-            // 2. Convert newly uploaded files to base64 and add them to txMedia
+            // Add new media (Base64)
             for (const file of formData.media) {
                 const base64 = await fileToBase64(file);
-                const isVideo = file.type.startsWith('video/');
-                const ext = file.name.split('.').pop() || (isVideo ? 'mp4' : 'jpeg');
-
+                const isVid = file.type.startsWith('video/');
                 txMedia.push({
-                    vMedia: base64, // Send Base64 string for new uploads
+                    vMedia: base64,
                     vMediaName: file.name,
-                    vMediaType: isVideo ? 'Video' : 'Image',
-                    vFileType: ext,
+                    vMediaType: isVid ? 'Video' : 'Image',
+                    vFileType: file.name.split('.').pop() || (isVid ? 'mp4' : 'jpeg'),
                     vThumb: base64
                 });
             }
@@ -288,208 +211,108 @@ export default function EditCharacterProfile() {
             const payload = {
                 iCharacterId: String(formData.iCharacterId || ""),
                 iCharacterKeywordId: String(formData.iCharacterKeywordId || ""),
-                vCharacterName: formData.character ? formData.character.trim() : '',
-                vCharacterStyle: Array.isArray(formData.characterStyle) ? formData.characterStyle.join(',') : "",
-                txDescription: formData.description ? formData.description.trim() : '',
-                txMedia: txMedia // Now this array will NOT be empty
+                vCharacterName: formData.character.trim(),
+                vCharacterStyle: formData.characterStyle.join(','),
+                txDescription: formData.description.trim(),
+                txMedia
             };
+            if (formData.iArtistCharacterId) payload.iArtistCharacterId = formData.iArtistCharacterId;
 
-            if (formData.iArtistCharacterId) {
-                payload.iArtistCharacterId = formData.iArtistCharacterId;
-            }
-
-            console.log("Final Payload being sent:", payload);
-
-            const apiCall = isEditMode ? characterApi.editCharacter : characterApi.addCharacter;
-            const res = await apiCall(payload);
-
+            const res = await (isEditMode ? characterApi.editCharacter(payload) : characterApi.addCharacter(payload));
             if (res.data?.responseCode === 200) {
                 showMessage(res.data?.responseMessage || 'Character Updated Successfully', 'success');
                 navigate('/dashboard/profile/manage-profiles');
             } else {
                 showMessage(res.data?.responseMessage || 'Update Failed', 'error');
             }
-        } catch (error) {
-            console.error('Submission error:', error);
-            showMessage('Failed to update character', 'error');
-        } finally {
-            setSubmitting(false);
-        }
+        } catch (err) {
+            console.error('Submission error:', err);
+            showMessage('Failed to process request', 'error');
+        } finally { setSubmitting(false); }
     };
 
-    // Helper: Convert File to base64 string
-    const fileToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (error) => reject(error);
-        });
-    };
+    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = e => reject(e);
+    });
 
     return (
-        <div className="edit-character-container">
-            <Header title={isEditMode ? "Edit Character Profile" : "Add Character Profile"} />
+        <div className="edit-profile-container">
+            <Header title={isEditMode ? "Edit Profile" : "Add Profile"} onBack={() => navigate(-1)} />
 
-            <div className="edit-character-form">
-                <div className="form-group">
-                    <label className="form-label">Upload Character Photos / Videos</label>
-                    <div className="upload-container" onScroll={handleScroll}>
-                        {formData.previewUrls.length > 0 ? (
-                            formData.previewUrls.map((url, idx) => (
-                                <div key={idx} className="edit-upload-box">
-                                    <div className="preview-wrapper">
-                                        <img src={url} alt={`Preview ${idx + 1}`} className="media-preview" />
-                                        <button className="remove-media" onClick={() => handleRemoveMedia(idx)}>×</button>
+            <div className="edit-profile-wrapper">
+                <main className="edit-card">
+                    <div className="media-section">
+                        <h3>Photos & Videos</h3>
+                        <div className="media-scroller">
+                            {formData.previewUrls.length > 0 ? (
+                                formData.previewUrls.map((url, idx) => (
+                                    <div key={idx} className="media-item">
+                                        <img src={url} alt="" />
+                                        <button className="remove-btn" onClick={() => handleRemoveMedia(idx)}><TrashIcon /></button>
                                     </div>
+                                ))
+                            ) : (
+                                <div className="upload-placeholder" onClick={() => fileInputRef.current?.click()}>
+                                    <PhotoIcon />
+                                    <span>Upload Media</span>
                                 </div>
-                            ))
-                        ) : (
-                            <div
-                                className="edit-upload-box"
-                                onClick={() => fileInputRef.current?.click()}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                <div className="upload-content">
-                                    <span className="upload-plus">+</span>
-                                    <span className="upload-hint">Upload Photo/Video</span>
-                                </div>
-                            </div>
-                        )}
-                        {formData.previewUrls.length > 0 && (
-                            <div
-                                className="edit-upload-box add-more-box"
-                                onClick={() => fileInputRef.current?.click()}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                <div className="upload-content">
-                                    <span className="upload-plus">+</span>
-                                    <span className="upload-hint">Add More</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                        accept="image/*,video/*"
-                        multiple
-                        style={{ display: 'none' }}
-                    />
-                    <div className="upload-indicator">
-                        {formData.previewUrls.length > 0 ? (
-                            // Total dots = number of images + 1 for "Add More"
-                            Array.from({ length: formData.previewUrls.length + 1 }).map((_, idx) => (
-                                <span
-                                    key={idx}
-                                    className={`indicator-dot ${idx === currentSlideIndex ? 'active' : ''}`}
-                                ></span>
-                            ))
-                        ) : (
-                            // Default 2 dots for the empty state
-                            <>
-                                <span className={`indicator-dot ${currentSlideIndex === 0 ? 'active' : ''}`}></span>
-                                <span className={`indicator-dot ${currentSlideIndex === 1 ? 'active' : ''}`}></span>
-                            </>
-                        )}
-                    </div>
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Select Character</label>
-                    <div className="select-wrapper">
-                        <select
-                            name="character"
-                            value={formData.character}
-                            onChange={handleInputChange}
-                            className="form-select"
-                        >
-                            <option value="">Select Character</option>
-                            {myCharacters.map((charObj, index) => {
-                                const charName = charObj.vCharacterName || charObj.name || `Character ${index + 1}`;
-                                return (
-                                    <option key={charObj.iCharacterId || charObj.id || index} value={charName}>
-                                        {charName}
-                                    </option>
-                                );
-                            })}
-                            {/* Fallback to show existing character if not in the list yet */}
-                            {formData.character && !myCharacters.some(c => (c.vCharacterName || c.name) === formData.character) && (
-                                <option value={formData.character}>{formData.character}</option>
                             )}
-                        </select>
+                            
+                            {formData.previewUrls.length > 0 && (
+                                <div className="add-more-box" onClick={() => fileInputRef.current?.click()}>
+                                    <div className="plus">+</div>
+                                    <span>Add More</span>
+                                </div>
+                            )}
+                        </div>
+                        <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*,video/*" multiple hidden />
                     </div>
-                </div>
 
-                <div className="form-group">
-                    <label className="form-label">Select Character Style</label>
-                    <div className="select-wrapper" ref={dropdownRef}>
-                        <div
-                            className="form-select custom-multi-select"
-                            onClick={() => setIsStyleDropdownOpen(!isStyleDropdownOpen)}
-                        >
-                            {Array.isArray(formData.characterStyle) && formData.characterStyle.length > 0
-                                ? formData.characterStyle.join(', ')
-                                : <span className="placeholder">Select Style</span>}
+                    <form className="form-group" onSubmit={handleUpdate}>
+                        <div className="input-field">
+                            <label>Character</label>
+                            <select name="character" value={formData.character} onChange={handleInputChange} required>
+                                <option value="">Select Character</option>
+                                {myCharacters.map((c, i) => <option key={i} value={c.vCharacterName || c.name}>{c.vCharacterName || c.name}</option>)}
+                            </select>
                         </div>
 
-                        {isStyleDropdownOpen && (
-                            <div className="style-dropdown-list">
-                                {styles.map((styleObj, index) => {
-                                    const styleName = styleObj.vKeyword || styleObj.name;
-                                    const styleId = String(styleObj.iKeywordId || styleObj.iCharacterKeywordId || '');
-
-                                    const currentStyles = Array.isArray(formData.characterStyle) ? formData.characterStyle : [];
-                                    const currentIds = formData.iCharacterKeywordId ? String(formData.iCharacterKeywordId).split(',').map(s => s.trim()).filter(Boolean) : [];
-
-                                    const isChecked = currentStyles.includes(styleName) || (styleId && currentIds.includes(styleId));
-
-                                    return (
-                                        <div key={styleId || index} className="style-option" onClick={() => handleStyleToggle(styleObj)}>
-                                            <span>{styleName}</span>
-                                            <div className={`custom-checkbox ${isChecked ? 'checked' : ''}`}>
-                                                {isChecked && <span className="checkmark">✓</span>}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                {/* Fallback styles */}
-                                {Array.isArray(formData.characterStyle) && formData.characterStyle.filter(styleName => !styles.some(s => (s.vKeyword || s.name) === styleName)).map((styleName, index) => (
-                                    <div key={`fallback-${index}`} className="style-option" onClick={() => handleStyleToggle({ name: styleName, iKeywordId: '' })}>
-                                        <span>{styleName}</span>
-                                        <div className="custom-checkbox checked">
-                                            <span className="checkmark">✓</span>
-                                        </div>
-                                    </div>
-                                ))}
+                        <div className="input-field" style={{ position: 'relative' }} ref={dropdownRef}>
+                            <label>Character Style</label>
+                            <div className="multi-select-trigger" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+                                {formData.characterStyle.length > 0 ? (
+                                    <div className="tags">{formData.characterStyle.join(', ')}</div>
+                                ) : (
+                                    <span className="placeholder">Select Styles</span>
+                                )}
+                                <ChevronDown />
                             </div>
-                        )}
-                    </div>
-                </div>
+                            {isDropdownOpen && (
+                                <div className="dropdown-popover">
+                                    {styles.map((s, i) => (
+                                        <div key={i} className="option" onClick={() => handleStyleToggle(s)}>
+                                            <input type="checkbox" checked={formData.characterStyle.includes(s.vKeyword || s.name)} readOnly />
+                                            <span>{s.vKeyword || s.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
 
-                <div className="form-group">
-                    <label className="form-label">Description</label>
-                    <textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        className="form-textarea"
-                        rows="8"
-                    />
-                </div>
-            </div>
+                        <div className="input-field">
+                            <label>Description</label>
+                            <textarea name="description" value={formData.description} onChange={handleInputChange} placeholder="Tell us about this character..." />
+                        </div>
 
-            <div className="form-actions">
-                <button
-                    className="action-btn btn-update"
-                    onClick={handleUpdate}
-                    disabled={submitting}
-                >
-                    {submitting ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update' : 'Add Character')}
-                </button>
+                        <button type="submit" className="submit-btn" disabled={submitting}>
+                            {submitting ? 'Processing...' : (isEditMode ? 'Update Profile' : 'Add Profile')}
+                        </button>
+                    </form>
+                </main>
             </div>
         </div>
     );
 }
-
