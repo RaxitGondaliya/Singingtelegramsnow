@@ -12,6 +12,47 @@ export default function Signin() {
   const [error, setError] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
+
+  const validateField = (name, value) => {
+    let errorMsg = "";
+    const trimmedVal = typeof value === 'string' ? value.trim() : value;
+
+    if (!trimmedVal) {
+      errorMsg = "This field is required";
+    } else if (name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      errorMsg = "Please enter a valid email address";
+    } else if (name === "password" && value.length < 8) {
+      errorMsg = "Password must be at least 8 characters";
+    }
+    return errorMsg;
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+  };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    setErrors(prev => ({ ...prev, email: validateField("email", value) }));
+  };
+
+  const handlePasswordChange = (e) => {
+    let value = e.target.value;
+    if (value.length > 15) {
+      value = value.slice(0, 15);
+    }
+    setPassword(value);
+    setErrors(prev => ({ ...prev, password: validateField("password", value) }));
+  };
+
+  const isFormValid = () => {
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const isValidPassword = password.length >= 8 && password.length <= 15;
+    return email.trim().length > 0 && isValidEmail && isValidPassword;
+  };
 
   const handleSignin = async () => {
     setLoading(true);
@@ -63,29 +104,35 @@ export default function Signin() {
 
           <label>Email</label>
           <input
+            name="email"
             type="text"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
+            onBlur={handleBlur}
             disabled={loading}
           />
+          {errors.email && <div className="field-error message" style={{ color: '#ff4d4f', fontSize: '12px', textAlign: 'left', marginTop: '4px', marginBottom: '10px' }}>{errors.email}</div>}
 
           <label>Password</label>
           <div className="password">
             <input
+              name="password"
               type={showPass ? "text" : "password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
+              onBlur={handleBlur}
               disabled={loading}
             />
             <span onClick={() => setShowPass(!showPass)}>
               {showPass ? "Hide" : "Show"}
             </span>
           </div>
+          {errors.password && <div className="field-error message" style={{ color: '#ff4d4f', fontSize: '12px', textAlign: 'left', marginTop: '4px', marginBottom: '10px' }}>{errors.password}</div>}
 
           <button
             className="signin-btn"
             onClick={handleSignin}
-            disabled={loading}
+            disabled={loading || !email.trim() || !password.trim()}
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>

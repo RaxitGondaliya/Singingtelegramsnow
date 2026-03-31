@@ -7,6 +7,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -52,6 +53,7 @@ export default function Signup() {
               vCountryCode: (data?.address?.country_code || "US").toUpperCase(),
             }));
             setLocationLoading(false);
+            setErrors(prev => ({ ...prev, streetAddress: "" }));
           }).catch(() => setLocationLoading(false));
       },
       () => setLocationLoading(false),
@@ -59,15 +61,73 @@ export default function Signup() {
     );
   };
 
+  const validateField = (name, value) => {
+    let errorMsg = "";
+    const trimmedVal = typeof value === 'string' ? value.trim() : value;
+
+    if (!trimmedVal && name !== "gender") {
+      errorMsg = "This field is required";
+    } else {
+      if (name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        errorMsg = "Please enter a valid email address";
+      } else if (name === "mobileNumber" && value.length !== 10) {
+        errorMsg = "Mobile number must be exactly 10 digits";
+      } else if (name === "zipCode" && value.length !== 6) {
+        errorMsg = "Zip code must be exactly 6 digits";
+      } else if (name === "password" && value.length < 8) {
+        errorMsg = "Password must be at least 8 characters";
+      } else if (name === "gender" && value === "0") {
+        errorMsg = "This field is required";
+      }
+    }
+    return errorMsg;
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+  };
+
+  const isFormValid = () => {
+    const { firstName, lastName, email, streetAddress, mobileNumber, zipCode, gender, password } = formData;
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const isMobileValid = /^\d{10}$/.test(mobileNumber);
+    const isZipValid = /^\d{6}$/.test(zipCode);
+    const isPasswordValid = password.length >= 8 && password.length <= 15;
+    
+    return (
+      firstName.trim().length > 0 &&
+      lastName.trim().length > 0 &&
+      streetAddress.trim().length > 0 &&
+      isValidEmail &&
+      isMobileValid &&
+      isZipValid &&
+      isPasswordValid &&
+      gender !== "0"
+    );
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    let updatedValue = value;
+    if (name === "mobileNumber") {
+      updatedValue = value.replace(/\D/g, "").slice(0, 10);
+    } else if (name === "zipCode") {
+      updatedValue = value.replace(/\D/g, "").slice(0, 6);
+    } else if (name === "password") {
+      updatedValue = value.slice(0, 15);
+    }
+
+    setFormData(prev => ({ ...prev, [name]: updatedValue }));
+    setErrors(prev => ({ ...prev, [name]: validateField(name, updatedValue) }));
+    
     if (name === "streetAddress") {
       setShowSuggestions(true);
-      if (value.length > 2) {
+      if (updatedValue.length > 2) {
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = setTimeout(() => {
-          fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&limit=5`)
+          fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(updatedValue)}&format=json&addressdetails=1&limit=5`)
             .then(res => res.json())
             .then(data => setSuggestions(data))
             .catch(() => { });
@@ -87,6 +147,7 @@ export default function Signup() {
       vCountryCode: (s?.address?.country_code || "US").toUpperCase(),
     }));
     setShowSuggestions(false);
+    setErrors(prev => ({ ...prev, streetAddress: "" }));
   };
 
   const handleSignup = async (e) => {
@@ -148,6 +209,7 @@ export default function Signup() {
               placeholder="First Name"
               value={formData.firstName}
               onChange={handleChange}
+              onBlur={handleBlur}
               disabled={loading}
             />
             <input
@@ -155,17 +217,27 @@ export default function Signup() {
               placeholder="Last Name"
               value={formData.lastName}
               onChange={handleChange}
+              onBlur={handleBlur}
               disabled={loading}
             />
           </div>
+          {(errors.firstName || errors.lastName) && (
+            <div style={{ display: 'flex', gap: '10px', marginTop: '-5px', marginBottom: '10px' }}>
+              <div style={{ flex: 1, color: '#ff4d4f', fontSize: '12px', textAlign: 'left', paddingLeft: '5px' }}>{errors.firstName}</div>
+              <div style={{ flex: 1, color: '#ff4d4f', fontSize: '12px', textAlign: 'left', paddingLeft: '5px' }}>{errors.lastName}</div>
+            </div>
+          )}
 
           <input
             name="email"
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
+            onBlur={handleBlur}
             disabled={loading}
           />
+          {errors.email && <div style={{ color: '#ff4d4f', fontSize: '12px', textAlign: 'left', marginTop: '-5px', marginBottom: '10px', paddingLeft: '5px' }}>{errors.email}</div>}
+
           <div className="address-field">
             <input
               type="text"
@@ -173,11 +245,13 @@ export default function Signup() {
               placeholder="Street Address"
               value={formData.streetAddress}
               onChange={handleChange}
+              onBlur={handleBlur}
               onFocus={handleLocationFocus}
               disabled={loading}
               autoComplete="off"
               className="input-field"
             />
+            {errors.streetAddress && <div style={{ color: '#ff4d4f', fontSize: '12px', textAlign: 'left', marginTop: '4px', marginBottom: '10px', paddingLeft: '5px' }}>{errors.streetAddress}</div>}
 
             {/* Location detecting message */}
             {locationLoading && (
@@ -205,13 +279,16 @@ export default function Signup() {
               </ul>
             )}
           </div>
+
           <input
             name="mobileNumber"
             placeholder="Mobile Number"
             value={formData.mobileNumber}
             onChange={handleChange}
+            onBlur={handleBlur}
             disabled={loading}
           />
+          {errors.mobileNumber && <div style={{ color: '#ff4d4f', fontSize: '12px', textAlign: 'left', marginTop: '-5px', marginBottom: '10px', paddingLeft: '5px' }}>{errors.mobileNumber}</div>}
 
           <div className="zip-gender">
             <input
@@ -219,12 +296,14 @@ export default function Signup() {
               placeholder="Zip Code"
               value={formData.zipCode}
               onChange={handleChange}
+              onBlur={handleBlur}
               disabled={loading}
             />
             <select
               name="gender"
               value={formData.gender}
               onChange={handleChange}
+              onBlur={handleBlur}
               disabled={loading}
             >
               <option value="0">Gender</option>
@@ -233,6 +312,12 @@ export default function Signup() {
               <option value="3">Other</option>
             </select>
           </div>
+          {(errors.zipCode || errors.gender) && (
+            <div style={{ display: 'flex', gap: '10px', marginTop: '-5px', marginBottom: '10px' }}>
+              <div style={{ flex: 1, color: '#ff4d4f', fontSize: '12px', textAlign: 'left', paddingLeft: '5px' }}>{errors.zipCode}</div>
+              <div style={{ flex: 1, color: '#ff4d4f', fontSize: '12px', textAlign: 'left', paddingLeft: '5px' }}>{errors.gender}</div>
+            </div>
+          )}
 
           <input
             name="password"
@@ -240,13 +325,15 @@ export default function Signup() {
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
+            onBlur={handleBlur}
             disabled={loading}
           />
+          {errors.password && <div style={{ color: '#ff4d4f', fontSize: '12px', textAlign: 'left', marginTop: '-5px', marginBottom: '10px', paddingLeft: '5px' }}>{errors.password}</div>}
 
           <button
             className="create-btn"
             onClick={handleSignup}
-            disabled={loading}
+            disabled={loading || !isFormValid()}
           >
             {loading ? "Creating Account..." : "Create Account"}
           </button>
