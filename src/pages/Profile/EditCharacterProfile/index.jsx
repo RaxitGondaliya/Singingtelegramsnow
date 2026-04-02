@@ -44,6 +44,7 @@ export default function EditCharacterProfile() {
     });
 
     const [submitting, setSubmitting] = useState(false);
+    const [errors, setErrors] = useState({});
     const [styles, setStyles] = useState([]);
     const [myCharacters, setMyCharacters] = useState([]);
     const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
@@ -144,6 +145,9 @@ export default function EditCharacterProfile() {
             }
             return newState;
         });
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: null }));
+        }
     };
 
     const handleStyleToggle = (styleObj) => {
@@ -178,6 +182,10 @@ export default function EditCharacterProfile() {
                 iCharacterKeywordId: newIds.filter(Boolean).join(',')
             };
         });
+
+        if (errors.characterStyle) {
+            setErrors(prev => ({ ...prev, characterStyle: null }));
+        }
     };
 
     const handleFileSelect = (e) => {
@@ -199,6 +207,10 @@ export default function EditCharacterProfile() {
         setTimeout(() => {
             setCurrentSlideIndex(formData.previewUrls.length);
         }, 100);
+
+        if (errors.media) {
+            setErrors(prev => ({ ...prev, media: null }));
+        }
     };
 
     const handleRemoveMedia = (index) => {
@@ -238,7 +250,34 @@ export default function EditCharacterProfile() {
         }
     };
 
+    const validateForm = () => {
+        let newErrors = {};
+        
+        if (!formData.previewUrls || formData.previewUrls.length === 0) {
+            newErrors.media = "At least one photo or video is required.";
+        }
+        
+        if (!formData.character || !formData.character.trim()) {
+            newErrors.character = "Character selection is required.";
+        }
+        
+        if (!formData.characterStyle || formData.characterStyle.length === 0) {
+            newErrors.characterStyle = "At least one character style is required.";
+        }
+        
+        if (!formData.description || !formData.description.trim()) {
+            newErrors.description = "Description is required.";
+        } else if (formData.description.trim().length < 10) {
+            newErrors.description = "Description must be at least 10 characters long.";
+        }
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleUpdate = async () => {
+        if (!validateForm()) return;
+        
         try {
             setSubmitting(true);
 
@@ -394,6 +433,7 @@ export default function EditCharacterProfile() {
                             </>
                         )}
                     </div>
+                    {errors.media && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block', textAlign: 'center' }}>{errors.media}</span>}
                 </div>
 
                 <div className="form-group">
@@ -420,6 +460,7 @@ export default function EditCharacterProfile() {
                             )}
                         </select>
                     </div>
+                    {errors.character && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.character}</span>}
                 </div>
 
                 <div className="form-group">
@@ -466,6 +507,7 @@ export default function EditCharacterProfile() {
                             </div>
                         )}
                     </div>
+                    {errors.characterStyle && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.characterStyle}</span>}
                 </div>
 
                 <div className="form-group">
@@ -477,6 +519,7 @@ export default function EditCharacterProfile() {
                         className="form-textarea"
                         rows="8"
                     />
+                    {errors.description && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.description}</span>}
                 </div>
             </div>
 

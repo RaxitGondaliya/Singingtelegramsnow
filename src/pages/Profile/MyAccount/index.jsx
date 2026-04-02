@@ -12,6 +12,7 @@ export default function MyAccount() {
     const [activeTab, setActiveTab] = useState('personal');
     const [hasBankDetails, setHasBankDetails] = useState(false);
     const [bankLoading, setBankLoading] = useState(false);
+    const [errors, setErrors] = useState({});
     const { showMessage } = useMessage();
 
     const [formData, setFormData] = useState(() => {
@@ -129,14 +130,61 @@ export default function MyAccount() {
         fetchBankInfo();
     }, [activeTab]);
 
+    const validatePersonal = () => {
+        let newErrors = {};
+        if (!formData.firstName?.trim()) newErrors.firstName = "First Name is required";
+        if (!formData.lastName?.trim()) newErrors.lastName = "Last Name is required";
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.email?.trim()) newErrors.email = "Email is required";
+        else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email format";
+
+        if (!formData.streetAddress?.trim()) newErrors.streetAddress = "Street Address is required";
+        
+        if (!formData.zipCode?.trim()) newErrors.zipCode = "Zip Code is required";
+        
+        if (!formData.gender) newErrors.gender = "Gender is required";
+        if (!formData.dob) newErrors.dob = "DOB is required";
+        
+        if (!String(formData.radius)?.trim()) newErrors.radius = "Radius is required";
+        else if (isNaN(formData.radius)) newErrors.radius = "Radius must be a valid number";
+        
+        if (!formData.ssn?.trim()) newErrors.ssn = "SSN is required";
+        else if (!/^\d{9}$/.test(formData.ssn.replace(/[- ]/g, ''))) newErrors.ssn = "Invalid SSN format";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const validateBank = () => {
+        let newErrors = {};
+        if (!formData.bankName?.trim()) newErrors.bankName = "Bank Name is required";
+        if (!formData.branchLocation?.trim()) newErrors.branchLocation = "Branch Location is required";
+        
+        if (!formData.routingNumber?.trim()) newErrors.routingNumber = "Routing Number is required";
+        else if (!/^\d{9}$/.test(formData.routingNumber)) newErrors.routingNumber = "Routing number must be 9 digits";
+
+        if (!formData.accountHolderName?.trim()) newErrors.accountHolderName = "Account Holder Name is required";
+        
+        if (!formData.accountNumber?.trim()) newErrors.accountNumber = "Account Number is required";
+        else if (!/^\d{6,18}$/.test(formData.accountNumber)) newErrors.accountNumber = "Invalid Account Number";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: null }));
+        }
     };
 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validatePersonal()) return;
 
         try {
             const res = await profileApi.updateProfile(formData);
@@ -153,6 +201,7 @@ export default function MyAccount() {
 
     const handleBankSubmit = async (e) => {
         e.preventDefault();
+        if (!validateBank()) return;
 
         try {
             const bankData = {
@@ -216,16 +265,19 @@ export default function MyAccount() {
                                 <div className="form-group half">
                                     <label>First Name</label>
                                     <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} />
+                                    {errors.firstName && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.firstName}</span>}
                                 </div>
                                 <div className="form-group half">
                                     <label>Last Name</label>
                                     <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} />
+                                    {errors.lastName && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.lastName}</span>}
                                 </div>
                             </div>
 
                             <div className="form-group">
                                 <label>Email</label>
                                 <input type="email" name="email" value={formData.email} onChange={handleChange} />
+                                {errors.email && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.email}</span>}
                             </div>
 
                             <div className="form-group address-group">
@@ -234,12 +286,14 @@ export default function MyAccount() {
                                     <input type="text" name="streetAddress" value={formData.streetAddress} onChange={handleChange} />
                                     <span className="location-icon">📍</span>
                                 </div>
+                                {errors.streetAddress && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.streetAddress}</span>}
                             </div>
 
                             <div className="form-row">
                                 <div className="form-group half">
                                     <label>Zip Code</label>
                                     <input type="text" name="zipCode" value={formData.zipCode} onChange={handleChange} />
+                                    {errors.zipCode && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.zipCode}</span>}
                                 </div>
                                 <div className="form-group half">
                                     <label>Gender</label>
@@ -249,6 +303,7 @@ export default function MyAccount() {
                                         <option value="Female">Female</option>
                                         <option value="Other">Other</option>
                                     </select>
+                                    {errors.gender && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.gender}</span>}
                                 </div>
                             </div>
 
@@ -256,10 +311,12 @@ export default function MyAccount() {
                                 <div className="form-group half">
                                     <label>DOB</label>
                                     <input type="date" name="dob" value={formData.dob} onChange={handleChange} />
+                                    {errors.dob && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.dob}</span>}
                                 </div>
                                 <div className="form-group half">
                                     <label>Radius</label>
                                     <input type="text" name="radius" value={formData.radius} onChange={handleChange} />
+                                    {errors.radius && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.radius}</span>}
                                 </div>
                             </div>
 
@@ -281,6 +338,7 @@ export default function MyAccount() {
                             <div className="form-group">
                                 <label>Social Security number</label>
                                 <input type="text" name="ssn" value={formData.ssn} onChange={handleChange} />
+                                {errors.ssn && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.ssn}</span>}
                             </div>
 
                             <button type="submit" className="update-btn">Update</button>
@@ -295,26 +353,31 @@ export default function MyAccount() {
                                 <div className="form-group">
                                     <label>Bank Name</label>
                                     <input type="text" name="bankName" value={formData.bankName} onChange={handleChange} />
+                                    {errors.bankName && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.bankName}</span>}
                                 </div>
 
                                 <div className="form-group">
                                     <label>Branch Location</label>
                                     <input type="text" name="branchLocation" value={formData.branchLocation} onChange={handleChange} />
+                                    {errors.branchLocation && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.branchLocation}</span>}
                                 </div>
 
                                 <div className="form-group">
                                     <label>Bank Routing Number</label>
                                     <input type="text" name="routingNumber" value={formData.routingNumber} onChange={handleChange} />
+                                    {errors.routingNumber && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.routingNumber}</span>}
                                 </div>
 
                                 <div className="form-group">
                                     <label>Account Holder's Name</label>
                                     <input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={handleChange} />
+                                    {errors.accountHolderName && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.accountHolderName}</span>}
                                 </div>
 
                                 <div className="form-group">
                                     <label>Account Number</label>
                                     <input type="text" name="accountNumber" value={formData.accountNumber} onChange={handleChange} />
+                                    {errors.accountNumber && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>{errors.accountNumber}</span>}
                                 </div>
 
                                 <button type="submit" className="update-btn">
