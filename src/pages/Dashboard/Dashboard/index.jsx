@@ -20,7 +20,7 @@ export default function DashboardLayout() {
 
     const path = location.pathname.toLowerCase();
     const isNotificationsPage = path.includes("notifications");
-    const isSettingsPage = path.includes("setting") || path.includes("sync-calendars") || path.includes("change-password") || path.includes("about-us") || path.includes("privacy-policy") || path.includes("contact-us") || (path.includes("profile/") && !path.endsWith("profile"));
+    const isSettingsPage = path.includes("setting") || path.includes("sync-calendars") || path.includes("change-password") || path.includes("about-us") || path.includes("privacy-policy") || path.includes("contact-us") || path.includes("terms-and-conditions") || (path.includes("profile/") && !path.endsWith("profile"));
 
     const activeTab = getActiveTab();
     const shouldHideNav = isNotificationsPage || isSettingsPage;
