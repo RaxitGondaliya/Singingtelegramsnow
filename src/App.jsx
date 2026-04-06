@@ -31,11 +31,13 @@ import TermsAndConditions from "./pages/Settings/TermsAndConditions";
 import ReportIt from "./pages/Profile/ReportIt";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import VerifyOtp from "./pages/Auth/VerifyOtp/VerifyOtp";
+import GlobalLoader from "./components/common/GlobalLoader/GlobalLoader";
 
 
 function App() {
   return (
     <MessageProvider>
+      <GlobalLoader />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<AuthLanding />} />

@@ -9,8 +9,29 @@ const apiClient = axios.create({
     },
 });
 
+let requestCount = 0;
+
+const showLoader = () => {
+    if (requestCount === 0) {
+        window.dispatchEvent(new CustomEvent('apiLoadStart'));
+    }
+    requestCount++;
+};
+
+const hideLoader = () => {
+    requestCount--;
+    if (requestCount <= 0) {
+        requestCount = 0; // prevent negative counting just in case
+        window.dispatchEvent(new CustomEvent('apiLoadEnd'));
+    }
+};
+
 apiClient.interceptors.request.use(
     (config) => {
+        if (!config.hideLoader) {
+            showLoader();
+        }
+        
         const token = localStorage.getItem('token');
         if (token && token !== 'undefined' && token !== 'null') {
             config.headers.Authorization = `Bearer ${token}`;
@@ -18,14 +39,26 @@ apiClient.interceptors.request.use(
         return config;
     },
     (error) => {
+        if (error.config && !error.config.hideLoader) {
+            hideLoader();
+        }
         return Promise.reject(error);
     }
 );
 
 // Response interceptor for handling common errors
 apiClient.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        if (response.config && !response.config.hideLoader) {
+            hideLoader();
+        }
+        return response;
+    },
     (error) => {
+        if (error.config && !error.config.hideLoader) {
+            hideLoader();
+        }
+        
         if (error.response && error.response.status === 401) {
             // Optional: Handle logout on 401
             localStorage.removeItem('token');

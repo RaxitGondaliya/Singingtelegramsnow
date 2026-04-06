@@ -18,8 +18,8 @@ export default function EditCharacterProfile() {
     const profileData = location.state?.profileData || {};
 
     const [formData, setFormData] = useState({
-        iArtistCharacterId: profileData.iCharacterId || profileData.iArtistCharacterId || profileData.id || '',
-        iCharacterId: '',
+        iArtistCharacterId: profileData.iArtistCharacterId || profileData.id || '',
+        iCharacterId: profileData.iCharacterId || profileData.icharacterId || profileData.icharacterid || '',
         iCharacterKeywordId: (() => {
             const rawId = profileData.iCharacterKeywordId || profileData.iKeywordId;
             if (Array.isArray(rawId)) return rawId.join(',');
@@ -76,16 +76,35 @@ export default function EditCharacterProfile() {
                 }
                 setStyles(fetchedStyles);
 
-                // Fetch Characters
+                // Fetch Characters - Fetch ALL pages to ensure we have the full master list
                 let fetchedChars = [];
-                const charsRes = await characterApi.getMyCharactersList();
-                if (charsRes.data?.responseData) {
-                    fetchedChars = Array.isArray(charsRes.data.responseData) ? charsRes.data.responseData : [charsRes.data.responseData];
-                } else if (charsRes.data?.data) {
-                    fetchedChars = Array.isArray(charsRes.data.data) ? charsRes.data.data : [charsRes.data.data];
-                } else if (Array.isArray(charsRes.data)) {
-                    fetchedChars = charsRes.data;
+                let currentOffset = '';
+                let keepFetching = true;
+
+                while (keepFetching) {
+                    const charsRes = await characterApi.getMyCharactersList(currentOffset);
+                    let newPageData = [];
+                    
+                    if (charsRes.data?.responseData) {
+                        newPageData = Array.isArray(charsRes.data.responseData) ? charsRes.data.responseData : [charsRes.data.responseData];
+                    } else if (charsRes.data?.data) {
+                        newPageData = Array.isArray(charsRes.data.data) ? charsRes.data.data : [charsRes.data.data];
+                    } else if (Array.isArray(charsRes.data)) {
+                        newPageData = charsRes.data;
+                    }
+
+                    if (newPageData.length > 0) {
+                        fetchedChars = [...fetchedChars, ...newPageData];
+                    }
+                    
+                    const returnedOffset = charsRes.data?.responseDataOffset;
+                    if (newPageData.length > 0 && returnedOffset !== undefined && returnedOffset > 0 && String(returnedOffset) !== String(currentOffset)) {
+                        currentOffset = String(returnedOffset);
+                    } else {
+                        keepFetching = false;
+                    }
                 }
+                
                 setMyCharacters(fetchedChars);
 
                 // Auto-fill hidden IDs if they were missing but we passed strings
@@ -115,10 +134,15 @@ export default function EditCharacterProfile() {
 
                     // Same logic for Character Name/ID
                     if (!newState.iCharacterId && prev.character) {
-                        const cMatch = fetchedChars.find(c => (c.vCharacterName || c.name) === prev.character);
-                        if (cMatch) newState.iCharacterId = cMatch.iCharacterId || cMatch.id || '';
+                        const searchStr = prev.character.replace(/[^a-z0-9]/gi, '').toLowerCase();
+                        const cMatch = fetchedChars.find(c => {
+                            const cName = String(c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+                            return cName === searchStr;
+                        });
+                        if (cMatch) newState.iCharacterId = extractCharId(cMatch);
                     } else if (!prev.character && prev.iCharacterId) {
-                        const cMatch = fetchedChars.find(c => String(c.iCharacterId || c.id || '') === String(prev.iCharacterId));
+                        const searchId = String(prev.iCharacterId).trim();
+                        const cMatch = fetchedChars.find(c => String(extractCharId(c)) === searchId);
                         if (cMatch) newState.character = cMatch.vCharacterName || cMatch.name || '';
                     }
 
@@ -133,14 +157,32 @@ export default function EditCharacterProfile() {
         fetchDropdownData();
     }, []);
 
+    // Helper to robustly extract character ID regardless of case
+    const extractCharId = (obj) => {
+        if (!obj) return '';
+        if (obj.iCharacterId) return obj.iCharacterId;
+        if (obj.id) return obj.id;
+        for (const key in obj) {
+            const lowerKey = key.toLowerCase();
+            if (lowerKey === 'icharacterid' || lowerKey === 'characterid' || lowerKey === 'id_character' || lowerKey === 'id') {
+                return obj[key];
+            }
+        }
+        return '';
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => {
             const newState = { ...prev, [name]: value };
             if (name === 'character') {
-                const selectedChar = myCharacters.find(c => (c.vCharacterName || c.name) === value);
+                const searchStr = value.replace(/[^a-z0-9]/gi, '').toLowerCase();
+                const selectedChar = myCharacters.find(c => {
+                    const cName = String(c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+                    return cName === searchStr;
+                });
                 if (selectedChar) {
-                    newState.iCharacterId = selectedChar.iCharacterId || selectedChar.id || '';
+                    newState.iCharacterId = extractCharId(selectedChar);
                 }
             }
             return newState;
@@ -324,13 +366,30 @@ export default function EditCharacterProfile() {
                 });
             }
 
+            let submitICharacterId = formData.iCharacterId;
+            if (!submitICharacterId && formData.character) {
+                const searchStr = formData.character.replace(/[^a-z0-9]/gi, '').toLowerCase();
+                const selectedChar = myCharacters.find(c => {
+                    const cName = String(c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+                    return cName === searchStr;
+                });
+                if (selectedChar) {
+                    submitICharacterId = extractCharId(selectedChar);
+                }
+            }
+            
+            // Ultimate Fallback: Just grab it directly from the parent component's passed profileData!
+            if (!submitICharacterId && profileData) {
+                submitICharacterId = extractCharId(profileData);
+            }
+
             const payload = {
-                iCharacterId: String(formData.iCharacterId || ""),
+                iCharacterId: String(submitICharacterId || ""),
                 iCharacterKeywordId: String(formData.iCharacterKeywordId || ""),
                 vCharacterName: formData.character ? formData.character.trim() : '',
                 vCharacterStyle: Array.isArray(formData.characterStyle) ? formData.characterStyle.join(',') : "",
                 txDescription: formData.description ? formData.description.trim() : '',
-                txMedia: txMedia // Now this array will NOT be empty
+                txMedia: txMedia 
             };
 
             if (formData.iArtistCharacterId) {
