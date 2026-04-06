@@ -15,19 +15,19 @@ export default function AuthLanding() {
       <div className="bottom">
 
         <div className="row">
-          <button className="outline btn" onClick={()=>nav("/signup")}>
+          <button className="outline btn" onClick={() => nav("/signup")}>
             Sign Up
           </button>
 
-          <button className="outline btn" onClick={()=>nav("/signin")}>
+          <button className="outline btn" onClick={() => nav("/signin")}>
             Sign In
           </button>
         </div>
 
         <p className="terms">
-          By signing up, I agree to <span className="link">Terms of service</span>
-          <br/>
-          and <span className="link">Privacy Policy</span>
+          By signing up, I agree to <span className="link" onClick={() => nav("/terms-and-conditions")}>Terms of service</span>
+          <br />
+          and <span className="link" onClick={() => nav("/privacy-policy")}>Privacy Policy</span>
         </p>
 
       </div>
