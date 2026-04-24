@@ -149,9 +149,10 @@ export const authApi = {
     },
 
     logout: () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('vAuthKey');
-        localStorage.clear(); 
+        // Preserve non-auth data that should survive across sessions
+        const charImgs = localStorage.getItem('_stn_char_imgs');
+        localStorage.clear();
         sessionStorage.clear();
+        if (charImgs) localStorage.setItem('_stn_char_imgs', charImgs);
     }
 };

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import { characterApi } from '../../../api/characterApi';
 import { getImageUrl } from '../../../utils/imageUtils';
+import { cacheCharacterImage } from '../../../utils/imageCache';
 import { useMessage } from '../../../context/MessageContext';
 import './EditCharacterProfile.scss';
 
@@ -319,51 +320,56 @@ export default function EditCharacterProfile() {
 
     const handleUpdate = async () => {
         if (!validateForm()) return;
-        
+
         try {
             setSubmitting(true);
 
-            // This array must contain ALL images (old and new) to avoid count() error
             const txMedia = [];
+            // base64 of new uploads — cached locally since backend only stores filename
+            const newUploadBase64 = [];
 
-            // 1. IMPORTANT: Loop through existing previewUrls
-            // If the URL is from the server (doesn't start with 'blob:'), 
-            // we must add it to txMedia so the backend sees it.
+            let mediaIndex = 0;
+
+            // 1. Existing server images — send filename only (no base64)
             if (formData.previewUrls && formData.previewUrls.length > 0) {
                 formData.previewUrls.forEach((url) => {
                     if (!url.startsWith('blob:')) {
                         const cleanUrl = url.split('?')[0];
                         const extractedFilename = cleanUrl.substring(cleanUrl.lastIndexOf('/') + 1);
-
-                        // Use full URL for external fallback image, otherwise standard filename
-                        const filename = url.includes('freepik.com') ? url : extractedFilename;
-                        const isVideo = extractedFilename.match(/\.(mp4|mov|wmv|avi|mkv|flv)$/i);
-                        const ext = extractedFilename.split('.').pop() || 'jpeg';
+                        const isVideo = /\.(mp4|mov|wmv|avi|mkv|flv)$/i.test(extractedFilename);
+                        const thumbName = isVideo
+                            ? extractedFilename.replace(/\.[^.]+$/, '_thumb.jpg')
+                            : extractedFilename;
 
                         txMedia.push({
-                            vMedia: filename, // Send filename for existing images (or full url for fallback)
+                            vMediaType: isVideo ? 'video' : 'image',
                             vMediaName: extractedFilename,
-                            vMediaType: isVideo ? 'Video' : 'Image',
-                            vFileType: ext,
-                            vThumb: filename
+                            vThumb: thumbName,
+                            vFileType: isVideo ? extractedFilename.split('.').pop() : '',
+                            tiMarkAsCoverPhoto: mediaIndex === 0 ? 1 : 0
                         });
+                        mediaIndex++;
                     }
                 });
             }
 
-            // 2. Convert newly uploaded files to base64 and add them to txMedia
+            // 2. Newly uploaded files — filename only in payload; cache base64 locally for display
             for (const file of formData.media) {
                 const base64 = await fileToBase64(file);
                 const isVideo = file.type.startsWith('video/');
-                const ext = file.name.split('.').pop() || (isVideo ? 'mp4' : 'jpeg');
+                const thumbName = isVideo
+                    ? file.name.replace(/\.[^.]+$/, '_thumb.jpg')
+                    : file.name;
 
                 txMedia.push({
-                    vMedia: base64, // Send Base64 string for new uploads
+                    vMediaType: isVideo ? 'video' : 'image',
                     vMediaName: file.name,
-                    vMediaType: isVideo ? 'Video' : 'Image',
-                    vFileType: ext,
-                    vThumb: base64
+                    vThumb: thumbName,
+                    vFileType: isVideo ? file.type : '',
+                    tiMarkAsCoverPhoto: mediaIndex === 0 ? 1 : 0
                 });
+                newUploadBase64.push(base64);
+                mediaIndex++;
             }
 
             let submitICharacterId = formData.iCharacterId;
@@ -377,33 +383,39 @@ export default function EditCharacterProfile() {
                     submitICharacterId = extractCharId(selectedChar);
                 }
             }
-            
-            // Ultimate Fallback: Just grab it directly from the parent component's passed profileData!
+
             if (!submitICharacterId && profileData) {
                 submitICharacterId = extractCharId(profileData);
             }
 
+            const submitArtistCharacterId = formData.iArtistCharacterId || profileData.iArtistCharacterId || '';
+
             const payload = {
-                iCharacterId: String(submitICharacterId || ""),
-                iCharacterKeywordId: String(formData.iCharacterKeywordId || ""),
-                vCharacterName: formData.character ? formData.character.trim() : '',
-                vCharacterStyle: Array.isArray(formData.characterStyle) ? formData.characterStyle.join(',') : "",
+                iArtistCharacterId: submitArtistCharacterId,
+                iCharacterId: submitICharacterId || '',
+                vOtherCharacterName: '',
                 txDescription: formData.description ? formData.description.trim() : '',
-                txMedia: txMedia 
+                iCharacterKeywordId: String(formData.iCharacterKeywordId || ''),
+                txMedia
             };
-
-            if (formData.iArtistCharacterId) {
-                payload.iArtistCharacterId = formData.iArtistCharacterId;
-            }
-
-            console.log("Final Payload being sent:", payload);
 
             const apiCall = isEditMode ? characterApi.editCharacter : characterApi.addCharacter;
             const res = await apiCall(payload);
 
             if (res.data?.responseCode === 200) {
                 showMessage(res.data?.responseMessage || 'Character Updated Successfully', 'success');
-                navigate('/dashboard/profile/manage-profiles');
+                // Use new upload base64 if available, otherwise the first existing preview URL
+                const coverPreviewUrl = newUploadBase64[0] || formData.previewUrls[0] || '';
+                // Save to IndexedDB — survives localStorage.clear() on logout
+                if (coverPreviewUrl && submitArtistCharacterId) {
+                    await cacheCharacterImage(submitArtistCharacterId, coverPreviewUrl);
+                }
+                navigate('/dashboard/profile/manage-profiles', {
+                    state: {
+                        updatedCharacterId: String(submitArtistCharacterId),
+                        coverPreviewUrl
+                    }
+                });
             } else {
                 showMessage(res.data?.responseMessage || 'Update Failed', 'error');
             }

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileApi } from '../../../api/profileApi';
 import { bankApi } from '../../../api/bankApi';
 import { useMessage } from '../../../context/MessageContext';
+import { getImageUrl } from '../../../utils/imageUtils';
 import './MyAccount.scss';
 import Header from '../../../components/layout/Header/Header';
 
@@ -14,6 +15,7 @@ export default function MyAccount() {
     const [bankLoading, setBankLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const { showMessage } = useMessage();
+    const fileInputRef = useRef(null);
 
     const [formData, setFormData] = useState(() => {
         let user = {};
@@ -181,6 +183,31 @@ export default function MyAccount() {
         }
     };
 
+    const handlePhotoSelect = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const base64 = await fileToBase64(file);
+            setFormData(prev => ({
+                ...prev,
+                txProfilePic: base64,
+                txProfileThumb: base64
+            }));
+        } catch (error) {
+            showMessage('Failed to process image', 'error');
+        }
+    };
+
+    const fileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -255,9 +282,26 @@ export default function MyAccount() {
                     <div className="personal-details">
                         <div className="photo-section">
                             <div className="avatar-circle">
-                                <span className="avatar-icon">👤</span>
+                                {formData.txProfilePic ? (
+                                    <img 
+                                        src={getImageUrl(formData.txProfilePic)} 
+                                        alt="Profile" 
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} 
+                                    />
+                                ) : (
+                                    <span className="avatar-icon">👤</span>
+                                )}
                             </div>
-                            <button className="change-photo-btn">Change Photo</button>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                onChange={handlePhotoSelect} 
+                                accept="image/*" 
+                                style={{ display: 'none' }} 
+                            />
+                            <button type="button" className="change-photo-btn" onClick={() => fileInputRef.current?.click()}>
+                                Change Photo
+                            </button>
                         </div>
 
                         <form className="account-form" onSubmit={handleSubmit}>

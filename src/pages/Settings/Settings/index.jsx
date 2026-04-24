@@ -32,7 +32,6 @@ export default function Settings() {
         { id: 'password', label: 'Change Password', type: 'link' },
         { id: 'contact', label: 'Contact Us', type: 'link' },
         { id: 'about', label: 'About Us', type: 'link' },
-        { id: 'share', label: 'Share App', type: 'link' },
     ];
 
     const legalItems = [
@@ -104,7 +103,7 @@ export default function Settings() {
                         className="settings-item sign-out-item"
                         onClick={() => {
                             authApi.logout();
-                            navigate('/Signin');   
+                            navigate('/Signin');
                         }}
                     >
                         <div className="sign-out-info">

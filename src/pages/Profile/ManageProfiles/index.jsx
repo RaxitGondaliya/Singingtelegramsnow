@@ -1,15 +1,45 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import { characterApi } from '../../../api/characterApi';
 import { getImageUrl } from '../../../utils/imageUtils';
+import { getAllCachedImages } from '../../../utils/imageCache';
 import { useMessage } from '../../../context/MessageContext';
 import './ManageProfiles.scss';
 
 export default function ManageProfiles() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { showMessage, showConfirm } = useMessage();
     const [characters, setCharacters] = useState([]);
+    // IndexedDB cache (survives logout) merged with localStorage fallback
+    const [localImageOverrides, setLocalImageOverrides] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('_stn_char_imgs') || '{}'); }
+        catch { return {}; }
+    });
+
+    // Load IndexedDB cache on mount and merge into overrides
+    useEffect(() => {
+        getAllCachedImages().then(cached => {
+            if (Object.keys(cached).length > 0) {
+                setLocalImageOverrides(prev => ({ ...cached, ...prev }));
+            }
+        });
+    }, []);
+
+    useEffect(() => {
+        const { updatedCharacterId, coverPreviewUrl } = location.state || {};
+        if (updatedCharacterId && coverPreviewUrl) {
+            setLocalImageOverrides(prev => {
+                const updated = { ...prev, [updatedCharacterId]: coverPreviewUrl };
+                // Blob URLs expire with the session — only persist stable URLs to localStorage
+                if (!coverPreviewUrl.startsWith('blob:')) {
+                    try { localStorage.setItem('_stn_char_imgs', JSON.stringify(updated)); } catch { /* localStorage full */ }
+                }
+                return updated;
+            });
+        }
+    }, [location.state]);
 
     // Infinite Scroll States
     const [loading, setLoading] = useState(true); // Initial full-page load
@@ -54,6 +84,7 @@ export default function ManageProfiles() {
             }
 
             if (newPageData.length > 0) {
+                console.log("Character list raw data:", newPageData.map(c => ({ id: c.iArtistCharacterId, name: c.vCharacterName, vImage: c.vImage, txCharacterPic: c.txCharacterPic })));
                 setCharacters(prev => {
                     const getCharId = (c) => c.iArtistCharacterId || c.iCharacterId || c.id;
                     const existingIds = new Set(prev.map(getCharId).filter(Boolean));
@@ -159,15 +190,25 @@ export default function ManageProfiles() {
                             ? char.eStatus.toLowerCase()
                             : getStatusClass(char.tiStatus);
 
-                        // Robust image selection
-                        let rawImage = char.vImage || char.txCharacterPic || char.vCharacterImage || char.image;
+                        // Always prefer locally cached preview — backend may return a truncated base64 in vImage
+                        let rawImage = localImageOverrides[String(charId)] || '';
+
+                        if (!rawImage) {
+                            const apiImage = char.vImage || char.txCharacterPic || char.txCharacterThumb || char.vCharacterImage || char.vCharacterPic || char.image;
+                            // Skip base64 values shorter than 500 chars — they are almost certainly truncated/corrupt
+                            if (apiImage && apiImage.startsWith('data:') && apiImage.length < 500) {
+                                rawImage = '';
+                            } else {
+                                rawImage = apiImage || '';
+                            }
+                        }
 
                         // Handle txMedia array or stringified JSON
                         if (!rawImage && char.txMedia) {
                             try {
                                 const media = typeof char.txMedia === 'string' ? JSON.parse(char.txMedia) : char.txMedia;
                                 if (Array.isArray(media) && media.length > 0) {
-                                    rawImage = media[0].vMedia || media[0].vMediaName || media[0].vThumb;
+                                    rawImage = media[0].vThumb || media[0].vMedia || media[0].vMediaName;
                                 }
                             } catch (e) {
                                 console.warn('Failed to parse txMedia:', e);
@@ -180,7 +221,14 @@ export default function ManageProfiles() {
                             <div key={charId} className="profile-card">
                                 <div className="card-content">
                                     <div className="profile-image-wrapper">
-                                        <img src={charImage} alt={charName} />
+                                        <img
+                                            src={charImage}
+                                            alt={charName}
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'https://placehold.co/100x100';
+                                            }}
+                                        />
                                     </div>
                                     <div className="profile-info">
                                         <h3 className="profile-name">{charName}</h3>
