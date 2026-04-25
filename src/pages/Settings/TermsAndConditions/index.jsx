@@ -125,8 +125,9 @@ export default function TermsAndConditions() {
 
                 <p><strong>STN welcomes your questions or comments regarding the Terms:</strong></p>
                 <p><strong>Singing Telegrams Now</strong></p>
-                <p><strong>118 Tocoloma Ave</strong></p>
-                <p><strong>San Francisco, California 94134</strong></p>
+                <p><strong>732 S 6TH ST STE V
+                </strong></p>
+                <p><strong>LAS VEGAS, NV 89101</strong></p>
 
                 <p><strong>Email Address:</strong></p>
                 <p><strong>info@singingtelegramsnow.com</strong></p>

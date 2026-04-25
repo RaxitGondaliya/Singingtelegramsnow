@@ -3,4 +3,5 @@ export * from './bookingApi';
 export * from './profileApi';
 export * from './settingsApi';
 export * from './availabilityApi';
+export * from './notificationApi';
 export { default as apiClient } from './axiosConfig';

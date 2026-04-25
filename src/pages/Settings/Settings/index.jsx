@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import './Settings.scss';
 import Header from '../../../components/layout/Header/Header';
 import ToggleSwitch from '../../../components/common/ToggleSwitch/ToggleSwitch';
-import { authApi } from '../../../api';
+import { authApi, notificationApi } from '../../../api';
+import { useMessage } from '../../../context/MessageContext';
 
 export default function Settings() {
     const navigate = useNavigate();
+    const { showMessage } = useMessage();
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
     const [userEmail, setUserEmail] = useState('testing@singing.Com');
 
@@ -20,14 +22,44 @@ export default function Settings() {
                 } else if (userData && userData.email) {
                     setUserEmail(userData.email);
                 }
+                
+                if (userData && typeof userData.tiNotification !== 'undefined') {
+                    setNotificationsEnabled(userData.tiNotification === "1" || userData.tiNotification === 1);
+                }
             }
         } catch (error) {
             console.error('Failed to parse userData from localStorage:', error);
         }
     }, []);
 
+    const handleNotificationToggle = async () => {
+        const newValue = !notificationsEnabled;
+        const flagValue = newValue ? "1" : "0";
+        setNotificationsEnabled(newValue);
+        try {
+            const response = await notificationApi.updateNotificationFlag(flagValue);
+            
+            if (response.data && response.data.responseCode === 200) {
+                showMessage(response.data.responseMessage || 'Notification Flag Updated Successfully.', 'success');
+                const userDataString = localStorage.getItem('userData');
+                if (userDataString) {
+                    const userData = JSON.parse(userDataString);
+                    userData.tiNotification = flagValue;
+                    localStorage.setItem('userData', JSON.stringify(userData));
+                }
+            } else {
+                showMessage(response.data?.responseMessage || 'Failed to update notification flag', 'error');
+                setNotificationsEnabled(!newValue); // Rollback
+            }
+        } catch (error) {
+            console.error('Failed to update notification flag:', error);
+            showMessage(error.response?.data?.responseMessage || 'Failed to update notification flag', 'error');
+            setNotificationsEnabled(!newValue); // Rollback
+        }
+    };
+
     const settingsItems = [
-        { id: 'notifications', label: 'Manage Notifications', type: 'toggle', value: notificationsEnabled, onChange: () => setNotificationsEnabled(!notificationsEnabled) },
+        { id: 'notifications', label: 'Manage Notifications', type: 'toggle', value: notificationsEnabled, onChange: handleNotificationToggle },
         { id: 'sync', label: 'Sync Calendars', type: 'link' },
         { id: 'password', label: 'Change Password', type: 'link' },
         { id: 'contact', label: 'Contact Us', type: 'link' },
