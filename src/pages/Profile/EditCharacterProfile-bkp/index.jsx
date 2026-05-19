@@ -243,7 +243,7 @@ export default function EditCharacterProfile() {
                             >
                                 <div className="upload-content">
                                     <span className="upload-plus">+</span>
-                                    <span className="upload-hint">Add More</span>
+                                    <span className="upload-hint">Upload Photo</span>
                                 </div>
                             </div>
                         )}

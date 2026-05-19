@@ -1,21 +1,34 @@
-/**
- * Constructs the full image URL from a filename.
- * If the value is already a full URL (http/https/blob), it returns it as-is.
- * If it's just a filename (e.g. "20220209092640thumb.jpeg"), it prepends the base URL from env.
- *
- * @param {string} filename - The image filename or URL
- * @param {string} fallback - Fallback URL if filename is empty/null
- * @returns {string} The full image URL
- */
+const S3_BASE = 'https://s3.us-east-1.amazonaws.com/stn-deployments-mobilehub-1291405271/';
+
+export const getCharacterImageUrl = (fileName) =>
+    fileName ? `${S3_BASE}character_images/${fileName}` : '';
+
+export const getCharacterThumbUrl = (fileName) =>
+    fileName ? `${S3_BASE}character_thumb_images/${fileName}` : '';
+
+export const getCharacterVideoUrl = (fileName) =>
+    fileName ? `${S3_BASE}character_videos/${fileName}` : '';
+
 export const getImageUrl = (filename, fallback = 'https://placehold.co/100x100') => {
     if (!filename || filename === '') return fallback;
 
-    // Already a full URL or blob → return as-is
     if (filename.startsWith('http://') || filename.startsWith('https://') || filename.startsWith('blob:') || filename.startsWith('data:')) {
         return filename;
     }
 
-    // Prepend the base image URL from env
-    const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || 'https://s3.us-east-1.amazonaws.com/stn-deployments-mobilehub-1291405271/character_thumb_images/';
+    // Folder-prefixed paths returned by some API endpoints
+    if (filename.startsWith('character_images/') || filename.startsWith('character_thumb_images/') || filename.startsWith('character_videos/')) {
+        return `${S3_BASE}${filename}`;
+    }
+
+    // thumbnail_*.jpg → character_thumb_images/
+    if (filename.startsWith('thumbnail_')) return getCharacterThumbUrl(filename);
+    // pic_*.jpg → character_images/
+    if (filename.startsWith('pic_')) return getCharacterImageUrl(filename);
+    // video_* → character_videos/
+    if (filename.startsWith('video_')) return getCharacterVideoUrl(filename);
+
+    // Legacy filenames — use configured base URL (character_thumb_images/)
+    const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || `${S3_BASE}character_thumb_images/`;
     return `${baseUrl}${filename}`;
 };

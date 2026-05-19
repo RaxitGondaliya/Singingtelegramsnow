@@ -2,172 +2,273 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../../../components/layout/Header/Header';
 import { characterApi } from '../../../api/characterApi';
+import imageCompression from 'browser-image-compression';
 import { getImageUrl } from '../../../utils/imageUtils';
-import { cacheCharacterImage } from '../../../utils/imageCache';
 import { useMessage } from '../../../context/MessageContext';
 import './EditCharacterProfile.scss';
 
+// ── S3 constants (display only — for existing uploaded media) ─────────────────
+const S3_BASE     = 'https://s3.us-east-1.amazonaws.com/stn-deployments-mobilehub-1291405271/';
+const IMG_FOLDER  = 'character_images/';
+const VID_FOLDER  = 'character_videos/';
+const THUMB_FOLDER = 'character_thumb_images/';
+
+// ── Base64 helpers ────────────────────────────────────────────────────────────
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function compressImageBase64(file) {
+    const compressed = await imageCompression(file, { maxSizeMB: 0.05, maxWidthOrHeight: 800, useWebWorker: true });
+    return fileToBase64(compressed);
+}
+
+async function generateThumbBase64(file) {
+    const thumb = await imageCompression(file, { maxSizeMB: 0.01, maxWidthOrHeight: 100, useWebWorker: true });
+    return fileToBase64(thumb);
+}
+
+function generateVideoThumbBase64(videoFile) {
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(videoFile);
+        video.currentTime = 0.1;
+        video.onloadeddata = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg', 0.6));
+        };
+    });
+}
+
+const mapExistingMedia = (apiMedia) =>
+    apiMedia.map((item, i) => {
+        const isBase64Name  = item.vMediaName?.startsWith('data:');
+        const isBase64Thumb = item.vThumb?.startsWith('data:');
+        const folder        = item.vMediaType !== 'image' ? VID_FOLDER : IMG_FOLDER;
+        return {
+            localFile:    null,
+            isVideo:      item.vMediaType !== 'image',
+            isCover:      String(item.tiMarkAsCoverPhoto) === '1' || i === 0,
+            s3Key:        isBase64Name  ? null : `${folder}${item.vMediaName}`,
+            thumbS3Key:   isBase64Thumb ? null : `${THUMB_FOLDER}${item.vThumb}`,
+            base64Data:   isBase64Name  ? item.vMediaName : null,
+            thumbBase64:  isBase64Thumb ? item.vThumb     : null,
+            previewUrl:   isBase64Name  ? item.vMediaName : `${S3_BASE}${folder}${item.vMediaName}`,
+            alreadyUploaded: true,
+        };
+    });
+
 export default function EditCharacterProfile() {
-    const navigate = useNavigate();
-    const location = useLocation();
+    const navigate  = useNavigate();
+    const location  = useLocation();
     const { showMessage } = useMessage();
-    const fileInputRef = useRef(null);
+    const fileInputRef      = useRef(null);
+    const dropdownRef       = useRef(null);
+    const scrollContainerRef = useRef(null);
 
-    const isEditMode = location.pathname.includes('edit-character');
-
-    // Profile data passed from ManageProfiles via navigate state
+    const isEditMode  = location.pathname.includes('edit-character');
     const profileData = location.state?.profileData || {};
 
+    // ── Form state ────────────────────────────────────────────────────────────
     const [formData, setFormData] = useState({
         iArtistCharacterId: profileData.iArtistCharacterId || profileData.id || '',
-        iCharacterId: profileData.iCharacterId || profileData.icharacterId || profileData.icharacterid || '',
+        iCharacterId:       profileData.iCharacterId || profileData.icharacterId || profileData.icharacterid || '',
         iCharacterKeywordId: (() => {
-            const rawId = profileData.iCharacterKeywordId || profileData.iKeywordId;
-            if (Array.isArray(rawId)) return rawId.join(',');
-            if (rawId !== undefined && rawId !== null) return String(rawId);
-            return '';
+            const raw = profileData.iCharacterKeywordId || profileData.iKeywordId;
+            if (Array.isArray(raw)) return raw.join(',');
+            return raw != null ? String(raw) : '';
         })(),
-        character: profileData.vCharacterName || profileData.name || '',
+        character:      profileData.vCharacterName || profileData.name || '',
         characterStyle: (() => {
-            const rawStyle = profileData.vCharacterStyle || profileData.characterStyle;
-            if (Array.isArray(rawStyle)) return rawStyle;
-            if (typeof rawStyle === 'string') return rawStyle.split(',').map(s => s.trim()).filter(Boolean);
-            if (typeof rawStyle === 'number') return [String(rawStyle)];
+            const raw = profileData.vCharacterStyle || profileData.characterStyle;
+            if (Array.isArray(raw)) return raw;
+            if (typeof raw === 'string') return raw.split(',').map(s => s.trim()).filter(Boolean);
+            if (typeof raw === 'number') return [String(raw)];
             return [];
         })(),
         description: profileData.txDescription || profileData.description || '',
-        media: [],
-        previewUrls: profileData.vImage
-            ? [getImageUrl(profileData.vImage)]
-            : profileData.txCharacterPic
-                ? [getImageUrl(profileData.txCharacterPic)]
-                : ['https://img.freepik.com/premium-vector/snowflakes-stencil-vector03-mandala-style_566680-13576.jpg?semt=ais_rp_progressive&w=740&q=80']
     });
 
-    const [submitting, setSubmitting] = useState(false);
-    const [errors, setErrors] = useState({});
-    const [styles, setStyles] = useState([]);
-    const [myCharacters, setMyCharacters] = useState([]);
-    const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
-    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+    // Step 4 — Media list: { localFile, isVideo, isCover, s3Key, thumbS3Key, previewUrl, alreadyUploaded }
+    const [mediaList, setMediaList] = useState([]);
 
+    const [loadingDetails,      setLoadingDetails]      = useState(isEditMode);
+    const [submitting,          setSubmitting]          = useState(false);
+    const [errors,              setErrors]              = useState({});
+    const [styles,              setStyles]              = useState([]);
+    const [myCharacters,        setMyCharacters]        = useState([]);
+    const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
+    const [currentSlideIndex,   setCurrentSlideIndex]   = useState(0);
+
+    // ── Step 7: load characterdetails on edit page open ───────────────────────
+    // This gives us artistCharacterMedia with the exact S3 filenames for all
+    // existing media — same call Android makes when opening the edit screen.
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsStyleDropdownOpen(false);
+        if (!isEditMode) return;
+
+        const artistCharacterId = profileData.iArtistCharacterId || profileData.id || '';
+        if (!artistCharacterId) {
+            setLoadingDetails(false);
+            return;
+        }
+
+        const fetchDetails = async () => {
+            try {
+                const res = await characterApi.getCharacterDetails(artistCharacterId);
+                const data = res.data?.responseData || res.data?.data || res.data || {};
+
+                // Normalise — API may return single object or array
+                const detail = Array.isArray(data) ? data[0] : data;
+                if (!detail) { setLoadingDetails(false); return; }
+
+                // Pre-fill form fields from the detailed response
+                setFormData(prev => ({
+                    ...prev,
+                    iArtistCharacterId: detail.iArtistCharacterId || prev.iArtistCharacterId,
+                    iCharacterId:       detail.iCharacterId        || prev.iCharacterId,
+                    iCharacterKeywordId: (() => {
+                        const raw = detail.iCharacterKeywordId || detail.iKeywordId;
+                        if (raw == null) return prev.iCharacterKeywordId;
+                        return Array.isArray(raw) ? raw.join(',') : String(raw);
+                    })(),
+                    character:      detail.vCharacterName  || prev.character,
+                    characterStyle: (() => {
+                        const raw = detail.vCharacterStyle || detail.characterStyle;
+                        if (!raw) return prev.characterStyle;
+                        if (Array.isArray(raw)) return raw;
+                        if (typeof raw === 'string') return raw.split(',').map(s => s.trim()).filter(Boolean);
+                        return prev.characterStyle;
+                    })(),
+                    description: detail.txDescription || prev.description,
+                }));
+
+                // Resolve the same image the list card uses — guaranteed to display correctly
+                const rawFallback = profileData.vImage || profileData.vThumbImage ||
+                                    profileData.txCharacterPic || profileData.image || '';
+                const knownGoodUrl = rawFallback
+                    ? (rawFallback.startsWith('data:') || rawFallback.startsWith('http')
+                        ? rawFallback
+                        : getImageUrl(rawFallback))
+                    : '';
+
+                // Build media list from artistCharacterMedia array
+                const apiMedia = detail.artistCharacterMedia || detail.txMedia || [];
+                if (Array.isArray(apiMedia) && apiMedia.length > 0) {
+                    const mapped = mapExistingMedia(apiMedia);
+                    // Use the list-card image as previewUrl — it's the same image, known-good
+                    if (knownGoodUrl && mapped.length > 0) {
+                        mapped[0] = { ...mapped[0], previewUrl: knownGoodUrl };
+                    }
+                    setMediaList(mapped);
+                } else if (knownGoodUrl) {
+                    const isDataUrl = knownGoodUrl.startsWith('data:');
+                    const filename  = !isDataUrl ? rawFallback.split('/').pop() : null;
+                    const folder    = filename?.startsWith('thumbnail_') ? THUMB_FOLDER : IMG_FOLDER;
+                    setMediaList([{
+                        localFile:   null,
+                        isVideo:     false,
+                        isCover:     true,
+                        s3Key:       !isDataUrl && filename ? `${folder}${filename}` : null,
+                        thumbS3Key:  null,
+                        base64Data:  isDataUrl ? knownGoodUrl : null,
+                        thumbBase64: null,
+                        previewUrl:  knownGoodUrl,
+                        alreadyUploaded: true,
+                    }]);
+                }
+            } catch (err) {
+                console.error('characterdetails error:', err);
+                showMessage('Failed to load character details', 'error');
+            } finally {
+                setLoadingDetails(false);
             }
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+
+        fetchDetails();
     }, []);
 
+    // ── Dropdown data (styles + character master list) ────────────────────────
     useEffect(() => {
-        const fetchDropdownData = async () => {
+        const load = async () => {
             try {
-                // Fetch Styles
+                // Styles
                 let fetchedStyles = [];
-                const stylesRes = await characterApi.getCharacterStyles();
-                if (stylesRes.data?.responseData) {
-                    fetchedStyles = stylesRes.data.responseData;
-                } else if (stylesRes.data?.data) {
-                    fetchedStyles = stylesRes.data.data;
-                } else if (Array.isArray(stylesRes.data)) {
-                    fetchedStyles = stylesRes.data;
-                }
+                const sRes = await characterApi.getCharacterStyles();
+                if (sRes.data?.responseData)      fetchedStyles = sRes.data.responseData;
+                else if (sRes.data?.data)         fetchedStyles = sRes.data.data;
+                else if (Array.isArray(sRes.data)) fetchedStyles = sRes.data;
                 setStyles(fetchedStyles);
 
-                // Fetch Characters - Fetch ALL pages to ensure we have the full master list
-                let fetchedChars = [];
-                let currentOffset = '';
-                let keepFetching = true;
-
-                while (keepFetching) {
-                    const charsRes = await characterApi.getMyCharactersList(currentOffset);
-                    let newPageData = [];
-                    
-                    if (charsRes.data?.responseData) {
-                        newPageData = Array.isArray(charsRes.data.responseData) ? charsRes.data.responseData : [charsRes.data.responseData];
-                    } else if (charsRes.data?.data) {
-                        newPageData = Array.isArray(charsRes.data.data) ? charsRes.data.data : [charsRes.data.data];
-                    } else if (Array.isArray(charsRes.data)) {
-                        newPageData = charsRes.data;
-                    }
-
-                    if (newPageData.length > 0) {
-                        fetchedChars = [...fetchedChars, ...newPageData];
-                    }
-                    
-                    const returnedOffset = charsRes.data?.responseDataOffset;
-                    if (newPageData.length > 0 && returnedOffset !== undefined && returnedOffset > 0 && String(returnedOffset) !== String(currentOffset)) {
-                        currentOffset = String(returnedOffset);
-                    } else {
-                        keepFetching = false;
-                    }
+                // Master character list (all pages)
+                let allChars = [], off = '', more = true;
+                while (more) {
+                    const cRes = await characterApi.getMyCharactersList(off);
+                    let page = [];
+                    if (cRes.data?.responseData)       page = Array.isArray(cRes.data.responseData) ? cRes.data.responseData : [cRes.data.responseData];
+                    else if (cRes.data?.data)          page = Array.isArray(cRes.data.data) ? cRes.data.data : [cRes.data.data];
+                    else if (Array.isArray(cRes.data)) page = cRes.data;
+                    allChars = [...allChars, ...page];
+                    const nextOff = cRes.data?.responseDataOffset;
+                    more = page.length > 0 && nextOff && nextOff > 0 && String(nextOff) !== String(off);
+                    if (more) off = String(nextOff);
                 }
-                
-                setMyCharacters(fetchedChars);
+                setMyCharacters(allChars);
 
-                // Auto-fill hidden IDs if they were missing but we passed strings
+                // Auto-resolve IDs ↔ names for style + character fields
                 setFormData(prev => {
-                    const newState = { ...prev };
+                    const next = { ...prev };
+                    const ids   = prev.iCharacterKeywordId ? String(prev.iCharacterKeywordId).split(',').map(s => s.trim()).filter(Boolean) : [];
+                    const names = Array.isArray(prev.characterStyle) ? prev.characterStyle : [];
 
-                    const currentStyles = Array.isArray(prev.characterStyle) ? prev.characterStyle : [];
-                    const currentIds = prev.iCharacterKeywordId ? String(prev.iCharacterKeywordId).split(',').map(id => id.trim()).filter(Boolean) : [];
-
-                    // Fill IDs from Strings
-                    if (currentIds.length === 0 && currentStyles.length > 0) {
-                        const matchIds = currentStyles.map(styleStr => {
-                            const sMatch = fetchedStyles.find(s => (s.vKeyword || s.name) === styleStr);
-                            return sMatch ? String(sMatch.iKeywordId || sMatch.iCharacterKeywordId || '') : '';
+                    if (ids.length === 0 && names.length > 0) {
+                        const resolved = names.map(n => {
+                            const m = fetchedStyles.find(s => (s.vKeyword || s.name) === n);
+                            return m ? String(m.iKeywordId || m.iCharacterKeywordId || '') : '';
                         }).filter(Boolean);
-                        if (matchIds.length > 0) newState.iCharacterKeywordId = matchIds.join(',');
+                        if (resolved.length) next.iCharacterKeywordId = resolved.join(',');
                     }
-
-                    // Fill Strings from IDs
-                    if (currentStyles.length === 0 && currentIds.length > 0) {
-                        const matchNames = currentIds.map(idStr => {
-                            const sMatch = fetchedStyles.find(s => String(s.iKeywordId || s.iCharacterKeywordId || '') === idStr);
-                            return sMatch ? (sMatch.vKeyword || s.name) : '';
+                    if (names.length === 0 && ids.length > 0) {
+                        const resolved = ids.map(id => {
+                            const m = fetchedStyles.find(s => String(s.iKeywordId || s.iCharacterKeywordId || '') === id);
+                            return m ? (m.vKeyword || m.name) : '';
                         }).filter(Boolean);
-                        if (matchNames.length > 0) newState.characterStyle = matchNames;
+                        if (resolved.length) next.characterStyle = resolved;
                     }
-
-                    // Same logic for Character Name/ID
-                    if (!newState.iCharacterId && prev.character) {
-                        const searchStr = prev.character.replace(/[^a-z0-9]/gi, '').toLowerCase();
-                        const cMatch = fetchedChars.find(c => {
-                            const cName = String(c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
-                            return cName === searchStr;
-                        });
-                        if (cMatch) newState.iCharacterId = extractCharId(cMatch);
-                    } else if (!prev.character && prev.iCharacterId) {
-                        const searchId = String(prev.iCharacterId).trim();
-                        const cMatch = fetchedChars.find(c => String(extractCharId(c)) === searchId);
-                        if (cMatch) newState.character = cMatch.vCharacterName || cMatch.name || '';
+                    if (!next.iCharacterId && prev.character) {
+                        const key = prev.character.replace(/[^a-z0-9]/gi, '').toLowerCase();
+                        const m   = allChars.find(c => (c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase() === key);
+                        if (m) next.iCharacterId = extractCharId(m);
                     }
-
-                    return newState;
+                    return next;
                 });
-
-            } catch (error) {
-                console.error('Error fetching dropdown data:', error);
+            } catch (err) {
+                console.error('Dropdown load error:', err);
             }
         };
-
-        fetchDropdownData();
+        load();
     }, []);
 
-    // Helper to robustly extract character ID regardless of case
+    useEffect(() => {
+        const close = (e) => { if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsStyleDropdownOpen(false); };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, []);
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
     const extractCharId = (obj) => {
         if (!obj) return '';
         if (obj.iCharacterId) return obj.iCharacterId;
         if (obj.id) return obj.id;
-        for (const key in obj) {
-            const lowerKey = key.toLowerCase();
-            if (lowerKey === 'icharacterid' || lowerKey === 'characterid' || lowerKey === 'id_character' || lowerKey === 'id') {
-                return obj[key];
-            }
+        for (const k in obj) {
+            if (['icharacterid','characterid','id_character','id'].includes(k.toLowerCase())) return obj[k];
         }
         return '';
     };
@@ -175,357 +276,260 @@ export default function EditCharacterProfile() {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => {
-            const newState = { ...prev, [name]: value };
+            const next = { ...prev, [name]: value };
             if (name === 'character') {
-                const searchStr = value.replace(/[^a-z0-9]/gi, '').toLowerCase();
-                const selectedChar = myCharacters.find(c => {
-                    const cName = String(c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
-                    return cName === searchStr;
-                });
-                if (selectedChar) {
-                    newState.iCharacterId = extractCharId(selectedChar);
-                }
+                const key = value.replace(/[^a-z0-9]/gi, '').toLowerCase();
+                const m   = myCharacters.find(c => (c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase() === key);
+                if (m) next.iCharacterId = extractCharId(m);
             }
-            return newState;
+            return next;
         });
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: null }));
-        }
+        if (errors[name]) setErrors(p => ({ ...p, [name]: null }));
     };
 
     const handleStyleToggle = (styleObj) => {
         const styleName = styleObj.vKeyword || styleObj.name;
-        const styleId = String(styleObj.iKeywordId || styleObj.iCharacterKeywordId || '');
-
+        const styleId   = String(styleObj.iKeywordId || styleObj.iCharacterKeywordId || '');
         setFormData(prev => {
-            const currentStyles = Array.isArray(prev.characterStyle) ? prev.characterStyle : [];
-            const currentIds = prev.iCharacterKeywordId ? String(prev.iCharacterKeywordId).split(',').map(s => s.trim()).filter(Boolean) : [];
-
-            let newStyles;
-            let newIds;
-
-            const isAlreadyChecked = currentStyles.includes(styleName) || (styleId && currentIds.includes(styleId));
-
-            if (isAlreadyChecked) {
-                newStyles = currentStyles.filter(s => s !== styleName);
-                if (styleId) newIds = currentIds.filter(id => id !== styleId);
-                else newIds = currentIds;
-            } else {
-                newStyles = [...currentStyles, styleName];
-                if (styleId && !currentIds.includes(styleId)) {
-                    newIds = [...currentIds, styleId];
-                } else {
-                    newIds = currentIds;
-                }
-            }
-
+            const curNames = Array.isArray(prev.characterStyle) ? prev.characterStyle : [];
+            const curIds   = prev.iCharacterKeywordId ? String(prev.iCharacterKeywordId).split(',').map(s => s.trim()).filter(Boolean) : [];
+            const checked  = curNames.includes(styleName) || (styleId && curIds.includes(styleId));
             return {
                 ...prev,
-                characterStyle: newStyles.filter(Boolean),
-                iCharacterKeywordId: newIds.filter(Boolean).join(',')
+                characterStyle:      checked ? curNames.filter(s => s !== styleName) : [...curNames, styleName],
+                iCharacterKeywordId: checked
+                    ? curIds.filter(id => id !== styleId).join(',')
+                    : styleId && !curIds.includes(styleId) ? [...curIds, styleId].join(',') : curIds.join(','),
             };
         });
-
-        if (errors.characterStyle) {
-            setErrors(prev => ({ ...prev, characterStyle: null }));
-        }
+        if (errors.characterStyle) setErrors(p => ({ ...p, characterStyle: null }));
     };
 
+    // Step 4 — add new files to media list
     const handleFileSelect = (e) => {
         const files = Array.from(e.target.files || []);
-        if (files.length === 0) return;
-
-        const newPreviewUrls = files.map(file => URL.createObjectURL(file));
-
-        setFormData(prev => {
-            const isReplacingOld = prev.media.length === 0;
-            return {
-                ...prev,
-                media: isReplacingOld ? files : [...prev.media, ...files],
-                previewUrls: isReplacingOld ? newPreviewUrls : [...prev.previewUrls, ...newPreviewUrls]
-            };
+        if (!files.length) return;
+        const newItems = files.map(file => ({
+            localFile: file,
+            isVideo: file.type.startsWith('video/'),
+            isCover: false,
+            s3Key: '', thumbS3Key: '',
+            previewUrl: URL.createObjectURL(file),
+            alreadyUploaded: false,
+        }));
+        setMediaList(prev => {
+            // Remove existing (default) uploaded items — replace with new selection
+            const kept = prev.filter(item => !item.alreadyUploaded);
+            const all  = [...kept, ...newItems];
+            return all.map((item, i) => ({ ...item, isCover: i === 0 }));
         });
-
-        // When new files are added, scroll to the newly added images (which is current previewUrls length)
-        setTimeout(() => {
-            setCurrentSlideIndex(formData.previewUrls.length);
-        }, 100);
-
-        if (errors.media) {
-            setErrors(prev => ({ ...prev, media: null }));
-        }
+        setCurrentSlideIndex(0);
+        if (errors.media) setErrors(p => ({ ...p, media: null }));
+        e.target.value = '';
     };
 
     const handleRemoveMedia = (index) => {
-        setFormData(prev => {
-            const newMedia = [...prev.media];
-            const newPreviews = [...prev.previewUrls];
-
-            // Revoke object URL if it's a blob URL
-            if (newPreviews[index]?.startsWith('blob:')) {
-                URL.revokeObjectURL(newPreviews[index]);
-            }
-
-            newMedia.splice(index, 1);
-            newPreviews.splice(index, 1);
-
-            return { ...prev, media: newMedia, previewUrls: newPreviews };
+        setMediaList(prev => {
+            const next = [...prev];
+            if (next[index]?.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(next[index].previewUrl);
+            next.splice(index, 1);
+            return next.map((item, i) => ({ ...item, isCover: i === 0 }));
         });
-
-        // Adjust current slide index if we delete the current or a previous slide
-        setCurrentSlideIndex(prevIndex => {
-            if (prevIndex > index) return prevIndex - 1;
-            if (prevIndex === index && index === formData.previewUrls.length - 1) return Math.max(0, index - 1);
-            return prevIndex;
-        });
+        setCurrentSlideIndex(prev => (prev > index ? prev - 1 : prev === index && index === mediaList.length - 1 ? Math.max(0, index - 1) : prev));
     };
 
     const handleScroll = (e) => {
-        const container = e.target;
-        const scrollPosition = container.scrollLeft;
-        const itemWidth = container.clientWidth;
+        const idx = Math.round(e.target.scrollLeft / e.target.clientWidth);
+        if (idx !== currentSlideIndex) setCurrentSlideIndex(idx);
+    };
 
-        // Calculate the current index based on scroll position (adding half width for round-to-nearest behavior)
-        const newIndex = Math.round(scrollPosition / itemWidth);
-
-        if (newIndex !== currentSlideIndex) {
-            setCurrentSlideIndex(newIndex);
+    const scrollToSlide = (index) => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({ left: index * scrollContainerRef.current.clientWidth, behavior: 'smooth' });
         }
+        setCurrentSlideIndex(index);
     };
 
     const validateForm = () => {
-        let newErrors = {};
-        
-        if (!formData.previewUrls || formData.previewUrls.length === 0) {
-            newErrors.media = "At least one photo or video is required.";
-        }
-        
-        if (!formData.character || !formData.character.trim()) {
-            newErrors.character = "Character selection is required.";
-        }
-        
-        if (!formData.characterStyle || formData.characterStyle.length === 0) {
-            newErrors.characterStyle = "At least one character style is required.";
-        }
-        
-        if (!formData.description || !formData.description.trim()) {
-            newErrors.description = "Description is required.";
-        } else if (formData.description.trim().length < 10) {
-            newErrors.description = "Description must be at least 10 characters long.";
-        }
-        
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        const errs = {};
+        if (!mediaList.length)                              errs.media          = 'At least one photo or video is required.';
+        if (!formData.character?.trim())                    errs.character      = 'Character selection is required.';
+        else if (!formData.iCharacterId)                    errs.character      = 'Please select a character from the dropdown list.';
+        if (!formData.characterStyle?.length)               errs.characterStyle = 'At least one character style is required.';
+        if (!formData.description?.trim())                  errs.description    = 'Description is required.';
+        else if (formData.description.trim().length < 10)   errs.description    = 'Description must be at least 10 characters long.';
+        setErrors(errs);
+        return !Object.keys(errs).length;
     };
 
+    // ── Steps 5–8: build txMedia and call API ─────────────────────────────────
     const handleUpdate = async () => {
         if (!validateForm()) return;
-
+        setSubmitting(true);
         try {
-            setSubmitting(true);
+            // Resolve iCharacterId
+            let charId = formData.iCharacterId;
+            if (!charId && formData.character) {
+                const key = formData.character.replace(/[^a-z0-9]/gi, '').toLowerCase();
+                const m   = myCharacters.find(c => (c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase() === key);
+                if (m) charId = extractCharId(m);
+            }
+            if (!charId) charId = extractCharId(profileData);
+            if (!charId) {
+                showMessage('Please select a character from the dropdown before saving.', 'error');
+                setSubmitting(false);
+                return;
+            }
 
-            const txMedia = [];
-            // base64 of new uploads — cached locally since backend only stores filename
-            const newUploadBase64 = [];
+            let txMedia = [];
 
-            let mediaIndex = 0;
-
-            // 1. Existing server images — send filename only (no base64)
-            if (formData.previewUrls && formData.previewUrls.length > 0) {
-                formData.previewUrls.forEach((url) => {
-                    if (!url.startsWith('blob:')) {
-                        const cleanUrl = url.split('?')[0];
-                        const extractedFilename = cleanUrl.substring(cleanUrl.lastIndexOf('/') + 1);
-                        const isVideo = /\.(mp4|mov|wmv|avi|mkv|flv)$/i.test(extractedFilename);
-                        const thumbName = isVideo
-                            ? extractedFilename.replace(/\.[^.]+$/, '_thumb.jpg')
-                            : extractedFilename;
-
-                        txMedia.push({
-                            vMediaType: isVideo ? 'video' : 'image',
-                            vMediaName: extractedFilename,
-                            vThumb: thumbName,
-                            vFileType: isVideo ? extractedFilename.split('.').pop() : '',
-                            tiMarkAsCoverPhoto: mediaIndex === 0 ? 1 : 0
-                        });
-                        mediaIndex++;
-                    }
+            // Existing items — send base64 or S3 filename depending on how they were saved
+            if (isEditMode) {
+                mediaList.filter(m => m.alreadyUploaded).forEach(item => {
+                    txMedia.push({
+                        vMediaName: item.base64Data  || item.s3Key?.split('/').pop()  || '',
+                        vMediaType: item.isVideo ? 'video' : 'image',
+                        vFileType:  item.base64Data ? (item.isVideo ? 'video/mp4' : 'image/jpeg') : (item.isVideo ? 'video/mp4' : ''),
+                        vThumb:     item.thumbBase64 || item.thumbS3Key?.split('/').pop() || '',
+                        tiMarkAsCoverPhoto: item.isCover ? 1 : 0,
+                    });
                 });
             }
 
-            // 2. Newly uploaded files — filename only in payload; cache base64 locally for display
-            for (const file of formData.media) {
-                const base64 = await fileToBase64(file);
-                const isVideo = file.type.startsWith('video/');
-                const thumbName = isVideo
-                    ? file.name.replace(/\.[^.]+$/, '_thumb.jpg')
-                    : file.name;
+            // New items — convert to base64 (compressed to 50 KB for images)
+            const newItems = isEditMode
+                ? mediaList.filter(m => !m.alreadyUploaded)
+                : mediaList;
 
-                txMedia.push({
-                    vMediaType: isVideo ? 'video' : 'image',
-                    vMediaName: file.name,
-                    vThumb: thumbName,
-                    vFileType: isVideo ? file.type : '',
-                    tiMarkAsCoverPhoto: mediaIndex === 0 ? 1 : 0
-                });
-                newUploadBase64.push(base64);
-                mediaIndex++;
-            }
-
-            let submitICharacterId = formData.iCharacterId;
-            if (!submitICharacterId && formData.character) {
-                const searchStr = formData.character.replace(/[^a-z0-9]/gi, '').toLowerCase();
-                const selectedChar = myCharacters.find(c => {
-                    const cName = String(c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
-                    return cName === searchStr;
-                });
-                if (selectedChar) {
-                    submitICharacterId = extractCharId(selectedChar);
+            for (const item of newItems) {
+                let base64Data, thumbBase64;
+                if (!item.isVideo) {
+                    base64Data  = await compressImageBase64(item.localFile);
+                    thumbBase64 = await generateThumbBase64(item.localFile);
+                } else {
+                    base64Data  = await fileToBase64(item.localFile);
+                    thumbBase64 = await generateVideoThumbBase64(item.localFile);
                 }
+                txMedia.push({
+                    vMediaName: base64Data,
+                    vMediaType: item.isVideo ? 'video' : 'image',
+                    vFileType:  item.localFile.type || (item.isVideo ? 'video/mp4' : 'image/jpeg'),
+                    vThumb:     thumbBase64,
+                    tiMarkAsCoverPhoto: item.isCover ? 1 : 0,
+                });
             }
 
-            if (!submitICharacterId && profileData) {
-                submitICharacterId = extractCharId(profileData);
-            }
+            // Enforce cover on position 0
+            txMedia = txMedia.map((item, i) => ({ ...item, tiMarkAsCoverPhoto: i === 0 ? 1 : 0 }));
 
-            const submitArtistCharacterId = formData.iArtistCharacterId || profileData.iArtistCharacterId || '';
+            const payload = isEditMode
+                ? {
+                    iArtistCharacterId:  formData.iArtistCharacterId || profileData.iArtistCharacterId || '',
+                    iCharacterId:        charId,
+                    txDescription:       formData.description.trim(),
+                    vOtherCharacterName: '',
+                    iCharacterKeywordId: String(formData.iCharacterKeywordId || ''),
+                    txMedia,
+                }
+                : {
+                    iCharacterId:        charId,
+                    txDescription:       formData.description.trim(),
+                    vOtherCharacterName: '',
+                    iCharacterKeywordId: String(formData.iCharacterKeywordId || ''),
+                    txMedia,
+                };
 
-            const payload = {
-                iArtistCharacterId: submitArtistCharacterId,
-                iCharacterId: submitICharacterId || '',
-                vOtherCharacterName: '',
-                txDescription: formData.description ? formData.description.trim() : '',
-                iCharacterKeywordId: String(formData.iCharacterKeywordId || ''),
-                txMedia
-            };
-
-            const apiCall = isEditMode ? characterApi.editCharacter : characterApi.addCharacter;
-            const res = await apiCall(payload);
+            const res = await (isEditMode ? characterApi.editCharacter : characterApi.addCharacter)(payload);
 
             if (res.data?.responseCode === 200) {
-                showMessage(res.data?.responseMessage || 'Character Updated Successfully', 'success');
-                // Use new upload base64 if available, otherwise the first existing preview URL
-                const coverPreviewUrl = newUploadBase64[0] || formData.previewUrls[0] || '';
-                // Save to IndexedDB — survives localStorage.clear() on logout
-                if (coverPreviewUrl && submitArtistCharacterId) {
-                    await cacheCharacterImage(submitArtistCharacterId, coverPreviewUrl);
-                }
-                navigate('/dashboard/profile/manage-profiles', {
-                    state: {
-                        updatedCharacterId: String(submitArtistCharacterId),
-                        coverPreviewUrl
-                    }
-                });
+                showMessage(res.data?.responseMessage || 'Character saved successfully', 'success');
+                // Signal ManageProfiles to re-fetch from server (Android approach)
+                navigate('/dashboard/profile/manage-profiles', { state: { needsRefresh: true } });
             } else {
-                showMessage(res.data?.responseMessage || 'Update Failed', 'error');
+                showMessage(res.data?.responseMessage || 'Save failed', 'error');
             }
-        } catch (error) {
-            console.error('Submission error:', error);
-            showMessage('Failed to update character', 'error');
+        } catch (err) {
+            console.error('Submission error:', err);
+            showMessage('Failed to save character', 'error');
         } finally {
             setSubmitting(false);
         }
     };
 
-    // Helper: Convert File to base64 string
-    const fileToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (error) => reject(error);
-        });
-    };
+    // ── Render ────────────────────────────────────────────────────────────────
+    if (loadingDetails) {
+        return (
+            <div className="edit-character-container">
+                <Header title="Edit Character Profile" />
+                <div style={{ padding: '40px', textAlign: 'center' }}>Loading character details...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="edit-character-container">
-            <Header title={isEditMode ? "Edit Character Profile" : "Add Character Profile"} />
+            <Header title={isEditMode ? 'Edit Character Profile' : 'Add Character Profile'} />
 
             <div className="edit-character-form">
+
+                {/* Media carousel */}
                 <div className="form-group">
                     <label className="form-label">Upload Character Photos / Videos</label>
-                    <div className="upload-container" onScroll={handleScroll}>
-                        {formData.previewUrls.length > 0 ? (
-                            formData.previewUrls.map((url, idx) => (
-                                <div key={idx} className="edit-upload-box">
-                                    <div className="preview-wrapper">
-                                        <img src={url} alt={`Preview ${idx + 1}`} className="media-preview" />
-                                        <button className="remove-media" onClick={() => handleRemoveMedia(idx)}>×</button>
-                                    </div>
+                    <div className="upload-container" ref={scrollContainerRef} onScroll={handleScroll}>
+                        {mediaList.map((item, idx) => (
+                            <div key={idx} className="edit-upload-box">
+                                <div className="preview-wrapper">
+                                    {item.isVideo
+                                        ? <video src={item.previewUrl} className="media-preview" muted playsInline />
+                                        : <img src={item.previewUrl} alt={`Media ${idx + 1}`} className="media-preview"
+                                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/300x200'; }} />}
+                                    <button className="remove-media" onClick={() => handleRemoveMedia(idx)}>×</button>
                                 </div>
-                            ))
-                        ) : (
-                            <div
-                                className="edit-upload-box"
-                                onClick={() => fileInputRef.current?.click()}
-                                style={{ cursor: 'pointer' }}
-                            >
+                            </div>
+                        ))}
+                        {mediaList.length === 0 && (
+                            <div className="edit-upload-box" onClick={() => fileInputRef.current?.click()} style={{ cursor: 'pointer' }}>
                                 <div className="upload-content">
                                     <span className="upload-plus">+</span>
                                     <span className="upload-hint">Upload Photo/Video</span>
                                 </div>
                             </div>
                         )}
-                        {formData.previewUrls.length > 0 && (
-                            <div
-                                className="edit-upload-box add-more-box"
-                                onClick={() => fileInputRef.current?.click()}
-                                style={{ cursor: 'pointer' }}
-                            >
+                        {mediaList.length > 0 && (
+                            <div className="edit-upload-box add-more-box" onClick={() => fileInputRef.current?.click()} style={{ cursor: 'pointer' }}>
                                 <div className="upload-content">
                                     <span className="upload-plus">+</span>
-                                    <span className="upload-hint">Add More</span>
+                                    <span className="upload-hint">Upload Photo</span>
                                 </div>
                             </div>
                         )}
                     </div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileSelect}
-                        accept="image/*,video/*"
-                        multiple
-                        style={{ display: 'none' }}
-                    />
+                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*,video/*" multiple style={{ display: 'none' }} />
                     <div className="upload-indicator">
-                        {formData.previewUrls.length > 0 ? (
-                            // Total dots = number of images + 1 for "Add More"
-                            Array.from({ length: formData.previewUrls.length + 1 }).map((_, idx) => (
+                        {mediaList.length > 0
+                            ? Array.from({ length: mediaList.length + 1 }).map((_, i) => (
                                 <span
-                                    key={idx}
-                                    className={`indicator-dot ${idx === currentSlideIndex ? 'active' : ''}`}
-                                ></span>
-                            ))
-                        ) : (
-                            // Default 2 dots for the empty state
-                            <>
-                                <span className={`indicator-dot ${currentSlideIndex === 0 ? 'active' : ''}`}></span>
-                                <span className={`indicator-dot ${currentSlideIndex === 1 ? 'active' : ''}`}></span>
-                            </>
-                        )}
+                                    key={i}
+                                    className={`indicator-dot ${i === currentSlideIndex ? 'active' : ''}`}
+                                    onClick={() => scrollToSlide(i)}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                              ))
+                            : <><span className="indicator-dot active" /><span className="indicator-dot" /></>}
                     </div>
                     {errors.media && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block', textAlign: 'center' }}>{errors.media}</span>}
                 </div>
 
+                {/* Character select */}
                 <div className="form-group">
                     <label className="form-label">Select Character</label>
                     <div className="select-wrapper">
-                        <select
-                            name="character"
-                            value={formData.character}
-                            onChange={handleInputChange}
-                            className="form-select"
-                        >
+                        <select name="character" value={formData.character} onChange={handleInputChange} className="form-select">
                             <option value="">Select Character</option>
-                            {myCharacters.map((charObj, index) => {
-                                const charName = charObj.vCharacterName || charObj.name || `Character ${index + 1}`;
-                                return (
-                                    <option key={charObj.iCharacterId || charObj.id || index} value={charName}>
-                                        {charName}
-                                    </option>
-                                );
+                            {myCharacters.map((c, i) => {
+                                const name = c.vCharacterName || c.name || `Character ${i + 1}`;
+                                return <option key={c.iCharacterId || c.id || i} value={name}>{name}</option>;
                             })}
-                            {/* Fallback to show existing character if not in the list yet */}
                             {formData.character && !myCharacters.some(c => (c.vCharacterName || c.name) === formData.character) && (
                                 <option value={formData.character}>{formData.character}</option>
                             )}
@@ -534,76 +538,57 @@ export default function EditCharacterProfile() {
                     {errors.character && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.character}</span>}
                 </div>
 
+                {/* Style multi-select */}
                 <div className="form-group">
                     <label className="form-label">Select Character Style</label>
                     <div className="select-wrapper" ref={dropdownRef}>
-                        <div
-                            className="form-select custom-multi-select"
-                            onClick={() => setIsStyleDropdownOpen(!isStyleDropdownOpen)}
-                        >
+                        <div className="form-select custom-multi-select" onClick={() => setIsStyleDropdownOpen(v => !v)}>
                             {Array.isArray(formData.characterStyle) && formData.characterStyle.length > 0
                                 ? formData.characterStyle.join(', ')
                                 : <span className="placeholder">Select Style</span>}
                         </div>
-
                         {isStyleDropdownOpen && (
                             <div className="style-dropdown-list">
-                                {styles.map((styleObj, index) => {
-                                    const styleName = styleObj.vKeyword || styleObj.name;
-                                    const styleId = String(styleObj.iKeywordId || styleObj.iCharacterKeywordId || '');
-
-                                    const currentStyles = Array.isArray(formData.characterStyle) ? formData.characterStyle : [];
-                                    const currentIds = formData.iCharacterKeywordId ? String(formData.iCharacterKeywordId).split(',').map(s => s.trim()).filter(Boolean) : [];
-
-                                    const isChecked = currentStyles.includes(styleName) || (styleId && currentIds.includes(styleId));
-
+                                {styles.map((s, i) => {
+                                    const name    = s.vKeyword || s.name;
+                                    const sid     = String(s.iKeywordId || s.iCharacterKeywordId || '');
+                                    const curN    = Array.isArray(formData.characterStyle) ? formData.characterStyle : [];
+                                    const curIds  = formData.iCharacterKeywordId ? String(formData.iCharacterKeywordId).split(',').map(x => x.trim()).filter(Boolean) : [];
+                                    const checked = curN.includes(name) || (sid && curIds.includes(sid));
                                     return (
-                                        <div key={styleId || index} className="style-option" onClick={() => handleStyleToggle(styleObj)}>
-                                            <span>{styleName}</span>
-                                            <div className={`custom-checkbox ${isChecked ? 'checked' : ''}`}>
-                                                {isChecked && <span className="checkmark">✓</span>}
-                                            </div>
+                                        <div key={sid || i} className="style-option" onClick={() => handleStyleToggle(s)}>
+                                            <span>{name}</span>
+                                            <div className={`custom-checkbox ${checked ? 'checked' : ''}`}>{checked && <span className="checkmark">✓</span>}</div>
                                         </div>
                                     );
                                 })}
-                                {/* Fallback styles */}
-                                {Array.isArray(formData.characterStyle) && formData.characterStyle.filter(styleName => !styles.some(s => (s.vKeyword || s.name) === styleName)).map((styleName, index) => (
-                                    <div key={`fallback-${index}`} className="style-option" onClick={() => handleStyleToggle({ name: styleName, iKeywordId: '' })}>
-                                        <span>{styleName}</span>
-                                        <div className="custom-checkbox checked">
-                                            <span className="checkmark">✓</span>
+                                {Array.isArray(formData.characterStyle) && formData.characterStyle
+                                    .filter(n => !styles.some(s => (s.vKeyword || s.name) === n))
+                                    .map((n, i) => (
+                                        <div key={`fb-${i}`} className="style-option" onClick={() => handleStyleToggle({ name: n, iKeywordId: '' })}>
+                                            <span>{n}</span>
+                                            <div className="custom-checkbox checked"><span className="checkmark">✓</span></div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         )}
                     </div>
                     {errors.characterStyle && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.characterStyle}</span>}
                 </div>
 
+                {/* Description */}
                 <div className="form-group">
                     <label className="form-label">Description</label>
-                    <textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        className="form-textarea"
-                        rows="8"
-                    />
+                    <textarea name="description" value={formData.description} onChange={handleInputChange} className="form-textarea" rows="8" />
                     {errors.description && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.description}</span>}
                 </div>
             </div>
 
             <div className="form-actions">
-                <button
-                    className="action-btn btn-update"
-                    onClick={handleUpdate}
-                    disabled={submitting}
-                >
+                <button className="action-btn btn-update" onClick={handleUpdate} disabled={submitting}>
                     {submitting ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update' : 'Add Character')}
                 </button>
             </div>
         </div>
     );
 }
-
