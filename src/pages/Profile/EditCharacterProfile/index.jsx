@@ -12,6 +12,7 @@ const S3_BASE     = 'https://s3.us-east-1.amazonaws.com/stn-deployments-mobilehu
 const IMG_FOLDER  = 'character_images/';
 const VID_FOLDER  = 'character_videos/';
 const THUMB_FOLDER = 'character_thumb_images/';
+const OTHER_CHARACTER_VALUE = '__other__';
 
 // ── Base64 helpers ────────────────────────────────────────────────────────────
 function fileToBase64(file) {
@@ -86,7 +87,8 @@ export default function EditCharacterProfile() {
             if (Array.isArray(raw)) return raw.join(',');
             return raw != null ? String(raw) : '';
         })(),
-        character:      profileData.vCharacterName || profileData.name || '',
+        character:      profileData.vOtherCharacterName ? OTHER_CHARACTER_VALUE : (profileData.vCharacterName || profileData.name || ''),
+        otherCharacterName: profileData.vOtherCharacterName || '',
         characterStyle: (() => {
             const raw = profileData.vCharacterStyle || profileData.characterStyle;
             if (Array.isArray(raw)) return raw;
@@ -133,13 +135,14 @@ export default function EditCharacterProfile() {
                 setFormData(prev => ({
                     ...prev,
                     iArtistCharacterId: detail.iArtistCharacterId || prev.iArtistCharacterId,
-                    iCharacterId:       detail.iCharacterId        || prev.iCharacterId,
+                    iCharacterId:       detail.vOtherCharacterName ? '' : (detail.iCharacterId || prev.iCharacterId),
                     iCharacterKeywordId: (() => {
                         const raw = detail.iCharacterKeywordId || detail.iKeywordId;
                         if (raw == null) return prev.iCharacterKeywordId;
                         return Array.isArray(raw) ? raw.join(',') : String(raw);
                     })(),
-                    character:      detail.vCharacterName  || prev.character,
+                    character:      detail.vOtherCharacterName ? OTHER_CHARACTER_VALUE : (detail.vCharacterName || prev.character),
+                    otherCharacterName: detail.vOtherCharacterName || prev.otherCharacterName,
                     characterStyle: (() => {
                         const raw = detail.vCharacterStyle || detail.characterStyle;
                         if (!raw) return prev.characterStyle;
@@ -278,13 +281,19 @@ export default function EditCharacterProfile() {
         setFormData(prev => {
             const next = { ...prev, [name]: value };
             if (name === 'character') {
-                const key = value.replace(/[^a-z0-9]/gi, '').toLowerCase();
-                const m   = myCharacters.find(c => (c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase() === key);
-                if (m) next.iCharacterId = extractCharId(m);
+                if (value === OTHER_CHARACTER_VALUE) {
+                    next.iCharacterId = '';
+                } else {
+                    const key = value.replace(/[^a-z0-9]/gi, '').toLowerCase();
+                    const m   = myCharacters.find(c => (c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase() === key);
+                    if (m) next.iCharacterId = extractCharId(m);
+                    else next.iCharacterId = '';
+                }
             }
             return next;
         });
         if (errors[name]) setErrors(p => ({ ...p, [name]: null }));
+        if (name === 'character' && errors.otherCharacterName) setErrors(p => ({ ...p, otherCharacterName: null }));
     };
 
     const handleStyleToggle = (styleObj) => {
@@ -354,7 +363,8 @@ export default function EditCharacterProfile() {
         const errs = {};
         if (!mediaList.length)                              errs.media          = 'At least one photo or video is required.';
         if (!formData.character?.trim())                    errs.character      = 'Character selection is required.';
-        else if (!formData.iCharacterId)                    errs.character      = 'Please select a character from the dropdown list.';
+        else if (formData.character === OTHER_CHARACTER_VALUE && !formData.otherCharacterName?.trim()) errs.otherCharacterName = 'Custom character name is required.';
+        else if (formData.character !== OTHER_CHARACTER_VALUE && !formData.iCharacterId) errs.character = 'Please select a character from the dropdown list.';
         if (!formData.characterStyle?.length)               errs.characterStyle = 'At least one character style is required.';
         if (!formData.description?.trim())                  errs.description    = 'Description is required.';
         else if (formData.description.trim().length < 10)   errs.description    = 'Description must be at least 10 characters long.';
@@ -368,14 +378,15 @@ export default function EditCharacterProfile() {
         setSubmitting(true);
         try {
             // Resolve iCharacterId
-            let charId = formData.iCharacterId;
-            if (!charId && formData.character) {
+            const isOtherCharacter = formData.character === OTHER_CHARACTER_VALUE;
+            let charId = isOtherCharacter ? '' : formData.iCharacterId;
+            if (!isOtherCharacter && !charId && formData.character) {
                 const key = formData.character.replace(/[^a-z0-9]/gi, '').toLowerCase();
                 const m   = myCharacters.find(c => (c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase() === key);
                 if (m) charId = extractCharId(m);
             }
-            if (!charId) charId = extractCharId(profileData);
-            if (!charId) {
+            if (!isOtherCharacter && !charId) charId = extractCharId(profileData);
+            if (!isOtherCharacter && !charId) {
                 showMessage('Please select a character from the dropdown before saving.', 'error');
                 setSubmitting(false);
                 return;
@@ -427,14 +438,14 @@ export default function EditCharacterProfile() {
                     iArtistCharacterId:  formData.iArtistCharacterId || profileData.iArtistCharacterId || '',
                     iCharacterId:        charId,
                     txDescription:       formData.description.trim(),
-                    vOtherCharacterName: '',
+                    vOtherCharacterName: isOtherCharacter ? formData.otherCharacterName.trim() : '',
                     iCharacterKeywordId: String(formData.iCharacterKeywordId || ''),
                     txMedia,
                 }
                 : {
                     iCharacterId:        charId,
                     txDescription:       formData.description.trim(),
-                    vOtherCharacterName: '',
+                    vOtherCharacterName: isOtherCharacter ? formData.otherCharacterName.trim() : '',
                     iCharacterKeywordId: String(formData.iCharacterKeywordId || ''),
                     txMedia,
                 };
@@ -530,12 +541,27 @@ export default function EditCharacterProfile() {
                                 const name = c.vCharacterName || c.name || `Character ${i + 1}`;
                                 return <option key={c.iCharacterId || c.id || i} value={name}>{name}</option>;
                             })}
-                            {formData.character && !myCharacters.some(c => (c.vCharacterName || c.name) === formData.character) && (
+                            <option value={OTHER_CHARACTER_VALUE}>Other</option>
+                            {formData.character && formData.character !== OTHER_CHARACTER_VALUE && !myCharacters.some(c => (c.vCharacterName || c.name) === formData.character) && (
                                 <option value={formData.character}>{formData.character}</option>
                             )}
                         </select>
                     </div>
                     {errors.character && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.character}</span>}
+                    {formData.character === OTHER_CHARACTER_VALUE && (
+                        <>
+                            <label className="form-label other-character-label">Character Name</label>
+                            <input
+                                type="text"
+                                name="otherCharacterName"
+                                value={formData.otherCharacterName}
+                                onChange={handleInputChange}
+                                className="form-input"
+                                placeholder="Enter character name"
+                            />
+                            {errors.otherCharacterName && <span style={{ color: 'red', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.otherCharacterName}</span>}
+                        </>
+                    )}
                 </div>
 
                 {/* Style multi-select */}

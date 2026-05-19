@@ -24,6 +24,11 @@
                 font-size: 14px;
                 margin-bottom: 6px;
                 font-weight: 500;
+
+                &.other-character-label {
+                    margin-top: 18px;
+                    margin-bottom: 2px;
+                }
             }
 
             .upload-container {
@@ -158,6 +163,7 @@
             }
 
             .form-select,
+            .form-input,
             .form-textarea {
                 width: 100%;
                 padding: 10px 0;
@@ -168,6 +174,11 @@
                 outline: none;
                 appearance: none;
                 cursor: pointer;
+            }
+
+            .form-input {
+                margin-top: 0;
+                cursor: text;
             }
 
             .form-textarea {
