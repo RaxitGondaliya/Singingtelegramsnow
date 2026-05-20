@@ -265,6 +265,24 @@ export default function EditCharacterProfile() {
         return () => document.removeEventListener('mousedown', close);
     }, []);
 
+    useEffect(() => {
+        if (!isEditMode || !myCharacters.length || !formData.character || formData.character === OTHER_CHARACTER_VALUE) return;
+
+        const key = formData.character.replace(/[^a-z0-9]/gi, '').toLowerCase();
+        const matchedCharacter = myCharacters.find(c => (c.vCharacterName || c.name || '').replace(/[^a-z0-9]/gi, '').toLowerCase() === key);
+        if (matchedCharacter) return;
+
+        setFormData(prev => {
+            if (!prev.character || prev.character === OTHER_CHARACTER_VALUE) return prev;
+            return {
+                ...prev,
+                character: OTHER_CHARACTER_VALUE,
+                otherCharacterName: prev.otherCharacterName || prev.character,
+                iCharacterId: '',
+            };
+        });
+    }, [isEditMode, myCharacters, formData.character]);
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     const extractCharId = (obj) => {
         if (!obj) return '';
@@ -433,9 +451,10 @@ export default function EditCharacterProfile() {
             // Enforce cover on position 0
             txMedia = txMedia.map((item, i) => ({ ...item, tiMarkAsCoverPhoto: i === 0 ? 1 : 0 }));
 
-            const payload = isEditMode
+            const shouldAddCharacter = !isEditMode || (isEditMode && isOtherCharacter);
+
+            const payload = shouldAddCharacter
                 ? {
-                    iArtistCharacterId:  formData.iArtistCharacterId || profileData.iArtistCharacterId || '',
                     iCharacterId:        charId,
                     txDescription:       formData.description.trim(),
                     vOtherCharacterName: isOtherCharacter ? formData.otherCharacterName.trim() : '',
@@ -443,6 +462,7 @@ export default function EditCharacterProfile() {
                     txMedia,
                 }
                 : {
+                    iArtistCharacterId:  formData.iArtistCharacterId || profileData.iArtistCharacterId || '',
                     iCharacterId:        charId,
                     txDescription:       formData.description.trim(),
                     vOtherCharacterName: isOtherCharacter ? formData.otherCharacterName.trim() : '',
@@ -450,7 +470,7 @@ export default function EditCharacterProfile() {
                     txMedia,
                 };
 
-            const res = await (isEditMode ? characterApi.editCharacter : characterApi.addCharacter)(payload);
+            const res = await (shouldAddCharacter ? characterApi.addCharacter : characterApi.editCharacter)(payload);
 
             if (res.data?.responseCode === 200) {
                 showMessage(res.data?.responseMessage || 'Character saved successfully', 'success');
